@@ -5,7 +5,7 @@ Summary(tr):	PPP sunucu süreci
 Summary(pl):	Demon PPP dla Linux 2.2.11 i wy¿szych
 Name:		ppp
 Version:	2.4.0
-Release:	1
+Release:	2
 Epoch:		1
 License:	Distributable
 Group:		Networking/Daemons
@@ -20,6 +20,7 @@ Patch1:		%{name}-expect.patch
 Patch2:		%{name}-debian_scripts.patch
 Patch3:		%{name}-static.patch
 Patch4:		%{name}-CBCP.patch
+Patch5:		%{name}-speed.patch
 BuildRequires:	pam-devel
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
@@ -58,6 +59,7 @@ Hat çekirdeði PPP desteðini bir modül olarak içerir. (IPv6)
 %patch2 -p1 
 %patch3 -p1
 %patch4 -p1
+%patch5 -p1
 
 %build
 %configure
