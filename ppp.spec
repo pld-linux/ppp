@@ -1,8 +1,8 @@
-Summary:	ppp daemon package for linux 2.2.0 and greater
-Summary(de):	ppp-Dämonpaket für Linux 2.2.0 und höher 
-Summary(fr):	Paquetage du démon ppp pour Linux 2.2.0 et supérieur
+Summary:	ppp daemon package for linux 2.2.11 and greater
+Summary(de):	ppp-Dämonpaket für Linux 2.2.11 und höher 
+Summary(fr):	Paquetage du démon ppp pour Linux 2.2.11 et supérieur
 Summary(tr):	PPP sunucu süreci
-Summary(pl):	Demon PPP dla Linux 2.2.0 i wy¿szych
+Summary(pl):	Demon PPP dla Linux 2.2.11 i wy¿szych
 Name:		ppp
 Version:	2.3.9
 Release:	1 
@@ -11,37 +11,38 @@ Group:		Networking/Daemons
 Group(pl):	Sieciowe/Demony
 Source0:	ftp://cs.anu.edu.au/pub/software/ppp/%{name}-%{version}.tar.gz
 Source1:	pppd-2.3.7-pamd.conf
-Patch0:		ppp-make.patch
-Patch1:		ppp-expect.patch
-Patch2:		ppp-debian_scripts.patch
-Patch3:		ppp-static.patch
-Patch4:		ppp-log.patch
+Source2:	kernel-2.2.10-ppp.patch.gz
+Patch0:		ppp-2.3.9-ipv6-990816.patch.gz
+Patch1:		ppp-make.patch
+Patch2:		ppp-expect.patch
+Patch3:		ppp-debian_scripts.patch
+Patch4:		ppp-static.patch
 Patch5:		ppp-2.3.9-patch1
 Buildroot:	/tmp/%{name}-%{version}-root
 
 %description
 This is the daemon and documentation for PPP support.  It requires a kernel
-greater than 2.2.0 which is built with PPP support. The default kernels include 
+greater than 2.2.11 which is built with PPP support. The default kernels include 
 PPP support as a module.
 
 %description -l de
 Dies ist der Dämon und die Dokumentation für PPP-Support. Erfordert
-einen Kernel höher als 2.2.0, der mit PPP-Support gebaut ist. Die Standard-
+einen Kernel höher als 2.2.11, der mit PPP-Support gebaut ist. Die Standard-
 Red-Hat-Kernel schließen PPP-Support als Modul ein.
 
 %description -l fr
 Ceci est le démon et la documentation pour le support PPP. Cela réclame
-un noyau supérieur au 2.2.0 et construit avec le support PPP. Le noyau par
+un noyau supérieur au 2.2.11 et construit avec le support PPP. Le noyau par
 défaut de Red Hat contient le support PPP sous forme de module.
 
 %description -l tr
 Bu paket PPP desteði için belgeler ve sunucu sürecini içerir. Çekirdek
-sürümünun 2.2.0'dan daha yüksek olmasýný gerektirir. Öntanýmlý Red Hat
+sürümünun 2.2.11'dan daha yüksek olmasýný gerektirir. Öntanýmlý Red Hat
 çekirdeði PPP desteðini bir modül olarak içerir.
 
 %description -l pl
 Pakiet zawiera demona i dokumentacjê umo¿liwiaj±c± korzystanie z protoko³u
-PPP. Wymaga jadra 2.2.0 - lub wy¿szych - z wkompilowan± obs³ug± protoko³u PPP. 
+PPP. Wymaga jadra 2.2.11 - lub wy¿szych - z wkompilowan± obs³ug± protoko³u PPP. 
 Standardowe j±dro z dytrybucji zawiera wsparcie dla PPP skompilowane jako 
 modu³.
 
@@ -58,7 +59,7 @@ cd ..
 
 %build
 %configure
-make RPM_OPT_FLAGS="$RPM_OPT_FLAGS"
+make RPM_OPT_FLAGS="$RPM_OPT_FLAGS -DINET6"
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -73,6 +74,7 @@ install -d $RPM_BUILD_ROOT/etc/ppp/chatscripts
 
 make install TOPDIR=$RPM_BUILD_ROOT
 
+install %{SOURCE2}		   .
 install etc.ppp/chap-secrets 	   $RPM_BUILD_ROOT/etc/ppp
 install debian/{plog,poff,pon}	   $RPM_BUILD_ROOT%{_bindir}
 install debian/*.1		   $RPM_BUILD_ROOT%{_mandir}/man1
@@ -99,7 +101,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(644,root,root,755)
 %doc {README.linux,debian/README.debian}.gz scripts
 %doc {debian/win95.ppp,README.MSCHAP80,FAQ,debian/ppp-2.3.0.STATIC.README}.gz
-
+%doc kernel-2.2.10-ppp.patch.gz
 %attr(755,root,root) %{_bindir}/*
 %attr(755,root,root) %{_sbindir}/chat
 %attr(755,root,root) %{_sbindir}/pppstats
