@@ -1,0 +1,12 @@
+--- ppp-2.4.0/pppd/main.c.reap	Thu Jul  6 07:17:02 2000
++++ ppp-2.4.0/pppd/main.c	Thu Nov  9 17:41:30 2000
+@@ -1572,7 +1572,8 @@
+ 		 (chp? chp->prog: "??"), pid, WTERMSIG(status));
+ 	} else if (debug)
+ 	    dbglog("Script %s finished (pid %d), status = 0x%x",
+-		   (chp? chp->prog: "??"), pid, status);
++		   (chp? chp->prog: "??"), pid,
++		   WIFEXITED(status) ? WEXITSTATUS(status) : status);
+ 	if (chp && chp->done)
+ 	    (*chp->done)(chp->arg);
+ 	if (chp)
