@@ -137,7 +137,7 @@ install debian/options.ttyXX $RPM_BUILD_ROOT%{_sysconfdir}/ppp
 bzip2 -dc %{SOURCE4} | tar xf - -C $RPM_BUILD_ROOT%{_mandir}
 
 install %{SOURCE5} $RPM_BUILD_ROOT/etc/logrotate.d/ppp
-touch $RPM_BUILD_ROOT/var/log/ppp.log
+> $RPM_BUILD_ROOT/var/log/ppp.log
 
 rm -f scripts/README
 
