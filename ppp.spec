@@ -2,7 +2,6 @@
 # Conditional build:
 %bcond_without	pppoatm	# without PPPoATM plugin (which requires kernel 2.4 and atm-devel)
 #
-%define snap	20030613
 Summary:	ppp daemon package for Linux
 Summary(de):	ppp-D鋗onpaket f黵 Linux
 Summary(es):	Servidor ppp para Linux
@@ -14,12 +13,12 @@ Summary(tr):	PPP sunucu s黵eci
 Summary(zh_CN):	PPP 配置和管理软件包.
 Name:		ppp
 Version:	2.4.2
-Release:	4.%{snap}.1
+Release:	0.1
 Epoch:		2
 License:	distributable
 Group:		Networking/Daemons
-Source0:	cvs://pserver.samba.org/ppp/%{name}-%{version}-%{snap}.tar.bz2
-# Source0-md5:	cd1aeae556f6c2d61cb99d219eb32eac
+Source0:	ftp://ftp.samba.org/pub/%{name}/%{name}-%{version}.tar.gz
+# Source0-md5:	362bcf218fba8afbb9afbee7471e5dac
 Source1:	%{name}.pamd
 Source2:	%{name}.pon
 Source3:	%{name}.poff
@@ -111,14 +110,14 @@ PPPoATM plugin for pppd.
 Wtyczka PPPoATM dla pppd.
 
 %prep
-%setup -q -n %{name}-%{version}-%{snap}
-%patch0 -p1
+%setup -q 
+#%patch0 -p1
 %patch1 -p1
 %patch2 -p1
 %patch3 -p1
 %{?with_pppoatm:%patch4 -p1}
 %patch5 -p1
-%patch6 -p1
+#%patch6 -p1
 %patch7 -p1
 %patch8 -p1
 
