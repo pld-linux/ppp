@@ -1,15 +1,3 @@
-diff -urN ppp-2.4.2-20020809.org/chat/Makefile.linux ppp-2.4.2-20020809/chat/Makefile.linux
---- ppp-2.4.2-20020809.org/chat/Makefile.linux	Fri Aug  9 22:14:40 2002
-+++ ppp-2.4.2-20020809/chat/Makefile.linux	Sat Aug 10 00:31:18 2002
-@@ -6,7 +6,7 @@
- CDEF4=	-DFNDELAY=O_NDELAY		# Old name value
- CDEFS=	$(CDEF1) $(CDEF2) $(CDEF3) $(CDEF4)
- 
--CFLAGS=	-O2 -g -pipe $(CDEFS)
-+CFLAGS=	$(OPT_FLAGS) -pipe $(CDEFS)
- 
- INSTALL= install
- 
 diff -urN ppp-2.4.2-20020809.org/linux/Makefile.top ppp-2.4.2-20020809/linux/Makefile.top
 --- ppp-2.4.2-20020809.org/linux/Makefile.top	Fri Aug  9 22:14:40 2002
 +++ ppp-2.4.2-20020809/linux/Makefile.top	Sat Aug 10 00:31:18 2002
@@ -70,24 +58,6 @@ diff -urN ppp-2.4.2-20020809.org/pppd/Makefile.linux ppp-2.4.2-20020809/pppd/Mak
  	$(INSTALL) -c -m 444 pppd.8 $(MANDIR)/man8
  
  pppd: $(PPPDOBJS)
-diff -urN ppp-2.4.2-20020809.org/pppd/plugins/Makefile.linux ppp-2.4.2-20020809/pppd/plugins/Makefile.linux
---- ppp-2.4.2-20020809.org/pppd/plugins/Makefile.linux	Fri Aug  9 22:14:40 2002
-+++ ppp-2.4.2-20020809/pppd/plugins/Makefile.linux	Sat Aug 10 00:31:52 2002
-@@ -1,11 +1,11 @@
- CC	= gcc
--CFLAGS	= -g -O2 -I.. -I../../include -fPIC
-+CFLAGS	= -g $(OPT_FLAGS) -I.. -I../../include -D_linux_=1 -fPIC
- LDFLAGS	= -shared
--INSTALL	= install -o root
-+INSTALL	= install
- 
- SUBDIRS := rp-pppoe
- # Uncomment the next line to include the radius authentication plugin
--# SUBDIRS += radius
-+SUBDIRS += radius
- PLUGINS := minconn.so passprompt.so passwordfd.so
- 
- # include dependencies if present
 diff -urN ppp-2.4.2-20020809.org/pppdump/Makefile.linux ppp-2.4.2-20020809/pppdump/Makefile.linux
 --- ppp-2.4.2-20020809.org/pppdump/Makefile.linux	Fri Aug  9 22:14:40 2002
 +++ ppp-2.4.2-20020809/pppdump/Makefile.linux	Sat Aug 10 00:31:18 2002
@@ -124,17 +94,6 @@ diff -urN ppp-2.4.2-20020809.org/pppstats/Makefile.linux ppp-2.4.2-20020809/ppps
  	$(INSTALL) -c -m 444 pppstats.8 $(MANDIR)/man8/pppstats.8
  
  pppstats: $(PPPSTATSRCS)
---- ppp-2.4.2-20030613/pppd/plugins/rp-pppoe/Makefile.linux.orig	2003-06-17 00:58:36.000000000 +0200
-+++ ppp-2.4.2-20030613/pppd/plugins/rp-pppoe/Makefile.linux	2003-06-17 08:04:52.000000000 +0200
-@@ -16,7 +16,7 @@
- # Version is set ONLY IN THE MAKEFILE!  Don't delete this!
- VERSION=3.5
- 
--CFLAGS+=-I../../../include/linux
-+CFLAGS+=-I../../../include/linux $(OPT_FLAGS)
- all: rp-pppoe.so
- 
- rp-pppoe.so: libplugin.a plugin.o
 --- ppp-2.4.2-20030613/pppd/plugins/radius/Makefile.linux.orig	2002-10-05 06:35:24.000000000 +0200
 +++ ppp-2.4.2-20030613/pppd/plugins/radius/Makefile.linux	2003-06-17 08:02:16.000000000 +0200
 @@ -5,7 +5,7 @@
@@ -146,3 +105,43 @@ diff -urN ppp-2.4.2-20020809.org/pppstats/Makefile.linux ppp-2.4.2-20020809/ppps
  
  # Uncomment the next line to include support for Microsoft's
  # MS-CHAP authentication protocol.
+--- ppp-2.4.2/chat/Makefile.linux.orig	2004-01-13 04:57:55.000000000 +0100
++++ ppp-2.4.2/chat/Makefile.linux	2004-02-08 12:01:47.000000000 +0100
+@@ -6,7 +6,7 @@
+ CDEF4=	-DFNDELAY=O_NDELAY		# Old name value
+ CDEFS=	$(CDEF1) $(CDEF2) $(CDEF3) $(CDEF4)
+ 
+-COPTS=	-O2 -g -pipe $(CDEFS)
++COPTS=	$(OPT_FLAGS) -pipe $(CDEFS)
+ CFLAGS=	$(COPTS) $(CDEFS)
+ 
+ INSTALL= install
+--- ppp-2.4.2/pppd/plugins/Makefile.linux.orig	2004-01-13 04:56:24.000000000 +0100
++++ ppp-2.4.2/pppd/plugins/Makefile.linux	2004-02-08 12:04:45.000000000 +0100
+@@ -1,12 +1,12 @@
+ CC	= gcc
+-COPTS	= -O2 -g
++COPTS	= -g $(OPT_FLAGS)
+ CFLAGS	= $(COPTS) -I.. -I../../include -fPIC
+ LDFLAGS	= -shared
+-INSTALL	= install -o root
++INSTALL	= install 
+ 
+ SUBDIRS := rp-pppoe
+ # Uncomment the next line to include the radius authentication plugin
+-# SUBDIRS += radius
++SUBDIRS += radius
+ PLUGINS := minconn.so passprompt.so passwordfd.so
+ 
+ # include dependencies if present
+--- ppp-2.4.2/pppd/plugins/rp-pppoe/Makefile.linux.orig	2004-01-13 04:57:55.000000000 +0100
++++ ppp-2.4.2/pppd/plugins/rp-pppoe/Makefile.linux	2004-02-08 12:06:47.000000000 +0100
+@@ -16,7 +16,7 @@
+ # Version is set ONLY IN THE MAKEFILE!  Don't delete this!
+ VERSION=3.3
+ 
+-COPTS=-O2 -g
++COPTS=-g $(OPT_FLAGS)
+ CFLAGS=$(COPTS) -I../../../include/linux
+ all: rp-pppoe.so
+ 
