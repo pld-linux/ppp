@@ -78,7 +78,7 @@ Hat çekirdeði PPP desteðini bir modül olarak içerir. (IPv6)
 %{!?bcond_off_pppoe:%patch10 -p1}
 %build
 %configure
-%{__make} OPT_FLAGS="%{?debug:-O0 -g}%{!?debug:$RPM_OPT_FLAGS}" \
+%{__make} OPT_FLAGS="%{rpmcflags}" \
 	%{!?no_cbcp:CBCP=1}
 
 %install
