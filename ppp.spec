@@ -11,7 +11,7 @@ Summary(pt_BR):	Servidor ppp para Linux
 Summary(tr):	PPP sunucu süreci
 Name:		ppp
 Version:	2.4.1
-Release:	7
+Release:	8
 Epoch:		2
 License:	distributable
 Group:		Networking/Daemons
@@ -22,6 +22,7 @@ Source1:	%{name}.pamd
 Source2:	%{name}.pon
 Source3:	%{name}.poff
 Source4:	%{name}-non-english-man-pages.tar.bz2
+Source5:	%{name}.logrotate
 Patch0:		%{name}-make.patch
 Patch1:		%{name}-expect.patch
 Patch2:		%{name}-debian_scripts.patch
@@ -118,7 +119,8 @@ Wtyczka PPP-po-ATM.
 %install
 rm -rf $RPM_BUILD_ROOT
 install -d $RPM_BUILD_ROOT{%{_sbindir},%{_bindir},%{_mandir}/man{1,8}} \
-	$RPM_BUILD_ROOT{%{_sysconfdir}/{pam.d,ppp/peers},/var/log}
+	$RPM_BUILD_ROOT{%{_sysconfdir}/{pam.d,ppp/peers},/var/log} \
+	$RPM_BUILD_ROOT/etc/logrotate.d
 
 %{__make} install \
 	DESTDIR=$RPM_BUILD_ROOT
@@ -134,6 +136,7 @@ install debian/options.ttyXX $RPM_BUILD_ROOT%{_sysconfdir}/ppp
 
 bzip2 -dc %{SOURCE4} | tar xf - -C $RPM_BUILD_ROOT%{_mandir}
 
+install %{SOURCE5} $RPM_BUILD_ROOT/etc/logrotate.d/ppp
 touch $RPM_BUILD_ROOT/var/log/ppp.log
 
 rm -f scripts/README
@@ -170,6 +173,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(600,root,root) %config(missingok,noreplace) %verify(not md5 size mtime) %{_sysconfdir}/ppp/*-secrets
 %attr(644,root,root) %config(missingok) %verify(not md5 size mtime) %{_sysconfdir}/ppp/options*
 %attr(640,root,root) %config(noreplace) %verify(not md5 size mtime) /etc/pam.d/ppp
+%attr(640,root,root) /etc/logrotate.d/ppp
 %attr(640,root,root) %ghost /var/log/ppp.log
 
 %dir %{_sysconfdir}/ppp/peers
