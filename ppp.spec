@@ -13,7 +13,7 @@ Summary(tr):	PPP sunucu s黵eci
 Summary(zh_CN):	PPP 配置和管理软件包.
 Name:		ppp
 Version:	2.4.2
-Release:	0.%{snap}.1
+Release:	0.%{snap}.2
 Epoch:		2
 License:	distributable
 Group:		Networking/Daemons
@@ -32,6 +32,7 @@ Patch4:		%{name}-pppoatm.patch
 Patch5:		%{name}-pidfile-owner.patch
 Patch6:		%{name}-typos.patch
 Patch7:		%{name}-rp-pppoe-update.patch
+Patch8:		%{name}-rp-pppoe-macaddr.patch
 URL:		http://www.samba.org/ppp/
 BuildRequires:	pam-devel
 %{?_with_pppoatm:BuildRequires:	linux-atm-devel}
@@ -88,6 +89,7 @@ Hat 鏴kirde餴 PPP deste餴ni bir mod黮 olarak i鏴rir. (IPv6)
 %patch5 -p1
 %patch6 -p1
 %patch7 -p1
+%patch8 -p1
 
 %build
 find pppd/plugins/radius/radiusclient -exec touch "{}" ";"
