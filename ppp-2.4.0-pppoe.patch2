@@ -1,0 +1,4507 @@
+diff -r -N -u ppp-2.4.0.orig/configure ppp-2.4.0/configure
+--- ppp-2.4.0.orig/configure	Mon Apr 24 03:41:40 2000
++++ ppp-2.4.0/configure	Sun Aug  6 11:39:28 2000
+@@ -131,7 +131,7 @@
+       makext=$orig_makext 
+     fi
+   fi
+-  for dir in pppd pppstats chat pppdump; do
++  for dir in pppd pppstats chat pppdump pppd/plugins pppd/plugins/pppoe; do
+     rm -f $dir/Makefile
+     if [ -f $dir/Makefile.$makext ]; then
+       ln -s Makefile.$makext $dir/Makefile
+diff -r -N -u ppp-2.4.0.orig/linux/Makefile.top ppp-2.4.0/linux/Makefile.top
+--- ppp-2.4.0.orig/linux/Makefile.top	Mon Apr 17 06:39:26 2000
++++ ppp-2.4.0/linux/Makefile.top	Sun Aug  6 11:39:28 2000
+@@ -4,6 +4,7 @@
+ BINDIR = $(DESTDIR)/usr/sbin
+ MANDIR = $(DESTDIR)/usr/man
+ ETCDIR = $(DESTDIR)/etc/ppp
++LIBDIR = $(DESTDIR)/usr/lib/pppd
+ 
+ # uid 0 = root
+ INSTALL= install
+@@ -13,14 +14,16 @@
+ 	cd pppd; $(MAKE) $(MFLAGS) all
+ 	cd pppstats; $(MAKE) $(MFLAGS) all
+ 	cd pppdump; $(MAKE) $(MFLAGS) all
++	cd pppd/plugins; $(MAKE) $(MFLAGS) all
+ 
+-install: $(BINDIR) $(MANDIR)/man8 install-progs install-etcppp
++install: $(BINDIR) $(LIBDIR) $(MANDIR)/man8 install-progs install-etcppp
+ 
+ install-progs:
+ 	cd chat; $(MAKE) BINDIR=$(BINDIR) MANDIR=$(MANDIR) $(MFLAGS) install
+ 	cd pppd; $(MAKE) BINDIR=$(BINDIR) MANDIR=$(MANDIR) $(MFLAGS) install
+ 	cd pppstats; $(MAKE) BINDIR=$(BINDIR) MANDIR=$(MANDIR) $(MFLAGS) install
+ 	cd pppdump; $(MAKE) BINDIR=$(BINDIR) MANDIR=$(MANDIR) $(MFLAGS) install
++	cd pppd/plugins; $(MAKE) BINDIR=$(BINDIR) MANDIR=$(MANDIR) LIBDIR=$(LIBDIR) $(MFLAGS) install
+ 
+ install-etcppp: $(ETCDIR) $(ETCDIR)/options $(ETCDIR)/pap-secrets \
+ 	$(ETCDIR)/chap-secrets
+@@ -38,6 +41,8 @@
+ 	$(INSTALL) -d -m 755 $@
+ $(ETCDIR):
+ 	$(INSTALL) -d -m 755 $@
++$(LIBDIR):
++	$(INSTALL) -d -m 755 $@
+ 
+ clean:
+ 	rm -f `find . -name '*.[oas]' -print`
+@@ -47,6 +52,7 @@
+ 	cd pppd; $(MAKE) clean
+ 	cd pppstats; $(MAKE) clean
+ 	cd pppdump; $(MAKE) clean
++	cd pppd/plugins; $(MAKE) clean
+ 
+ dist-clean:	clean
+ 	rm -f Makefile `find . -name Makefile -print`
+diff -r -N -u ppp-2.4.0.orig/pppd/demand.c ppp-2.4.0/pppd/demand.c
+--- ppp-2.4.0.orig/pppd/demand.c	Sat Apr 15 04:56:30 2000
++++ ppp-2.4.0/pppd/demand.c	Sun Aug  6 11:39:28 2000
+@@ -85,8 +85,8 @@
+     flush_flag = 0;
+     fcs = PPP_INITFCS;
+ 
+-    ppp_send_config(0, PPP_MRU, (u_int32_t) 0, 0, 0);
+-    ppp_recv_config(0, PPP_MRU, (u_int32_t) 0, 0, 0);
++    send_config_hook(0, PPP_MRU, (u_int32_t) 0, 0, 0);
++    recv_config_hook(0, PPP_MRU, (u_int32_t) 0, 0, 0);
+ 
+ #ifdef PPP_FILTER
+     set_filters(&pass_filter, &active_filter);
+diff -r -N -u ppp-2.4.0.orig/pppd/lcp.c ppp-2.4.0/pppd/lcp.c
+--- ppp-2.4.0.orig/pppd/lcp.c	Sat Apr 29 08:32:09 2000
++++ ppp-2.4.0/pppd/lcp.c	Sun Aug  6 11:30:56 2000
+@@ -130,6 +130,28 @@
+     {NULL}
+ };
+ 
++
++
++/*
++ * Default hook values 
++ */
++extern void ppp_send_config __P((int, int, u_int32_t, int, int));
++				/* Configure i/f transmit parameters */
++extern void ppp_set_xaccm __P((int, ext_accm));
++				/* Set extended transmit ACCM */
++extern void ppp_recv_config __P((int, int, u_int32_t, int, int));
++				/* Configure i/f receive parameters */
++/* 
++ * Hook definitions
++ */
++void (*recv_config_hook) __P((int, int, u_int32_t, int, int)) 
++    = ppp_recv_config;
++void (*send_config_hook) __P((int, int, u_int32_t, int, int)) 
++    = ppp_send_config;
++void (*set_xaccm_hook) __P((int, ext_accm)) 
++    = ppp_set_xaccm;
++
++
+ /* global vars */
+ fsm lcp_fsm[NUM_PPP];			/* LCP fsm structure (global)*/
+ lcp_options lcp_wantoptions[NUM_PPP];	/* Options that we want to request */
+@@ -390,9 +412,9 @@
+      * but accept A/C and protocol compressed packets
+      * if we are going to ask for A/C and protocol compression.
+      */
+-    ppp_set_xaccm(unit, xmit_accm[unit]);
+-    ppp_send_config(unit, PPP_MRU, 0xffffffff, 0, 0);
+-    ppp_recv_config(unit, PPP_MRU, (lax_recv? 0: 0xffffffff),
++    set_xaccm_hook(unit, xmit_accm[unit]);
++    send_config_hook(unit, PPP_MRU, 0xffffffff, 0, 0);
++    recv_config_hook(unit, PPP_MRU, (lax_recv? 0: 0xffffffff),
+ 		    wo->neg_pcompression, wo->neg_accompression);
+     peer_mru[unit] = PPP_MRU;
+     lcp_allowoptions[unit].asyncmap = xmit_accm[unit][0];
+@@ -1736,13 +1758,15 @@
+      * set our MRU to the larger of value we wanted and
+      * the value we got in the negotiation.
+      */
+-    ppp_send_config(f->unit, MIN(ao->mru, (ho->neg_mru? ho->mru: PPP_MRU)),
+-		    (ho->neg_asyncmap? ho->asyncmap: 0xffffffff),
+-		    ho->neg_pcompression, ho->neg_accompression);
+-    ppp_recv_config(f->unit, (go->neg_mru? MAX(wo->mru, go->mru): PPP_MRU),
+-		    (lax_recv? 0: go->neg_asyncmap? go->asyncmap: 0xffffffff),
+-		    go->neg_pcompression, go->neg_accompression);
+-
++    send_config_hook(f->unit, 
++		     MIN(ao->mru, (ho->neg_mru? ho->mru: PPP_MRU)),
++		     (ho->neg_asyncmap? ho->asyncmap: 0xffffffff),
++		     ho->neg_pcompression, ho->neg_accompression);
++    recv_config_hook(f->unit, 
++		     (go->neg_mru? MAX(wo->mru, go->mru): PPP_MRU),
++		     (lax_recv? 0: go->neg_asyncmap? go->asyncmap: 0xffffffff),
++		     go->neg_pcompression, go->neg_accompression);
++    
+     if (ho->neg_mru)
+ 	peer_mru[f->unit] = ho->mru;
+ 
+@@ -1767,10 +1791,10 @@
+ 
+     link_down(f->unit);
+ 
+-    ppp_send_config(f->unit, PPP_MRU, 0xffffffff, 0, 0);
+-    ppp_recv_config(f->unit, PPP_MRU,
+-		    (go->neg_asyncmap? go->asyncmap: 0xffffffff),
+-		    go->neg_pcompression, go->neg_accompression);
++    send_config_hook(f->unit, PPP_MRU, 0xffffffff, 0, 0);
++    recv_config_hook(f->unit, PPP_MRU,
++		     (go->neg_asyncmap? go->asyncmap: 0xffffffff),
++		     go->neg_pcompression, go->neg_accompression);
+     peer_mru[f->unit] = PPP_MRU;
+ }
+ 
+diff -r -N -u ppp-2.4.0.orig/pppd/main.c ppp-2.4.0/pppd/main.c
+--- ppp-2.4.0.orig/pppd/main.c	Thu Jul  6 07:17:02 2000
++++ ppp-2.4.0/pppd/main.c	Thu Oct 12 16:56:07 2000
+@@ -99,6 +99,14 @@
+ int (*holdoff_hook) __P((void)) = NULL;
+ int (*new_phase_hook) __P((int)) = NULL;
+ 
++int (*device_init_hook) __P((void)) = tty_init;
++void (*device_check_hook) __P((void)) = tty_device_check;
++void (*device_check_options_hook) __P((void)) = tty_check_options;
++int (*connect_device_hook) __P((void)) = connect_tty;
++void (*disconnect_device_hook) __P((void)) = disconnect_tty;
++void (*cleanup_device_hook) __P((void)) = cleanup_tty;
++void (*close_device_hook) __P((void)) = tty_close_fds;
++
+ static int conn_running;	/* we have a [dis]connector running */
+ static int devfd;		/* fd of underlying device */
+ static int fd_ppp = -1;		/* fd for talking PPP */
+@@ -124,6 +132,7 @@
+ int privopen;			/* don't lock, open device as root */
+ 
+ char *no_ppp_msg = "Sorry - this system lacks PPP kernel support\n";
++char *bad_device_init_msg = "Encountered error configuring device\n";
+ 
+ GIDSET_TYPE groups[NGROUPS_MAX];/* groups the user is in */
+ int ngroups;			/* How many groups valid in groups */
+@@ -232,6 +241,12 @@
+ 
+     new_phase(PHASE_INITIALIZE);
+ 
++    if (!ppp_available()) {
++	option_error(no_ppp_msg);
++	exit(EXIT_NO_KERNEL_SUPPORT);
++    }
++
++
+     /*
+      * Ensure that fds 0, 1, 2 are open, to /dev/null if nowhere else.
+      * This way we can close 0, 1, 2 in detach() without clobbering
+@@ -276,7 +291,6 @@
+      */
+     for (i = 0; (protp = protocols[i]) != NULL; ++i)
+         (*protp->init)(0);
+-    tty_init();
+ 
+     progname = *argv;
+ 
+@@ -292,8 +306,16 @@
+     /*
+      * Work out the device name, if it hasn't already been specified,
+      * and parse the tty's options file.
++     * Device initialization must occur only after the device name
++     * has been identified.
+      */
+-    tty_device_check();
++    if(device_init_hook)
++	device_init_hook();
++
++    if(device_check_hook)
++	device_check_hook();
++
++
+ 
+     /*
+      * Check that we are running as root.
+@@ -304,10 +326,6 @@
+ 	exit(EXIT_NOT_ROOT);
+     }
+ 
+-    if (!ppp_available()) {
+-	option_error(no_ppp_msg);
+-	exit(EXIT_NO_KERNEL_SUPPORT);
+-    }
+ 
+     /*
+      * Check that the options given are valid and consistent.
+@@ -321,7 +339,8 @@
+     for (i = 0; (protp = protocols[i]) != NULL; ++i)
+ 	if (protp->check_options != NULL)
+ 	    (*protp->check_options)();
+-    tty_check_options();
++    if(device_check_options_hook)
++	    device_check_options_hook();
+ 
+     /*
+      * Initialize system-dependent stuff.
+@@ -444,7 +463,7 @@
+ 
+ 	new_phase(PHASE_SERIALCONN);
+ 
+-	devfd = connect_tty();
++	devfd = connect_device_hook();
+ 	if (devfd < 0)
+ 	    goto fail;
+ 
+@@ -563,10 +582,12 @@
+ 	 */
+     disconnect:
+ 	new_phase(PHASE_DISCONNECT);
+-	disconnect_tty();
++	if(disconnect_device_hook)
++	    disconnect_device_hook();
+ 
+     fail:
+-	cleanup_tty();
++	if(cleanup_device_hook)
++	    cleanup_device_hook();
+ 
+ 	if (!demand) {
+ 	    if (pidfilename[0] != 0
+@@ -1035,7 +1056,8 @@
+ 
+     if (fd_ppp >= 0)
+ 	disestablish_ppp(devfd);
+-    cleanup_tty();
++    if(cleanup_device_hook)
++	cleanup_device_hook();
+ 
+     if (pidfilename[0] != 0 && unlink(pidfilename) < 0 && errno != ENOENT) 
+ 	warn("unable to delete pid file %s: %m", pidfilename);
+@@ -1392,7 +1414,7 @@
+     close(1);
+     close(2);
+     sys_close();
+-    tty_close_fds();
++    close_device_hook();
+     closelog();
+ 
+     /* dup the in, out, err fds to 0, 1, 2 */
+@@ -1474,7 +1496,8 @@
+ 	close (0);
+ 	close (1);
+ 	close (2);
+-	tty_close_fds();
++	if(close_device_hook)
++	    close_device_hook();
+ 
+         /* Don't pass handles to the PPP device, even by accident. */
+ 	new_fd = open (_PATH_DEVNULL, O_RDWR);
+diff -r -N -u ppp-2.4.0.orig/pppd/options.c ppp-2.4.0/pppd/options.c
+--- ppp-2.4.0.orig/pppd/options.c	Mon Jul 31 21:38:30 2000
++++ ppp-2.4.0/pppd/options.c	Sun Aug  6 11:42:56 2000
+@@ -118,9 +118,8 @@
+ /*
+  * Prototypes
+  */
+-static int setdevname __P((char *));
++static int setdevname __P((const char *));
+ static int setipaddr __P((char *));
+-static int setspeed __P((char *));
+ static int noopt __P((char **));
+ static int setdomain __P((char **));
+ static int setnetmask __P((char **));
+@@ -139,6 +138,13 @@
+ static int setactivefilter __P((char **));
+ #endif
+ 
++/*
++ * Exported hooks
++ */
++int (*setspeed_hook) __P((const char*)) = setspeed_tty;
++int (*setdevname_hook) __P((const char*)) = setdevname_tty;
++
++
+ static option_t *find_option __P((char *name));
+ static int process_option __P((option_t *, char **));
+ static int n_arguments __P((option_t *));
+@@ -315,7 +321,7 @@
+ 	 * Maybe a tty name, speed or IP address?
+ 	 */
+ 	if ((ret = setdevname(arg)) == 0
+-	    && (ret = setspeed(arg)) == 0
++	    && (ret = setspeed_hook(arg)) == 0
+ 	    && (ret = setipaddr(arg)) == 0) {
+ 	    option_error("unrecognized option '%s'", arg);
+ 	    usage();
+@@ -438,7 +444,7 @@
+ 	 * Maybe a tty name, speed or IP address?
+ 	 */
+ 	if ((i = setdevname(cmd)) == 0
+-	    && (i = setspeed(cmd)) == 0
++	    && (i = setspeed_hook(cmd)) == 0
+ 	    && (i = setipaddr(cmd)) == 0) {
+ 	    option_error("In file %s: unrecognized option '%s'",
+ 			 filename, cmd);
+@@ -483,31 +489,26 @@
+ }
+ 
+ /*
+- * options_for_tty - See if an options file exists for the serial
+- * device, and if so, interpret options from it.
+- * We only allow the per-tty options file to override anything from
++ * options_for_dev - See if an options file exists for the device, 
++ * and if so, interpret options from it.
++ * We only allow the per-device options file to override anything from
+  * the command line if it is something that the user can't override
+  * once it has been set by root.
+  */
+ int
+-options_for_tty()
++options_for_dev(prefix,dev)
++    const char *prefix, *dev;
+ {
+-    char *dev, *path, *p;
+-    int ret;
+     size_t pl;
+-
+-    dev = devnam;
+-    if (strncmp(dev, "/dev/", 5) == 0)
+-	dev += 5;
+-    if (dev[0] == 0 || strcmp(dev, "tty") == 0)
+-	return 1;		/* don't look for /etc/ppp/options.tty */
+-    pl = strlen(_PATH_TTYOPT) + strlen(dev) + 1;
++    char *path, *p;
++    int ret;
++    pl = strlen(prefix) + strlen(dev) + 1;
+     path = malloc(pl);
+     if (path == NULL)
+-	novm("tty init file name");
+-    slprintf(path, pl, "%s%s", _PATH_TTYOPT, dev);
+-    /* Turn slashes into dots, for Solaris case (e.g. /dev/term/a) */
+-    for (p = path + strlen(_PATH_TTYOPT); *p != 0; ++p)
++	novm("per-device init file name");
++    slprintf(path, pl, "%s%s", prefix, dev);
++    /* Turn slashes into dots */
++    for (p = path + strlen(prefix); *p != 0; ++p)
+ 	if (*p == '/')
+ 	    *p = '.';
+     no_override = 1;
+@@ -560,7 +561,7 @@
+ 	 * Maybe a tty name, speed or IP address?
+ 	 */
+ 	if ((i = setdevname(w->word)) == 0
+-	    && (i = setspeed(w->word)) == 0
++	    && (i = setspeed_hook(w->word)) == 0
+ 	    && (i = setipaddr(w->word)) == 0) {
+ 	    option_error("In secrets file: unrecognized option '%s'",
+ 			 w->word);
+@@ -773,6 +774,24 @@
+ }
+ 
+ /*
++ * remove_option - permanently remove an option from consideration...
++ * for use by modules to remove choices which no longer make sense.
++ * returns true if found an option
++ */
++int
++remove_option(name)
++    char *name;
++{
++    option_t *o;
++    o = find_option(name);
++    if (o == NULL)
++	return 0;
++    o->name = "";
++    return 1;
++}
++
++
++/*
+  * usage - print out a message telling how to use the program.
+  */
+ static void
+@@ -1279,84 +1298,28 @@
+ }
+ 
+ 
+-/*
+- * setspeed - Set the speed.
+- */
+-static int
+-setspeed(arg)
+-    char *arg;
+-{
+-    char *ptr;
+-    int spd;
+-
+-    if (no_override && inspeed != 0)
+-	return 1;
+-    spd = strtol(arg, &ptr, 0);
+-    if (ptr == arg || *ptr != 0 || spd == 0)
+-	return 0;
+-    if (!no_override || inspeed == 0)
+-	inspeed = spd;
+-    return 1;
+-}
+-
+ 
+ /*
+- * setdevname - Set the device name.
++ * setdevname - Set the device name
++ * This is just a wrapper, the real work is done by the hook
+  */
+ static int
+ setdevname(cp)
+-    char *cp;
++    const char *cp;
+ {
+-    struct stat statbuf;
+-    char dev[MAXPATHLEN];
+-
+-    if (*cp == 0)
+-	return 0;
+-
+-    if (strncmp("/dev/", cp, 5) != 0) {
+-	strlcpy(dev, "/dev/", sizeof(dev));
+-	strlcat(dev, cp, sizeof(dev));
+-	cp = dev;
+-    }
+-
+-    /*
+-     * Check if there is a character device by this name.
+-     */
+-    if (stat(cp, &statbuf) < 0) {
+-	if (errno == ENOENT)
+-	    return 0;
+-	option_error("Couldn't stat %s: %m", cp);
+-	return -1;
+-    }
+-    if (!S_ISCHR(statbuf.st_mode)) {
+-	option_error("%s is not a character device", cp);
+-	return -1;
+-    }
+-
+-    if (phase != PHASE_INITIALIZE) {
+-	option_error("device name cannot be changed after initialization");
+-	return -1;
+-    }
+-    if (no_override) {
+-	option_error("per-tty options file may not specify device name");
+-	return -1;
++    int result;
++    result = setdevname_hook(cp);
++    if (result == 1) {
++	default_device = 0;
++	devnam_info.priv = privileged_option;
++	devnam_info.source = option_source;
++	return result;
+     }
+-
+-    if (devnam_info.priv && !privileged_option) {
+-	option_error("device name cannot be overridden");
+-	return -1;
+-    }
+-
+-    strlcpy(devnam, cp, sizeof(devnam));
+-    devstat = statbuf;
+-    default_device = 0;
+-    devnam_info.priv = privileged_option;
+-    devnam_info.source = option_source;
+-  
+-    return 1;
++    return 0;
+ }
+ 
+ 
++
+ /*
+  * setipaddr - Set the IP address
+  */
+@@ -1422,6 +1385,27 @@
+ 	seen_remote = 1;
+     }
+ 
++    return 1;
++}
++
++
++/*
++ * dev_set_ok - Is it ok to specify new a device now?
++ */
++int
++dev_set_ok(void)
++{
++    if (phase != PHASE_INITIALIZE) {
++	option_error("device name cannot be changed after initialization");
++	return 0;
++    } else if (no_override) {
++	option_error("per-tty options file may not specify device name");
++	return 0;
++    }
++    if (devnam_info.priv && !privileged_option) {
++	option_error("device name cannot be overridden");
++	return 0;
++    }
+     return 1;
+ }
+ 
+diff -r -N -u ppp-2.4.0.orig/pppd/pathnames.h ppp-2.4.0/pppd/pathnames.h
+--- ppp-2.4.0.orig/pppd/pathnames.h	Tue Apr  4 03:06:52 2000
++++ ppp-2.4.0/pppd/pathnames.h	Sun Aug  6 11:39:28 2000
+@@ -18,6 +18,10 @@
+ #define _ROOT_PATH
+ #endif
+ 
++#ifndef _LIB_DIR
++#define _LIB_DIR "/usr/lib"
++#endif
++
+ #define _PATH_UPAPFILE 	 _ROOT_PATH "/etc/ppp/pap-secrets"
+ #define _PATH_CHAPFILE 	 _ROOT_PATH "/etc/ppp/chap-secrets"
+ #define _PATH_SYSOPTIONS _ROOT_PATH "/etc/ppp/options"
+@@ -29,6 +33,8 @@
+ #define _PATH_CONNERRS	 _ROOT_PATH "/etc/ppp/connect-errors"
+ #define _PATH_PEERFILES	 _ROOT_PATH "/etc/ppp/peers/"
+ #define _PATH_RESOLV	 _ROOT_PATH "/etc/ppp/resolv.conf"
++#define _PATH_ATMOPT	 _ROOT_PATH "/etc/ppp/options-atm."
++#define _PATH_ETHOPT	 _ROOT_PATH "/etc/ppp/options."
+ 
+ #define _PATH_USEROPT	 ".ppprc"
+ 
+@@ -41,6 +47,10 @@
+ #define _PATH_IPXUP	 _ROOT_PATH "/etc/ppp/ipx-up"
+ #define _PATH_IPXDOWN	 _ROOT_PATH "/etc/ppp/ipx-down"
+ #endif /* IPX_CHANGE */
++
++#ifdef PLUGIN
++#define _PATH_PLUGIN	_LIB_DIR "/pppd/plugins/%s.so"
++#endif /* PLUGIN */
+ 
+ #ifdef __STDC__
+ #define _PATH_PPPDB	_ROOT_PATH _PATH_VARRUN "pppd.tdb"
+diff -r -N -u ppp-2.4.0.orig/pppd/plugins/Makefile.linux ppp-2.4.0/pppd/plugins/Makefile.linux
+--- ppp-2.4.0.orig/pppd/plugins/Makefile.linux	Sun Nov 14 23:08:24 1999
++++ ppp-2.4.0/pppd/plugins/Makefile.linux	Sun Aug  6 11:39:28 2000
+@@ -1,11 +1,30 @@
+ CC	= gcc
+-CFLAGS	= -g -O2 -I.. -I../../include
++CFLAGS	= -g -O2 -I.. -I../../include -D_linux_=1 -fPIC
+ LDFLAGS	= -shared
+ 
+ all:	minconn.so passprompt.so
++	cd pppoe; $(MAKE) $(MFLAGS) all
+ 
+-minconn.so: minconn.c
+-	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) minconn.c
++PLUGINDIR = $(LIBDIR)/plugins
++PLUGINSRCS= minconn.c passprompt.c 
+ 
+-passprompt.so: passprompt.c
+-	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) passprompt.c
++#
++# include dependancies if present and backup if as a header file
++ifeq (.depend,$(wildcard .depend))
++include .depend
++endif
++
++
++%.so: %.c
++	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $^
++
++clean: 
++	rm -f *.o *.so *.a 
++
++INSTALL= install -o root
++
++install:
++	cd pppoe; $(MAKE) $(MFLAGS) install
++
++depend:
++	$(CPP) -M $(CFLAGS) $(PLUGINSRCS) >.depend
+\ No newline at end of file
+diff -r -N -u ppp-2.4.0.orig/pppd/plugins/Makefile.sol2 ppp-2.4.0/pppd/plugins/Makefile.sol2
+--- ppp-2.4.0.orig/pppd/plugins/Makefile.sol2	Tue Nov 16 22:49:27 1999
++++ ppp-2.4.0/pppd/plugins/Makefile.sol2	Sun Aug  6 11:39:28 2000
+@@ -6,7 +6,7 @@
+ 
+ include ../../svr4/Makedefs
+ 
+-CFLAGS	= -c -O -I.. -I../../include $(COPTS)
++CFLAGS	= -c -O -I.. -I../../include -DSVR4 -DSOL2 $(COPTS)
+ LDFLAGS	= -G 
+ 
+ all:	minconn.so
+diff -r -N -u ppp-2.4.0.orig/pppd/plugins/pppoe/Makefile.linux ppp-2.4.0/pppd/plugins/pppoe/Makefile.linux
+--- ppp-2.4.0.orig/pppd/plugins/pppoe/Makefile.linux	Wed Dec 31 19:00:00 1969
++++ ppp-2.4.0/pppd/plugins/pppoe/Makefile.linux	Sun Aug  6 11:39:28 2000
+@@ -0,0 +1,48 @@
++CC	= gcc
++CFLAGS	= -g  -I.. -I../.. -I../../../include -D_linux_=1 -fPIC
++LDFLAGS	= -shared
++
++all: pppoe.so pppoed
++
++
++PLUGINDIR = $(LIBDIR)/plugins
++PLUGINSRCS= pppoe.c libpppoe.c utils.c pppoehash.c pppoe_client.c \
++		pppoe_relay.c pppoe_server.c pppd_utils.c
++#
++# include dependancies if present and backup if as a header file
++ifeq (.depend,$(wildcard .depend))
++include .depend
++endif
++
++
++
++pppoefwd: pppoefwd.o libpppoe.a 
++	$(CC) -o $@ $^
++
++pppoed: pppoed.o pppd_utils.o libpppoe.a 
++	$(CC) -o $@ $^
++
++libpppoe.a: pppoehash.o pppoe_client.o pppoe_relay.o pppoe_server.o \
++	utils.o libpppoe.o 
++	ar -rc $@ $^
++
++pppoe.so: pppoe.o libpppoe.a
++	$(CC) -o $@ $(LDFLAGS) $^
++
++%.so: %.c
++	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $^
++
++clean: 
++	rm -f *.o *.so *.a pppoefwd pppoed
++
++INSTALL= install -o root
++
++install: $(PLUGINDIR) all
++	$(INSTALL) -s -c -m 4550 pppoe.so $(PLUGINDIR)
++
++
++$(PLUGINDIR):
++	$(INSTALL) -d -m 755 $@
++
++depend:
++	$(CPP) -M $(CFLAGS) $(PLUGINSRCS) >.depend
+diff -r -N -u ppp-2.4.0.orig/pppd/plugins/pppoe/libpppoe.c ppp-2.4.0/pppd/plugins/pppoe/libpppoe.c
+--- ppp-2.4.0.orig/pppd/plugins/pppoe/libpppoe.c	Wed Dec 31 19:00:00 1969
++++ ppp-2.4.0/pppd/plugins/pppoe/libpppoe.c	Sun Aug  6 11:39:28 2000
+@@ -0,0 +1,631 @@
++/* PPPoE support library "libpppoe"
++ *
++ * Copyright 2000 Michal Ostrowski <mostrows@styx.uwaterloo.ca>,
++ *		  Jamal Hadi Salim <hadi@cyberus.ca>
++ *
++ *  This program is free software; you can redistribute it and/or
++ *  modify it under the terms of the GNU General Public License
++ *  as published by the Free Software Foundation; either version
++ *  2 of the License, or (at your option) any later version.
++ */
++
++#include "pppoe.h"
++
++int disc_sock=-1;
++
++int verify_packet( struct session *ses, struct pppoe_packet *p);
++
++#define TAG_DATA(type,tag_ptr) ((type *) tag_ptr+1  )
++
++    
++/***************************************************************************
++ *
++ * Return the location where the next tag can be pu
++ *
++ **************************************************************************/
++static  struct pppoe_tag *next_tag(struct pppoe_hdr *ph)
++{
++    return (struct pppoe_tag *)
++	(((char *) &ph->tag) + ntohs(ph->length));
++}
++
++/**************************************************************************
++ *
++ * Update header to reflect the addition of a new tag
++ *
++ **************************************************************************/
++static  void add_tag(struct pppoe_hdr *ph, struct pppoe_tag *pt)
++{
++    int len = (ntohs(ph->length) +
++	       ntohs(pt->tag_len) +
++	       sizeof(struct pppoe_tag));
++    
++    if (pt != next_tag(ph))
++	printf("PPPoE add_tag caller is buggy\n");
++    
++    ph->length = htons(len);
++}
++
++/*************************************************************************
++ *
++ * Look for a tag of a specific type
++ *
++ ************************************************************************/
++struct pppoe_tag *get_tag(struct pppoe_hdr *ph, u_int16_t idx)
++{
++    char *end = (char *) next_tag(ph);
++    char *ptn = NULL;
++    struct pppoe_tag *pt = &ph->tag[0];
++    
++    /*
++     * Keep processing tags while a tag header will still fit.
++     *
++     * This check will ensure that the entire tag header pointed
++     * to by pt will fit inside the message, and thus it will be
++     * valid to check the tag_type and tag_len fields.
++     */
++    while ((char *)(pt + 1) <= end) {
++	/*
++	 * If the tag data would go past the end of the packet, abort.
++	 */
++	ptn = (((char *) (pt + 1)) + ntohs(pt->tag_len));
++	if (ptn > end)
++	    return NULL;
++	
++	if (pt->tag_type == idx)
++	    return pt;
++	
++	pt = (struct pppoe_tag *) ptn;
++    }
++    
++    return NULL;
++}
++
++/* We want to use tag names to reference into arrays  containing the tag data.
++   This takes an RFC 2516 tag identifier and maps it into a local one.
++   The reverse mapping is accomplished via the tag_map array */
++#define UNMAP_TAG(x) case PTT_##x : return TAG_##x
++static inline int tag_index(int tag){
++    switch(tag){
++	UNMAP_TAG(SRV_NAME);
++	UNMAP_TAG(AC_NAME);
++	UNMAP_TAG(HOST_UNIQ);
++	UNMAP_TAG(AC_COOKIE);
++	UNMAP_TAG(VENDOR);
++	UNMAP_TAG(RELAY_SID);
++	UNMAP_TAG(SRV_ERR);
++	UNMAP_TAG(SYS_ERR);
++	UNMAP_TAG(GEN_ERR);
++	UNMAP_TAG(EOL);
++    };
++    return -1;
++}
++
++/*************************************************************************
++ *
++ * Makes a copy of a tag into a PPPoE packe
++ *
++ ************************************************************************/
++void copy_tag(struct pppoe_packet *dest, struct pppoe_tag *pt)
++{
++    struct pppoe_tag *end_tag = get_tag(dest->hdr, PTT_EOL);
++    int tagid;
++    int tag_len;
++    if( !pt ) {
++	return;
++    }
++    tagid = tag_index(pt->tag_type);
++    
++    tag_len = sizeof(struct pppoe_tag) + ntohs(pt->tag_len);
++    
++    if( end_tag ){
++	memcpy(((char*)end_tag)+tag_len ,
++	       end_tag, sizeof(struct pppoe_tag));
++	
++	dest->tags[tagid]=end_tag;
++	dest->tags[TAG_EOL] = (struct pppoe_tag*)((char*)dest->tags[TAG_EOL] + tag_len);
++	memcpy(end_tag, pt, tag_len);
++	dest->hdr->length = htons(ntohs(dest->hdr->length) + tag_len);
++	
++    }else{
++	memcpy(next_tag(dest->hdr),pt, tag_len);
++	dest->tags[tagid]=next_tag(dest->hdr);
++	add_tag(dest->hdr,next_tag(dest->hdr));
++    }
++    
++    
++}
++
++
++/*************************************************************************
++ *
++ * Put tags from a packet into a nice array
++ *
++ ************************************************************************/
++static void extract_tags(struct pppoe_hdr *ph, struct pppoe_tag** buf){
++    int i=0;
++    for(;i<MAX_TAGS;++i){
++	buf[i] = get_tag(ph,tag_map[i]);
++    }
++}
++
++
++/*************************************************************************
++ *
++ * Verify that a packet has a tag containint a specific value
++ *
++ ************************************************************************/
++static int verify_tag(struct session* ses,
++		      struct pppoe_packet* p,
++		      unsigned short id,
++		      char* data,
++		      int data_len)
++{
++    int len;
++    struct pppoe_tag *pt = p->tags[id];
++    
++    if( !pt ){
++	poe_info(ses,"Missing tag %d. Expected %s\n",
++		 id,data);
++	return 0;
++    }
++    len = ntohs(pt->tag_len);
++    if(len != data_len){
++	poe_info(ses,"Length mismatch on tag %d: expect: %d got: %d\n",
++		 id, data_len, len);
++	return 0;
++    }
++    
++    if( 0!=memcmp(pt->tag_data,data,data_len)){
++	poe_info(ses,"Tag data mismatch on tag %d: expect: %s vs %s\n",
++		 id, data,pt->tag_data);
++	return 0;
++    }
++    return 1;
++}
++
++
++/*************************************************************************
++ *
++ * Verify the existence of an ethernet device.
++ * Construct an AF_PACKET address struct to match.
++ *
++ ************************************************************************/
++int get_sockaddr_ll(const char *devnam,struct sockaddr_ll* sll){
++    struct ifreq ifr;
++    int retval;
++    
++    if(disc_sock<0){
++	
++	disc_sock = socket(PF_PACKET, SOCK_DGRAM, 0);
++	if( disc_sock < 0 ){
++	    return -1;
++	}
++    }
++    
++    strncpy(ifr.ifr_name, devnam, sizeof(ifr.ifr_name));
++    
++    retval = ioctl( disc_sock , SIOCGIFINDEX, &ifr);
++    
++    if( retval < 0 ){
++//	error("Bad device name: %s  (%m)",devnam);
++	return 0;
++    }
++    
++    if(sll) sll->sll_ifindex = ifr.ifr_ifindex;
++    
++    retval = ioctl (disc_sock, SIOCGIFHWADDR, &ifr);
++    if( retval < 0 ){
++//	error("Bad device name: %s  (%m)",devnam);
++	return 0;
++    }
++    
++    if (ifr.ifr_hwaddr.sa_family != ARPHRD_ETHER) {
++	error("Interface %s is not Ethernet!", devnam);
++	return 0;
++    }
++    if(sll){
++	sll->sll_family	= AF_PACKET;
++	sll->sll_protocol= ntohs(ETH_P_PPP_DISC);
++	sll->sll_hatype	= ARPHRD_ETHER;
++	sll->sll_pkttype = PACKET_BROADCAST;
++	sll->sll_hatype	= ETH_ALEN;
++	memcpy( sll->sll_addr , ifr.ifr_hwaddr.sa_data, ETH_ALEN);
++    }
++    return 1;
++}
++
++
++
++
++/*************************************************************************
++ *
++ * Construct and send a discovery message.
++ *
++ ************************************************************************/
++int send_disc(struct session *ses, struct pppoe_packet *p)
++{
++    char buf[MAX_PAYLOAD + sizeof(struct pppoe_hdr)];
++    int data_len = sizeof(struct pppoe_hdr);
++    
++    struct pppoe_hdr *ph = NULL;
++    struct pppoe_tag *tag = NULL;
++    int i, error = 0;
++    int got_host_uniq = 0;
++    int got_srv_name = 0;
++    int got_ac_name = 0;
++    
++    for (i = 0; i < MAX_TAGS; i++) {
++	if (!p->tags[i])
++	    continue;
++	
++	got_host_uniq |= (p->tags[i]->tag_type == PTT_HOST_UNIQ);
++	
++	/* Relay identifiers qualify as HOST_UNIQ's:
++	   we need HOST_UNIQ to uniquely identify the packet,
++	   PTT_RELAY_SID is sufficient for us for outgoing packets */
++	got_host_uniq |= (p->tags[i]->tag_type == PTT_RELAY_SID);
++
++	got_srv_name |= (p->tags[i]->tag_type == PTT_SRV_NAME);
++	got_ac_name  |= (p->tags[i]->tag_type == PTT_AC_NAME);
++	
++	data_len += (ntohs(p->tags[i]->tag_len) +
++		     sizeof(struct pppoe_tag));
++    }
++    
++    ph = (struct pppoe_hdr *) buf;
++    
++    
++    memcpy(ph, p->hdr, sizeof(struct pppoe_hdr));
++    ph->length = __constant_htons(0);
++
++    /* if no HOST_UNIQ tags --- add one with process id */
++    if (!got_host_uniq){
++	data_len += (sizeof(struct pppoe_tag) +
++		     sizeof(struct session *));
++	tag = next_tag(ph);
++	tag->tag_type = PTT_HOST_UNIQ;
++	tag->tag_len = htons(sizeof(struct session *));
++	memcpy(tag->tag_data,
++	       &ses,
++	       sizeof(struct session *));
++	
++	add_tag(ph, tag);
++    }
++
++    if( !got_srv_name ){
++	data_len += sizeof(struct pppoe_tag);
++	tag = next_tag(ph);
++	tag->tag_type = PTT_SRV_NAME;
++	tag->tag_len = 0;
++	add_tag(ph, tag);
++    }
++
++    if(!got_ac_name && ph->code==PADO_CODE){
++	data_len += sizeof(struct pppoe_tag);
++	tag = next_tag(ph);
++	tag->tag_type = PTT_AC_NAME;
++	tag->tag_len = 0;
++	add_tag(ph, tag);
++    }
++    
++    for (i = 0; i < MAX_TAGS; i++) {
++	if (!p->tags[i])
++	    continue;
++	
++	tag = next_tag(ph);
++	memcpy(tag, p->tags[i],
++	       sizeof(struct pppoe_tag) + ntohs(p->tags[i]->tag_len));
++	
++	add_tag(ph, tag);
++    }
++    
++    /* Now fixup the packet struct to make sure all of its pointers
++       are self-contained */
++    memcpy( p->hdr , ph, data_len );
++    extract_tags( p->hdr, p->tags);
++
++    error = sendto(disc_sock, buf, data_len, 0,
++		   (struct sockaddr*) &p->addr,
++		   sizeof(struct sockaddr_ll));
++    
++    if(error < 0)
++	poe_error(ses,"sendto returned: %m\n");
++    
++    return error;
++}
++
++/*************************************************************************
++ *
++ * Verify that a packet is legal
++ *
++ *************************************************************************/
++int verify_packet( struct session *ses, struct pppoe_packet *p){
++    struct session * hu_val;
++    
++    /* This code here should do all of the error checking and
++       validation on the incoming packet */
++
++
++    /* If we receive any error tags, abort */
++#define CHECK_TAG(name, val)					\
++    if((NULL==p->tags[name])== val){				\
++	poe_error(ses,"Tag error: " #name );			\
++	return -1;						\
++    }
++    
++    
++    
++    CHECK_TAG(TAG_SRV_ERR,0);
++    CHECK_TAG(TAG_SYS_ERR,0);
++    CHECK_TAG(TAG_GEN_ERR,0);
++
++    /* A HOST_UNIQ must be present */
++    CHECK_TAG(TAG_HOST_UNIQ,1);
++    
++    hu_val = *TAG_DATA(struct session* ,p->tags[TAG_HOST_UNIQ]);
++    
++    if( hu_val != ses ){
++	poe_info(ses,"HOST_UNIQ mismatch: %08x %i\n",(int)hu_val,getpid());
++	return -1;
++    }
++    
++    if(ses->filt->htag &&
++       !verify_tag(ses,p,TAG_HOST_UNIQ,ses->filt->htag->tag_data,(int)ntohs(ses->filt->htag->tag_len)))
++	return -1;
++    else
++	poe_info(ses,"HOST_UNIQ successful match\n");
++    
++    
++    if(ses->filt->ntag &&
++       !verify_tag(ses,p,TAG_AC_NAME,ses->filt->ntag->tag_data,(int)ntohs(ses->filt->ntag->tag_len))){
++	poe_info(ses,"AC_NAME failure");
++	return -1;
++    }
++    
++    if(ses->filt->stag &&
++       !verify_tag(ses,p,TAG_SRV_NAME,ses->filt->stag->tag_data,(int)ntohs(ses->filt->stag->tag_len))){
++	poe_info(ses,"SRV_NAME failure");
++	return -1;
++    }
++    
++}
++
++
++/*************************************************************************
++ *
++ * Receive and verify an incoming packet.
++ *
++ *************************************************************************/
++static int recv_disc( struct session *ses,
++		      struct pppoe_packet *p){
++    int error = 0;
++    unsigned int from_len = sizeof(struct sockaddr_ll);
++    struct session* hu_val;
++    struct pppoe_tag *pt;
++    
++    p->hdr = (struct pppoe_hdr*)p->buf;
++    
++    error = recvfrom( disc_sock, p->buf, 1500, 0,
++		      (struct sockaddr*)&p->addr, &from_len);
++    
++    if(error < 0) return error;
++    
++    extract_tags(p->hdr,p->tags);
++    
++    return 1;
++}
++
++
++/*************************************************************************
++ *
++ * Send a PADT
++ *
++ *************************************************************************/
++int session_disconnect(struct session *ses){
++    struct pppoe_packet padt;
++    
++    memset(&padt,0,sizeof(struct pppoe_packet));
++    memcpy(&padt.addr, &ses->remote, sizeof(struct sockaddr_ll));
++    
++    padt.hdr = (struct pppoe_hdr*) ses->curr_pkt.buf;
++    padt.hdr->ver  = 1;
++    padt.hdr->type = 1;
++    padt.hdr->code = PADT_CODE;
++    padt.hdr->sid  = ses->sp.sa_addr.pppoe.sid;
++    
++    send_disc(ses,&padt);
++    ses->sp.sa_addr.pppoe.sid = 0 ;
++    ses->state = PADO_CODE;
++    return 0;
++    
++}
++
++
++/*************************************************************************
++ *
++ * Make a connection -- behaviour depends on callbacks specified in "ses"
++ *
++ *************************************************************************/
++int session_connect(struct session *ses)
++{
++    
++    int pkt_size=0;
++    int ret_pkt_size=0;
++    struct pppoe_tag *tags = NULL;
++    struct pppoe_packet *p_out=NULL;
++    struct pppoe_packet rcv_packet;
++    int ret;
++    
++    
++    if(ses->init_disc){
++	ret = (*ses->init_disc)(ses, NULL, &p_out);
++	if( ret != 0 ) return ret;
++    }
++    
++    /* main discovery loop */
++    
++    
++    while(ses->retransmits < ses->retries || ses->retries==-1 ){
++	
++	fd_set in;
++	struct timeval tv;
++	FD_ZERO(&in);
++	
++	FD_SET(disc_sock,&in);
++	
++	if(ses->retransmits>=0){
++	    ++ses->retransmits;
++	    tv.tv_sec = 1 << ses->retransmits;
++	    tv.tv_usec = 0;
++	    ret = select(disc_sock+1, &in, NULL, NULL, &tv);
++	}else{
++	    ret = select(disc_sock+1, &in, NULL, NULL, NULL);
++	}
++	
++	if( ret == 0 ){
++	    if( DEB_DISC ){
++		poe_dbglog(ses, "Re-sending ...");
++	    }
++	    
++	    if( ses->timeout ){
++		ret = (*ses->timeout)(ses, NULL, &p_out);
++		if( ret != 0 )
++		    return ret;
++		
++	    }else if(p_out){
++		send_disc(ses,p_out);
++	    }
++	    continue;
++	}
++	
++	
++	ret = recv_disc(ses, &rcv_packet);
++	
++	/* Should differentiate between system errors and
++	   bad packets and the like... */
++	if( ret < 0 && errno != EINTR){
++	    
++	    return -1;
++	}
++	
++	
++	
++
++	switch (rcv_packet.hdr->code) {
++	    
++	case PADI_CODE:
++	{
++	    if(ses->rcv_padi){
++		ret = (*ses->rcv_padi)(ses,&rcv_packet,&p_out);
++		
++		if( ret != 0){
++		    return ret;
++		}
++	    }
++	    break;
++	}
++	
++	case PADO_CODE:		/* wait for PADO */
++	{
++	    if(ses->rcv_pado){
++		ret = (*ses->rcv_pado)(ses,&rcv_packet,&p_out);
++		
++		if( ret != 0){
++		    return ret;
++		}
++	    }
++	    break;
++	}
++	
++	case PADR_CODE:
++	{
++	    if(ses->rcv_padr){
++		ret = (*ses->rcv_padr)(ses,&rcv_packet,&p_out);
++		
++		if( ret != 0){
++		    return ret;
++		}
++	    }
++	    break;
++	}
++	
++	case PADS_CODE:
++	{
++	    if(ses->rcv_pads){
++		ret = (*ses->rcv_pads)(ses,&rcv_packet,&p_out);
++		
++		if( ret != 0){
++		    return ret;
++		}
++	    }
++	    break;
++	}
++	
++	case PADT_CODE:
++	{
++	    if( rcv_packet.hdr->sid != ses->sp.sa_addr.pppoe.sid ){
++		--ses->retransmits;
++		continue;
++	    }
++	    if(ses->rcv_padt){
++		ret = (*ses->rcv_padt)(ses,&rcv_packet,&p_out);
++		
++		if( ret != 0){
++		    return ret;
++		}
++	    }else{
++		poe_error (ses,"connection terminated");
++		return (-1);
++	    }
++	    break;
++	}
++	default:
++	    poe_error(ses,"invalid packet %P",&rcv_packet);
++	    return (-1);
++	}
++    }
++    return (0);
++}
++
++
++/*************************************************************************
++ *
++ * Register an ethernet address as a client of relaying services.
++ *
++ *************************************************************************/
++int add_client(char *addr)
++{
++    struct pppoe_con* pc = (struct pppoe_con*)malloc(sizeof(struct pppoe_con));
++    int ret;
++    if(!pc)
++	return -ENOMEM;
++    
++    memset(pc, 0 , sizeof(struct pppoe_con));
++    
++    memcpy(pc->client,addr, ETH_ALEN);
++    memcpy(pc->key, addr, ETH_ALEN);
++    
++    pc->key_len = ETH_ALEN;
++    
++    if( (ret=store_con(pc)) < 0 ){
++	free(pc);
++    }
++    return ret;
++    
++}
++
++struct pppoe_tag *make_filter_tag(short type, short length, char* data){
++    struct pppoe_tag *pt = 
++	(struct pppoe_tag* )malloc( sizeof(struct pppoe_tag) + length );
++
++    if(pt == NULL) return NULL;
++
++    pt->tag_len=htons(length);
++    pt->tag_type=type;
++
++    if(length>0 && data){
++	memcpy( pt+1, data, length);
++    }
++    return pt;
++}
+diff -r -N -u ppp-2.4.0.orig/pppd/plugins/pppoe/pppd_utils.c ppp-2.4.0/pppd/plugins/pppoe/pppd_utils.c
+--- ppp-2.4.0.orig/pppd/plugins/pppoe/pppd_utils.c	Wed Dec 31 19:00:00 1969
++++ ppp-2.4.0/pppd/plugins/pppoe/pppd_utils.c	Sun Aug  6 11:39:28 2000
+@@ -0,0 +1,162 @@
++/* PPPoE support library "libpppoe"
++ *
++ * Copyright 2000 Michal Ostrowski <mostrows@styx.uwaterloo.ca>,
++ *		  Jamal Hadi Salim <hadi@cyberus.ca>
++ *
++ *  This program is free software; you can redistribute it and/or
++ *  modify it under the terms of the GNU General Public License
++ *  as published by the Free Software Foundation; either version
++ *  2 of the License, or (at your option) any later version.
++ */
++#include "pppoe.h"
++
++/*
++ *
++ */
++int build_ppp_opts(char *args[],struct session *ses)
++{
++    char buf[256];
++    int retval=0,i=0;
++    
++    memset(buf,0,256);
++    
++/* pppds path */
++    if ( NULL != ses->filt->pppd){
++	args[0]=(char *)malloc(strlen(ses->filt->pppd));
++        strcpy (args[0],ses->filt->pppd);
++    } else {
++	args[0]=(char *)malloc(strlen(_PATH_PPPD));
++        strcpy (args[0],_PATH_PPPD);
++    }
++    
++/*  long device name */
++    snprintf(buf, 256,"%02x:%02x:%02x:%02x:%02x:%02x/%04x/%s",
++	     ses->remote.sll_addr[0],
++	     ses->remote.sll_addr[1],
++	     ses->remote.sll_addr[2],
++	     ses->remote.sll_addr[3],
++	     ses->remote.sll_addr[4],
++	     ses->remote.sll_addr[5],
++	     ses->sp.sa_addr.pppoe.sid,
++	     ses->name);
++    args[1]=(char *)malloc(strlen(buf));
++    strcpy(args[1],buf);
++    
++    i=2;
++    
++/* override options file */
++    if (NULL != ses->filt->fname ) {
++	
++	if (!ses->filt->peermode) {
++	    args[i]=(char *)malloc(strlen("file"));
++	    strcpy (args[i],"file");
++	    i++;
++	    args[i]=(char *)malloc(strlen(ses->filt->fname)+1);
++	    strcpy (args[i],ses->filt->fname);
++	    i++;
++	} else{ /* peermode */
++	    args[i]=(char *)malloc(strlen("call"));
++	    strcpy (args[i],"call");
++	    i++;
++	    args[i]=(char *)malloc(strlen(ses->filt->fname)+1);
++	    strcpy (args[i],ses->filt->fname);
++	    i++;
++	}
++    }
++    
++/* user requested for a specific name */
++    if (NULL != ses->filt->ntag) {
++	if ( NULL != ses->filt->ntag->tag_data) {
++	    args[i]=(char *)malloc(strlen("pppoe_ac_name"));
++	    strcpy(args[i],"pppoe_ac_name");
++	    i++;
++	    args[i]=(char *)malloc(ntohs(ses->filt->ntag->tag_len));
++	    strcpy(args[i],ses->filt->ntag->tag_data);
++	    i++;
++	}
++    }
++/* user requested for a specific service name */
++    if (NULL != ses->filt->stag) {
++	if ( NULL != ses->filt->stag->tag_data) {
++	    args[i]=(char *)malloc(strlen("pppoe_srv_name"));
++	    strcpy(args[i],"pppoe_srv_name");
++	    i++;
++	    args[i]=(char *)malloc(ntohs(ses->filt->stag->tag_len));
++	    strcpy(args[i],ses->filt->stag->tag_data);
++	    i++;
++	}
++    }
++    
++/*
++ */
++    if (ses->opt_daemonize) {
++	args[i]=(char *)malloc(strlen("nodetach"));
++	strcpy(args[i],"nodetach");
++	i++;
++    }
++    
++    args[i]=NULL;
++    {
++	int j;
++	poe_info(ses,"calling pppd with %d args\n",i);
++	j=i;
++	for (i=0; i<j,NULL !=args[i]; i++) {
++	    poe_info(ses," <%d: %s > \n",i,args[i]);
++	}
++    }
++    return retval;
++}
++
++
++/*
++ *
++ */
++int ppp_connect (struct session *ses)
++{
++    int ret,pid;
++    char *args[32];
++    
++    
++    poe_info(ses,"calling ses_connect\n");
++    do{
++	ret = session_connect(ses);
++    }while(ret == 0);
++
++    if (ret > 0 )
++	if (ses->np == 1 && ret == 1)
++	    return ses->np; /* -G */
++    if (ses->np == 2)
++	return ses->np; /* -H */
++
++    if( ret <= 0){
++	return ret;
++    }
++    
++    poe_info(ses,"DONE calling ses_connect np is %d \n",ses->np);
++    
++    
++    pid = fork ();
++    if (pid < 0) {
++	poe_error (ses,"unable to fork() for pppd: %m");
++	poe_die (-1);
++    }
++    
++    
++    if(!pid) {
++	poe_info(ses,"calling build_ppp_opts\n");
++	if (0> build_ppp_opts(args,ses)) {
++	    poe_error(ses,"ppp_connect: failed to build ppp_opts\n");
++	    return -1;
++	}
++	execvp(args[0],args);
++	poe_info (ses," child got killed");
++    } else if( ses->type == SESSION_CLIENT) {
++	if (!ses->opt_daemonize)
++	    return 1;
++	pause();
++	poe_info (ses," OK we got killed");
++	return -1;
++    }
++    return 1;
++}
++
+diff -r -N -u ppp-2.4.0.orig/pppd/plugins/pppoe/pppoe.c ppp-2.4.0/pppd/plugins/pppoe/pppoe.c
+--- ppp-2.4.0.orig/pppd/plugins/pppoe/pppoe.c	Wed Dec 31 19:00:00 1969
++++ ppp-2.4.0/pppd/plugins/pppoe/pppoe.c	Thu Oct 12 16:56:23 2000
+@@ -0,0 +1,385 @@
++/* pppoe.c - pppd plugin to implement PPPoE protocol.
++ *
++ * Copyright 2000 Michal Ostrowski <mostrows@styx.uwaterloo.ca>,
++ *		  Jamal Hadi Salim <hadi@cyberus.ca>
++ * Borrows heavily from the PPPoATM plugin by Mitchell Blank Jr., 
++ * which is based in part on work from Jens Axboe and Paul Mackerras.
++ *
++ *  This program is free software; you can redistribute it and/or
++ *  modify it under the terms of the GNU General Public License
++ *  as published by the Free Software Foundation; either version
++ *  2 of the License, or (at your option) any later version.
++ */
++
++#include <net/if.h>
++#include <string.h>
++#include <sys/ioctl.h>
++#include <sys/types.h>
++#include <sys/socket.h>
++#include <unistd.h>
++#include <errno.h>
++#include <sys/stat.h>
++#include "pppoe.h"
++
++#if _linux_
++extern int new_style_driver;    /* From sys-linux.c */
++#include <net/ethernet.h>
++#include <linux/if_pppox.h>
++#else
++#error this module meant for use with linux only at this time
++#endif
++
++
++#include "pppd.h"
++#include "fsm.h"
++#include "lcp.h"
++#include "ipcp.h"
++#include "ccp.h"
++#include "pathnames.h"
++
++#define PPPOE_MTU	1492
++extern int kill_link;
++static char *bad_options[] = {
++    "noaccomp", 
++    "-ac",
++    "default-asyncmap", 
++    "-am", 
++    "asyncmap", 
++    "-as", 
++    "escape",
++    "receive-all",
++    "crtscts", 
++    "-crtscts", 
++    "nocrtscts",
++    "cdtrcts", 
++    "nocdtrcts",
++    "xonxoff",
++    "modem", 
++    "local", 
++    "sync",
++    "deflate",
++    "nodeflate",
++    "vj",
++    "novj",
++    "nobsdcomp",
++    "bsdcomp",
++    "-bsdcomp",
++    NULL 
++};
++
++bool	pppoe_server=0;
++char	*pppoe_srv_name=NULL;
++char	*pppoe_ac_name=NULL;
++char    *hostuniq = NULL;
++int     retries = 0;
++static option_t pppoe_options[] = {
++    { "pppoe_srv_name", o_string, &pppoe_srv_name,
++      "PPPoE service name"},
++    { "pppoe_ac_name", o_string, &pppoe_ac_name,
++      "PPPoE access concentrator name"},
++    { "pppoe_hostuniq", o_string, &hostuniq,
++      "PPPoE client uniq hostid "},
++    { "pppoe_retransmit", o_int, &retries,
++      "PPPoE client number of retransmit tries"},
++    { "pppoe_server", o_bool, &pppoe_server,
++      "PPPoE listen for incoming requests",1},
++    { NULL }
++};
++
++
++
++struct session *ses = NULL;
++static int connect_pppoe_ses(void)
++{
++    int i,err=-1;
++    
++#if 0
++    ses->np=1;  /* jamal debug the discovery portion */
++#endif
++    strlcpy(ppp_devnam, devnam, sizeof(ppp_devnam));
++
++    err= session_connect ( ses );
++    
++    if(err < 0){
++	poe_fatal(ses,"Failed to negotiate PPPoE connection: %d %m",errno,errno);
++    }
++    
++    
++    poe_info(ses,"Connecting PPPoE socket: %E %04x %s %p",
++	     ses->sp.sa_addr.pppoe.remote,
++	     ses->sp.sa_addr.pppoe.sid,
++	     ses->sp.sa_addr.pppoe.dev,ses);
++    
++    err = connect(ses->fd, (struct sockaddr*)&ses->sp,
++		  sizeof(struct sockaddr_pppox));
++    
++    
++    if( err < 0 ){
++	poe_fatal(ses,"Failed to connect PPPoE socket: %d %m",errno,errno);
++	return err;
++    }
++#if 0
++    if (ses->np)
++     	fatal("discovery complete\n");
++#endif
++    /* Once the logging is fixed, print a message here indicating
++       connection parameters */
++    
++    return ses->fd;
++}
++
++static void disconnect_pppoe_ses(void)
++{
++    int ret;
++    warn("Doing disconnect");
++    session_disconnect(ses);
++    ses->sp.sa_addr.pppoe.sid = 0;
++    ret = connect(ses->fd, (struct sockaddr*)&ses->sp,
++	    sizeof(struct sockaddr_pppox));
++    
++}
++
++
++static int setspeed_pppoe(const char *cp)
++{
++    return 0;
++}
++
++static int init_device_pppoe(void)
++{
++    struct filter *filt;
++    unsigned int size=0;
++    ses=(void *)malloc(sizeof(struct session));
++    if(!ses){
++	fatal("No memory for new PPPoE session");
++    }
++    memset(ses,0,sizeof(struct session));
++    
++    if ((ses->filt=malloc(sizeof(struct filter))) == NULL) {
++	poe_error (ses,"failed to malloc for Filter ");
++	poe_die (-1);
++    }
++    
++    filt=ses->filt;  /* makes the code more readable */
++    memset(filt,0,sizeof(struct filter));
++    
++    if (pppoe_ac_name !=NULL) {
++	if (strlen (pppoe_ac_name) > 255) {
++	    poe_error (ses," AC name too long (maximum allowed 256 chars)");
++	    poe_die(-1);
++	}
++	ses->filt->ntag = make_filter_tag(PTT_AC_NAME,
++					  strlen(pppoe_ac_name),
++					  pppoe_ac_name);
++
++	if ( ses->filt->ntag== NULL) {
++	    poe_error (ses,"failed to malloc for AC name");
++	    poe_die(-1);
++	}
++
++    }
++
++
++    if (pppoe_srv_name !=NULL) {
++	if (strlen (pppoe_srv_name) > 255) {
++	    poe_error (ses," Service name too long 
++	                (maximum allowed 256 chars)");
++	    poe_die(-1);
++	}
++	ses->filt->stag = make_filter_tag(PTT_SRV_NAME,
++					  strlen(pppoe_srv_name),
++					  pppoe_srv_name);
++	if ( ses->filt->stag == NULL) {
++	    poe_error (ses,"failed to malloc for service name");
++	    poe_die(-1);
++	}
++    } 
++    
++    if (hostuniq) {
++	ses->filt->htag = make_filter_tag(PTT_HOST_UNIQ,
++					  strlen(hostuniq),
++					  hostuniq);
++	if ( ses->filt->htag == NULL) {
++	    poe_error (ses,"failed to malloc for Uniq Host Id ");
++	    poe_die(-1);
++	}
++    }
++    
++    if (retries) {
++	ses->retries=retries;
++    }
++    
++    memcpy( ses->name, devnam, IFNAMSIZ);
++    ses->opt_debug=1;
++    if( pppoe_server == 1 ){
++	return srv_init_ses(ses,devnam);
++    }
++    
++    return client_init_ses(ses,devnam);
++}
++
++static void options_for_pppoe()
++{
++    int ret;
++    if(!options_for_dev(_PATH_ETHOPT, devnam))
++	exit(EXIT_OPTION_ERROR);
++    
++}
++
++
++
++static void send_config_pppoe(int unit, 
++			      int mtu, 
++			      u_int32_t asyncmap, 
++			      int pcomp, 
++			      int accomp)
++{
++    int sock;
++    struct ifreq ifr;
++    
++    if (mtu > PPPOE_MTU)
++	warn("Couldn't increase MTU to %d", mtu);
++    sock = socket(AF_INET, SOCK_DGRAM, 0);
++    if (sock < 0)
++	fatal("Couldn't create IP socket: %m");
++    strlcpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
++    ifr.ifr_mtu = mtu;
++    if (ioctl(sock, SIOCSIFMTU, (caddr_t) &ifr) < 0)
++	fatal("ioctl(SIOCSIFMTU): %m");
++    (void) close (sock);
++}
++
++
++static void recv_config_pppoe(int unit, 
++			      int mru, 
++			      u_int32_t asyncmap, 
++			      int pcomp, 
++			      int accomp)
++{
++    if (mru > PPPOE_MTU)
++	error("Couldn't increase MRU to %d", mru);
++}
++
++static void set_xaccm_pppoe(int unit, ext_accm accm)
++{
++    /* NOTHING */
++}
++
++/* Check is cp is a valid ethernet device  
++ * return either 1 if "cp" is a reasonable thing to name a device 
++ * or die. 
++ * Note that we don't actually open the device at this point 
++ * We do need to fill in: 
++ *   devnam: a string representation of the device 
++ *   devstat: a stat structure of the device.  In this case 
++ *     we're not opening a device, so we just make sure 
++ *     to set up S_ISCHR(devstat.st_mode) != 1, so we 
++ *     don't get confused that we're on stdin. 
++ */ 
++
++int (*old_setdevname_hook)(const char* cp) = NULL;
++int setdevname_pppoe(const char *cp)
++{
++    int ret;
++    char dev[IFNAMSIZ+1];
++    int addr[ETH_ALEN];
++    int sid;
++    
++    char **a; 
++
++    for (a = bad_options; *a != NULL; a++)  
++	if (strcmp(*a, cp) == 0)  
++	    warn("PPPoE: option '%s' is disabled", cp); 
++
++    ret =sscanf(cp, FMTSTRING(IFNAMSIZ),addr, addr+1, addr+2, 
++		addr+3, addr+4, addr+5,&sid,dev);
++    if( ret != 8 ){
++
++	ret = get_sockaddr_ll(cp,NULL);
++        if (ret < 0)	
++	    fatal("PPPoE: Cannot create PF_PACKET socket for PPPoE discovery\n");
++	if (ret == 1) 
++	    strncpy(devnam, cp, sizeof(devnam));
++    }else{
++	/* long form parsed */
++	ret = get_sockaddr_ll(dev,NULL);
++        if (ret < 0)	
++	    fatal("PPPoE: Cannot create PF_PACKET socket for PPPoE discovery\n");
++	
++	strncpy(devnam, cp, sizeof(devnam));
++	ret = 1;
++    }
++
++
++    if( ret == 1 && device_check_hook!=options_for_pppoe ){
++
++	devstat.st_mode = S_IFSOCK;
++
++	device_init_hook = init_device_pppoe;
++
++	/* Dev name is valid, set up all the other hooks */
++	setspeed_hook = setspeed_pppoe;
++	device_check_hook = options_for_pppoe;
++	device_check_options_hook = NULL;
++	connect_device_hook = connect_pppoe_ses;
++	disconnect_device_hook = disconnect_pppoe_ses;	
++
++	send_config_hook = send_config_pppoe;
++	recv_config_hook = recv_config_pppoe;
++	set_xaccm_hook = set_xaccm_pppoe;
++	
++	{
++	    char **a;
++	    for (a = bad_options; *a != NULL; a++)
++		remove_option(*a);
++	}
++	modem = 0;
++	
++	lcp_allowoptions[0].neg_accompression = 0;
++	lcp_wantoptions[0].neg_accompression = 0;
++	
++	lcp_allowoptions[0].neg_asyncmap = 0;
++	lcp_wantoptions[0].neg_asyncmap = 0;
++	
++	lcp_allowoptions[0].neg_pcompression = 0;
++	lcp_wantoptions[0].neg_pcompression = 0;
++	
++	ccp_allowoptions[0].deflate = 0 ;
++	ccp_wantoptions[0].deflate = 0 ;
++	
++	ipcp_allowoptions[0].neg_vj=0;
++	ipcp_wantoptions[0].neg_vj=0;
++	
++	ccp_allowoptions[0].bsd_compress = 0;
++	ccp_wantoptions[0].bsd_compress = 0;
++
++	init_device_pppoe();
++    }else if(old_setdevname_hook != NULL){
++	    ret = old_setdevname_hook(cp);
++    }    
++    return ret;
++}
++
++
++
++void plugin_init(void)
++{
++/*
++  fatal("PPPoE plugin loading...");
++*/
++    
++#if _linux_
++    if (!new_style_driver)
++	fatal("Kernel doesn't support ppp_generic needed for PPPoE");
++#else
++    fatal("No PPPoE support on this OS");
++#endif
++    
++    old_setdevname_hook = setdevname_hook;
++    setdevname_hook = setdevname_pppoe;
++    add_options(pppoe_options);
++    
++    info("PPPoE Plugin Initialized");
++}
++
++
+diff -r -N -u ppp-2.4.0.orig/pppd/plugins/pppoe/pppoe.h ppp-2.4.0/pppd/plugins/pppoe/pppoe.h
+--- ppp-2.4.0.orig/pppd/plugins/pppoe/pppoe.h	Wed Dec 31 19:00:00 1969
++++ ppp-2.4.0/pppd/plugins/pppoe/pppoe.h	Sun Aug  6 11:39:28 2000
+@@ -0,0 +1,273 @@
++/* PPPoE support library "libpppoe"
++ *
++ * Copyright 2000 Michal Ostrowski <mostrows@styx.uwaterloo.ca>,
++ *		  Jamal Hadi Salim <hadi@cyberus.ca>
++ *
++ *  This program is free software; you can redistribute it and/or
++ *  modify it under the terms of the GNU General Public License
++ *  as published by the Free Software Foundation; either version
++ *  2 of the License, or (at your option) any later version.
++ */
++
++#ifndef PPPOE_H
++#define PPPOE_H	1
++#include <stdio.h>		/* stdio               */
++#include <stdlib.h>		/* strtoul(), realloc() */
++#include <unistd.h>		/* STDIN_FILENO,exec    */
++#include <string.h>		/* memcpy()             */
++#include <errno.h>		/* errno                */
++#include <signal.h>
++#include <getopt.h>
++#include <stdarg.h>
++#include <syslog.h>
++#include <paths.h>
++
++#include <sys/types.h>		/* socket types         */
++#include <asm/types.h>
++#include <sys/time.h>
++#include <sys/wait.h>
++#include <sys/fcntl.h>
++#include <sys/ioctl.h>		/* ioctl()              */
++#include <sys/select.h>
++#include <sys/socket.h>		/* socket()             */
++#include <net/if.h>		/* ifreq struct         */
++#include <net/if_arp.h>
++#include <netinet/in.h>
++
++#if __GLIBC__ >= 2 && __GLIBC_MINOR >= 1
++#include <netpacket/packet.h>
++#include <net/ethernet.h>
++#else
++#include <asm/types.h>
++#include <linux/if_packet.h>
++#include <linux/if_ether.h>
++#endif
++
++
++#include <asm/byteorder.h>
++
++/*
++  jamal: we really have to change this
++  to make it compatible to the 2.2 and
++  2.3 kernel
++*/
++
++#include <linux/if_pppox.h>
++
++
++#define CONNECTED 1
++#define DISCONNECTED 0
++
++#ifndef _PATH_PPPD
++#define _PATH_PPPD "/usr/sbin/pppd"
++#endif
++
++#ifndef LOG_PPPOE
++#define LOG_PPPOE LOG_DAEMON
++#endif
++
++
++#define VERSION_MAJOR 0
++#define VERSION_MINOR 4
++#define VERSION_DATE 991120
++
++/* Bigger than the biggest ethernet packet we'll ever see, in bytes */
++#define MAX_PACKET      2000
++
++/* references: RFC 2516 */
++/* ETHER_TYPE fields for PPPoE */
++
++#define ETH_P_PPPOE_DISC 0x8863	/* discovery stage */
++#define ETH_P_PPPOE_SESS 0x8864
++
++/* ethernet broadcast address */
++#define MAC_BCAST_ADDR "\xff\xff\xff\xff\xff\xff"
++
++/* Format for parsing long device-name */
++#define _STR(x) #x
++#define FMTSTRING(size) "%x:%x:%x:%x:%x:%x/%x/%" _STR(size) "s"
++
++/* maximum payload length */
++#define MAX_PAYLOAD 1484
++
++
++
++/* PPPoE tag types */
++#define MAX_TAGS		11
++
++
++/* PPPoE packet; includes Ethernet headers and such */
++struct pppoe_packet{
++	struct sockaddr_ll addr;
++	struct pppoe_tag *tags[MAX_TAGS];
++	struct pppoe_hdr *hdr;
++	char buf[MAX_PAYLOAD];		/* buffer in which tags are held */
++};
++/* Defines meaning of each "tags" element */
++
++#define TAG_SRV_NAME	0
++#define TAG_AC_NAME	1
++#define TAG_HOST_UNIQ	2
++#define TAG_AC_COOKIE	3
++#define TAG_VENDOR 	4
++#define TAG_RELAY_SID	5
++#define TAG_SRV_ERR     6
++#define TAG_SYS_ERR  	7
++#define TAG_GEN_ERR  	8
++#define TAG_EOL		9
++
++static int tag_map[] = { PTT_SRV_NAME,
++			 PTT_AC_NAME,
++			 PTT_HOST_UNIQ,
++			 PTT_AC_COOKIE,
++			 PTT_VENDOR,
++			 PTT_RELAY_SID,
++			 PTT_SRV_ERR,
++			 PTT_SYS_ERR,
++			 PTT_GEN_ERR,
++			 PTT_EOL
++};
++
++
++/* Debug flags */
++int DEB_DISC,DEB_DISC2;
++/*
++  #define DEB_DISC		(opt_debug & 0x0002)
++  #define DEB_DISC2		(opt_debug & 0x0004)
++*/
++#define MAX_FNAME		256
++
++
++struct session;
++
++/* return <0 --> fatal error; abor
++   return =0 --> ok, proceed
++   return >0 --> ok, qui
++*/
++typedef int (*packet_cb_t)(struct session* ses,
++			   struct pppoe_packet *p_in,
++			   struct pppoe_packet **p_out);
++
++/* various override filter tags */
++struct filter {
++	struct pppoe_tag *stag;  /* service name tag override */
++	struct pppoe_tag *ntag;  /*AC name override */
++	struct pppoe_tag *htag;  /* hostuniq override */
++	int num_restart;
++	int peermode;
++	char *fname;
++	char *pppd;
++} __attribute__ ((packed));
++
++
++struct pppoe_tag *make_filter_tag(short type, short length, char* data);
++
++/* Session type definitions */
++#define SESSION_CLIENT	0
++#define SESSION_SERVER	1
++#define SESSION_RELAY	2
++
++struct session {
++	
++	/* Administrative */
++	int type;
++	int opt_debug;
++	int detached;
++	int np;
++	int log_to_fd;
++	int ifindex;			/* index of device */
++	char name[IFNAMSIZ];		/*dev name */
++	struct pppoe_packet curr_pkt;
++	
++	packet_cb_t init_disc;
++	packet_cb_t rcv_pado;
++	packet_cb_t rcv_padi;
++	packet_cb_t rcv_pads;
++	packet_cb_t rcv_padr;
++	packet_cb_t rcv_padt;
++	packet_cb_t timeout;
++	
++	
++	/* Generic */
++	struct filter *filt;
++	struct sockaddr_ll local;
++	struct sockaddr_ll remote;
++	struct sockaddr_pppox sp;
++	int fd;				/* fd of PPPoE socket */
++	
++	
++	/* For client */
++	int retransmits;		/* Number of retransmission performed
++					   if < 0 , retransmissions disabled */
++	int retries;
++	int state;
++	int opt_daemonize;
++	
++	/* For server */
++	int fork;
++	
++	/* For forwarding */
++	int fwd_sock;
++	char fwd_name[IFNAMSIZ];	/* Name of device to forward to */
++} __attribute__ ((packed));
++
++/*
++  retransmit retries for the PADR and PADI packets
++  during discovery
++*/
++int PADR_ret;
++int PADI_ret;
++
++int log_to_fd;
++int ctrl_fd;
++int opt_debug;
++int opt_daemonize;
++
++
++/* Structure for keeping track of connection relays */
++struct pppoe_con{
++	struct pppoe_con *next;
++	int id;
++	int connected;
++	int  cl_sock;
++	int  sv_sock;
++	int ref_count;
++	char client[ETH_ALEN];
++	char server[ETH_ALEN];
++	char key_len;
++	char key[32];
++};
++
++/* Functions exported from utils.c. */
++
++/* Functions exported from pppoehash.c */
++struct pppoe_con *get_con(int len, char *key);
++int store_con(struct pppoe_con *pc);
++struct pppoe_con *delete_con(unsigned long len, char *key);
++
++/* exported by lib.c */
++
++extern int init_lib();
++
++extern int get_sockaddr_ll(const char *devnam,struct sockaddr_ll* sll);
++
++extern int client_init_ses (struct session *ses, char* devnam);
++extern int relay_init_ses(struct session *ses, char* from, char* to);
++extern int srv_init_ses(struct session *ses, char* from);
++extern int session_connect(struct session *ses);
++extern int session_disconnect(struct session*ses);
++
++extern int verify_packet( struct session *ses, struct pppoe_packet *p);
++
++extern void copy_tag(struct pppoe_packet *dest, struct pppoe_tag *pt);
++extern struct pppoe_tag *get_tag(struct pppoe_hdr *ph, u_int16_t idx);
++extern int send_disc(struct session *ses, struct pppoe_packet *p);
++
++
++extern int add_client(char *addr);
++
++/* Make connections (including spawning pppd) as server/client */
++extern ppp_connect(struct session *ses);
++
++
++#endif
+Binary files ppp-2.4.0.orig/pppd/plugins/pppoe/pppoe.so and ppp-2.4.0/pppd/plugins/pppoe/pppoe.so differ
+diff -r -N -u ppp-2.4.0.orig/pppd/plugins/pppoe/pppoe_client.c ppp-2.4.0/pppd/plugins/pppoe/pppoe_client.c
+--- ppp-2.4.0.orig/pppd/plugins/pppoe/pppoe_client.c	Wed Dec 31 19:00:00 1969
++++ ppp-2.4.0/pppd/plugins/pppoe/pppoe_client.c	Sun Aug  6 11:39:28 2000
+@@ -0,0 +1,232 @@
++/* PPPoE support library "libpppoe"
++ *
++ * Copyright 2000 Michal Ostrowski <mostrows@styx.uwaterloo.ca>,
++ *		  Jamal Hadi Salim <hadi@cyberus.ca>
++ *
++ *  This program is free software; you can redistribute it and/or
++ *  modify it under the terms of the GNU General Public License
++ *  as published by the Free Software Foundation; either version
++ *  2 of the License, or (at your option) any later version.
++ */
++
++#include "pppoe.h"
++
++
++
++static int std_rcv_pado(struct session* ses,
++			struct pppoe_packet *p_in,
++			struct pppoe_packet **p_out){
++    
++    if( verify_packet(ses, p_in) < 0)
++	return -1;
++    
++    if(ses->state != PADO_CODE ){
++	poe_error(ses,"Unexpected packet: %P",p_in);
++	return 0;
++    }
++    
++    
++    if (DEB_DISC2) {
++	poe_dbglog (ses,"PADO received: %P", p_in);
++    }
++    
++    memcpy(&ses->remote, &p_in->addr, sizeof(struct sockaddr_ll));
++    memcpy( &ses->curr_pkt.addr, &ses->remote , sizeof(struct sockaddr_ll));
++    
++    ses->curr_pkt.hdr->code = PADR_CODE;
++    
++    /* The HOST_UNIQ has been verified already... there's no "if" about this */
++    /* if(ses->filt->htag) */
++    copy_tag(&ses->curr_pkt,get_tag(p_in->hdr,PTT_HOST_UNIQ));	
++    
++    if (ses->filt->ntag) {
++    	ses->curr_pkt.tags[TAG_AC_NAME]=NULL;
++    }
++//    copy_tag(&ses->curr_pkt,get_tag(p_in->hdr,PTT_AC_NAME));
++    
++    if(ses->filt->stag) {
++    	ses->curr_pkt.tags[TAG_SRV_NAME]=NULL;
++    }
++    copy_tag(&ses->curr_pkt,get_tag(p_in->hdr,PTT_SRV_NAME));
++    
++    copy_tag(&ses->curr_pkt,get_tag(p_in->hdr,PTT_AC_COOKIE));
++    copy_tag(&ses->curr_pkt,get_tag(p_in->hdr,PTT_RELAY_SID));
++    
++    ses->state = PADS_CODE;
++    
++    ses->retransmits = 0;
++    
++    send_disc(ses, &ses->curr_pkt);
++    (*p_out) = &ses->curr_pkt;
++    
++    if (ses->np)
++	return 1;
++    
++    return 0;
++}
++
++static int std_init_disc(struct session* ses,
++			 struct pppoe_packet *p_in,
++			 struct pppoe_packet **p_out){
++    
++    memset(&ses->curr_pkt,0, sizeof(struct pppoe_packet));
++
++    
++    /* Check if already connected */
++    if( ses->state != PADO_CODE ){
++	return 1;
++    }
++    
++    ses->curr_pkt.hdr = (struct pppoe_hdr*) ses->curr_pkt.buf;
++    ses->curr_pkt.hdr->ver  = 1;
++    ses->curr_pkt.hdr->type = 1;
++    ses->curr_pkt.hdr->code = PADI_CODE;
++    
++    
++    memcpy( &ses->curr_pkt.addr, &ses->remote , sizeof(struct sockaddr_ll));
++    
++    poe_info (ses,"Sending PADI");
++    if (DEB_DISC)
++	poe_dbglog (ses,"Sending PADI");
++    
++    ses->retransmits = 0 ;
++    
++    if(ses->filt->ntag) {
++	ses->curr_pkt.tags[TAG_AC_NAME]=ses->filt->ntag;
++	poe_info(ses,"overriding AC name\n");
++    }
++    
++    if(ses->filt->stag)
++	ses->curr_pkt.tags[TAG_SRV_NAME]=ses->filt->stag;
++    
++    if(ses->filt->htag)
++	ses->curr_pkt.tags[TAG_HOST_UNIQ]=ses->filt->htag;
++    
++    send_disc(ses, &ses->curr_pkt);
++    (*p_out)= &ses->curr_pkt;
++    return 0;
++}
++
++
++static int std_rcv_pads(struct session* ses,
++			struct pppoe_packet *p_in,
++			struct pppoe_packet **p_out){
++    if( verify_packet(ses, p_in) < 0)
++	return -1;
++    
++    if (DEB_DISC)
++	poe_dbglog (ses,"Got connection: %x",
++		    ntohs(p_in->hdr->sid));
++    poe_info (ses,"Got connection: %x", ntohs(p_in->hdr->sid));
++    
++    ses->sp.sa_family = AF_PPPOX;
++    ses->sp.sa_protocol = PX_PROTO_OE;
++    ses->sp.sa_addr.pppoe.sid = p_in->hdr->sid;
++    memcpy(ses->sp.sa_addr.pppoe.dev,ses->name, IFNAMSIZ);
++    memcpy(ses->sp.sa_addr.pppoe.remote, p_in->addr.sll_addr, ETH_ALEN);
++    
++    
++    return 1;
++}
++
++static int std_rcv_padt(struct session* ses,
++			struct pppoe_packet *p_in,
++			struct pppoe_packet **p_out){
++    ses->state = PADO_CODE;
++    return 0;
++}
++
++
++extern int disc_sock;
++int client_init_ses (struct session *ses, char* devnam)
++{
++    int i=0;
++    int retval;
++    char dev[IFNAMSIZ+1];
++    int addr[ETH_ALEN];
++    int sid;
++    
++    /* do error checks here; session name etc are valid */
++//    poe_info (ses,"init_ses: creating socket");
++    
++    /* Make socket if necessary */
++    if( disc_sock < 0 ){
++	
++	disc_sock = socket(PF_PACKET, SOCK_DGRAM, 0);
++	if( disc_sock < 0 ){
++	    poe_fatal(ses,
++		      "Cannot create PF_PACKET socket for PPPoE discovery\n");
++	}
++	
++    }
++    
++    /* Check for long format */
++    retval =sscanf(devnam, FMTSTRING(IFNAMSIZ),addr, addr+1, addr+2,
++		   addr+3, addr+4, addr+5,&sid,dev);
++    if( retval != 8 ){
++	/* Verify the device name , construct ses->local */
++	retval = get_sockaddr_ll(devnam,&ses->local);
++	if (retval < 0)
++	    poe_fatal(ses, "client_init_ses: "
++		      "Cannot create PF_PACKET socket for PPPoE discovery\n");
++	
++	
++	ses->state = PADO_CODE;
++	memcpy(&ses->remote, &ses->local, sizeof(struct sockaddr_ll) );
++	
++	memset( ses->remote.sll_addr, 0xff, ETH_ALEN);
++    }else{
++	/* long form parsed */
++
++	/* Verify the device name , construct ses->local */
++	retval = get_sockaddr_ll(dev,&ses->local);
++	if (retval < 0)
++	    poe_fatal(ses,"client_init_ses(2): "
++		      "Cannot create PF_PACKET socket for PPPoE discovery\n");
++	ses->state = PADS_CODE;
++	ses->sp.sa_family = AF_PPPOX;
++	ses->sp.sa_protocol = PX_PROTO_OE;
++	ses->sp.sa_addr.pppoe.sid = sid;
++	
++	memcpy(&ses->remote, &ses->local, sizeof(struct sockaddr_ll) );
++	
++	for(; i < ETH_ALEN ; ++i ){
++	    ses->sp.sa_addr.pppoe.remote[i] = addr[i];
++	    ses->remote.sll_addr[i]=addr[i];
++	}
++	memcpy(ses->sp.sa_addr.pppoe.dev, dev, IFNAMSIZ);
++	
++	
++	
++    }
++    if( retval < 0 )
++	error("bad device name: %s",devnam);
++    
++    
++    retval = bind( disc_sock ,
++		   (struct sockaddr*)&ses->local,
++		   sizeof(struct sockaddr_ll));
++    
++    
++    if( retval < 0 ){
++	error("bind to PF_PACKET socket failed: %m");
++    }
++    
++    ses->fd = socket(AF_PPPOX,SOCK_STREAM,PX_PROTO_OE);
++    if(ses->fd < 0)
++    {
++	poe_fatal(ses,"Failed to create PPPoE socket: %m");
++    }
++    
++    
++    ses->init_disc = std_init_disc;
++    ses->rcv_pado  = std_rcv_pado;
++    ses->rcv_pads  = std_rcv_pads;
++    ses->rcv_padt  = std_rcv_padt;
++    
++    /* this should be filter overridable */
++    ses->retries = 10;
++    
++    return ses->fd;
++}
++
+diff -r -N -u ppp-2.4.0.orig/pppd/plugins/pppoe/pppoe_relay.c ppp-2.4.0/pppd/plugins/pppoe/pppoe_relay.c
+--- ppp-2.4.0.orig/pppd/plugins/pppoe/pppoe_relay.c	Wed Dec 31 19:00:00 1969
++++ ppp-2.4.0/pppd/plugins/pppoe/pppoe_relay.c	Sun Aug  6 11:39:28 2000
+@@ -0,0 +1,260 @@
++/* PPPoE support library "libpppoe"
++ *
++ * Copyright 2000 Michal Ostrowski <mostrows@styx.uwaterloo.ca>,
++ *		  Jamal Hadi Salim <hadi@cyberus.ca>
++ *
++ *  This program is free software; you can redistribute it and/or
++ *  modify it under the terms of the GNU General Public License
++ *  as published by the Free Software Foundation; either version
++ *  2 of the License, or (at your option) any later version.
++ */
++
++#include "pppoe.h"
++
++static int relay_init_disc(struct session* ses,
++			   struct pppoe_packet *p_in,
++			   struct pppoe_packet **p_out){
++
++    ses->state = 0;
++    ses->retransmits = -1 ;
++    ses->retries = -1;
++
++    (*p_out) = NULL;
++    return 0;
++}
++
++static int pcid=0;
++static int relay_rcv_padi(struct session* ses,
++			  struct pppoe_packet *p_in,
++			  struct pppoe_packet **p_out){
++    char tag_buf[32];
++    struct pppoe_con *newpc = NULL;
++    struct pppoe_tag *tag = (struct pppoe_tag *) tag_buf;
++
++
++    tag->tag_type = PTT_RELAY_SID;
++    tag->tag_len  = htons(ETH_ALEN + sizeof(struct session *));
++
++    memcpy(tag->tag_data, p_in->addr.sll_addr, ETH_ALEN);
++    memcpy(tag->tag_data + ETH_ALEN, &ses, sizeof(struct session *));
++
++    if(! p_in->tags[TAG_RELAY_SID] ){
++	copy_tag(p_in, tag);
++    }
++
++
++    poe_dbglog(ses, "Recv'd PADI: %P",p_in);
++    poe_dbglog(ses, "Recv'd packet: %P",p_in);
++    newpc = get_con( ntohs(tag->tag_len), tag->tag_data );
++    if(!newpc){
++	
++	newpc = (struct pppoe_con *) malloc(sizeof(struct pppoe_con));
++	memset(newpc , 0, sizeof(struct pppoe_con));
++	
++	newpc->id = pcid++;
++	
++	newpc->key_len = ntohs(p_in->tags[TAG_RELAY_SID]->tag_len);
++	memcpy(newpc->key, p_in->tags[TAG_RELAY_SID]->tag_data, newpc->key_len);
++	memcpy(newpc->client, p_in->addr.sll_addr, ETH_ALEN);
++	
++	memcpy(newpc->server, MAC_BCAST_ADDR, ETH_ALEN);
++	
++	store_con(newpc);
++	
++    }
++
++    ++newpc->ref_count;
++
++    memset(p_in->addr.sll_addr, 0xff, ETH_ALEN);
++
++    p_in->addr.sll_ifindex = ses->remote.sll_ifindex;
++
++    send_disc(ses, p_in);
++    return 0;
++}
++
++static int relay_rcv_pkt(struct session* ses,
++			 struct pppoe_packet *p_in,
++			 struct pppoe_packet **p_out){
++    struct pppoe_con *pc;
++    char tag_buf[32];
++    struct pppoe_tag *tag = p_in->tags[TAG_RELAY_SID];
++
++    if( !tag ) return 0;
++
++    pc = get_con(ntohs(tag->tag_len),tag->tag_data);
++
++    if( !pc ) return 0;
++
++    poe_dbglog(ses, "Recv'd packet: %P",p_in);
++
++    if( memcmp(pc->client , p_in->addr.sll_addr , ETH_ALEN ) == 0 ){
++	
++	memcpy(p_in->addr.sll_addr, pc->server, ETH_ALEN);
++	p_in->addr.sll_ifindex = ses->remote.sll_ifindex;
++	
++    }else{
++	if( memcmp(pc->server, MAC_BCAST_ADDR, ETH_ALEN) == 0 ){
++	    memcpy(pc->server, p_in->addr.sll_addr, ETH_ALEN);
++	
++	}else if( memcmp(pc->server, p_in->addr.sll_addr, ETH_ALEN) !=0){
++	    return 0;
++	}
++	
++	memcpy(p_in->addr.sll_addr, pc->client, ETH_ALEN);
++	p_in->addr.sll_ifindex = ses->local.sll_ifindex;
++	
++	
++    }
++
++
++    send_disc(ses, p_in);
++    return 0;
++}
++
++static int relay_rcv_pads(struct session* ses,
++			  struct pppoe_packet *p_in,
++			  struct pppoe_packet **p_out){
++
++    struct pppoe_con *pc;
++    char tag_buf[32];
++    struct pppoe_tag *tag = p_in->tags[TAG_RELAY_SID];
++    struct sockaddr_pppox sp_cl= { AF_PPPOX, PX_PROTO_OE,
++				   { p_in->hdr->sid, {0,},{0,}}};
++
++    struct sockaddr_pppox sp_sv= { AF_PPPOX, PX_PROTO_OE,
++				   { p_in->hdr->sid, {0,},{0,}}};
++
++    int ret;
++
++
++    if( !tag ) return 0;
++
++    pc = get_con(ntohs(tag->tag_len),tag->tag_data);
++
++    if( !pc ) return 0;
++
++
++    if(!pc->connected){
++	
++	pc->sv_sock = socket( AF_PPPOX, SOCK_DGRAM, PX_PROTO_OE);
++	if( pc->sv_sock < 0){
++	    poe_fatal(ses,"Cannot open PPPoE socket: %i",errno);
++	}
++	
++	pc->cl_sock = socket( AF_PPPOX, SOCK_DGRAM, PX_PROTO_OE);
++	if( pc->cl_sock < 0){
++	    poe_fatal(ses,"Cannot open PPPoE socket: %i",errno);
++	}
++	
++	memcpy( sp_sv.sa_addr.pppoe.dev, ses->fwd_name, IFNAMSIZ);
++	memcpy( sp_sv.sa_addr.pppoe.remote, pc->server, ETH_ALEN);
++	
++	ret = connect( pc->sv_sock,
++		       (struct sockaddr*)&sp_sv,
++		       sizeof(struct sockaddr_pppox));
++	if( ret < 0){
++	    poe_fatal(ses,"Cannot connect PPPoE socket: %i",errno);
++	}
++	
++	memcpy( sp_cl.sa_addr.pppoe.dev, ses->name, IFNAMSIZ);
++	memcpy( sp_cl.sa_addr.pppoe.remote, pc->client, ETH_ALEN);
++	
++	ret = connect( pc->cl_sock,
++		       (struct sockaddr*)&sp_cl,
++		       sizeof(struct sockaddr_pppox));
++	if( ret < 0){
++	    poe_fatal(ses,"Cannot connect PPPoE socket: %i",errno);
++	}
++	
++	
++	ret = ioctl( pc->sv_sock, PPPOEIOCSFWD, &sp_cl);
++	if( ret < 0){
++	    poe_fatal(ses,"Cannot set forwarding on PPPoE socket: %i",errno);
++	}
++	
++	ret = ioctl( pc->cl_sock, PPPOEIOCSFWD, &sp_sv);
++	if( ret < 0){
++	    poe_fatal(ses,"Cannot set forwarding on PPPoE socket: %i",errno);
++	}
++	
++	pc->connected = 1;
++    }
++
++    poe_info(ses,"PPPoE relay for %E established to %E (sid=%04x)\n",
++	     pc->client,pc->server, p_in->hdr->sid);
++
++    return relay_rcv_pkt(ses,p_in,p_out);
++}
++
++
++static int relay_rcv_padt(struct session* ses,
++			  struct pppoe_packet *p_in,
++			  struct pppoe_packet **p_out){
++
++    int ret;
++    struct pppoe_con *pc;
++    char tag_buf[32];
++    struct pppoe_tag *tag = p_in->tags[TAG_RELAY_SID];
++
++    if( !tag ) return 0;
++
++    pc = get_con(ntohs(tag->tag_len),tag->tag_data);
++
++    if( !pc ) return 0;
++
++    ret = relay_rcv_pkt(ses,p_in,p_out);
++
++
++    if(pc->cl_sock>0){
++	close(pc->cl_sock);
++    }
++
++    if(pc->sv_sock>0){
++	close(pc->sv_sock);
++    }
++
++    --pc->ref_count;
++    if( pc->ref_count == 0 ){
++	delete_con(pc->key_len, pc->key);
++	
++	free(pc);
++    }
++}
++
++
++int relay_init_ses(struct session *ses, char* from, char* to)
++{
++    int retval = client_init_ses(ses, from);
++
++    if(retval<0) return retval;
++
++    ses->fwd_sock =  socket(PF_PACKET, SOCK_DGRAM, 0);
++    if( ses->fwd_sock < 0 ) {
++	poe_fatal(ses,"Cannot create PF_PACKET socket for PPPoE forwarding\n");
++    }
++
++    /* Verify the device name , construct ses->local */
++    retval = get_sockaddr_ll(to, &ses->remote);
++    if (retval < 0)
++	poe_fatal(ses,"relay_init_ses:get_sockaddr_ll failed %m");
++
++    retval = bind( ses->fwd_sock ,
++		   (struct sockaddr*)&ses->remote,
++		   sizeof(struct sockaddr_ll));
++
++    if( retval < 0 ){
++	poe_fatal(ses,"bind to PF_PACKET socket failed: %m");
++    }
++
++    memcpy(ses->fwd_name, to, IFNAMSIZ);
++    memcpy(ses->name, from, IFNAMSIZ);
++
++
++    ses->init_disc = relay_init_disc;
++    ses->rcv_padi  = relay_rcv_padi;
++    ses->rcv_pado  = relay_rcv_pkt;
++    ses->rcv_padr  = relay_rcv_pkt;
++    ses->rcv_pads  = relay_rcv_pads;
++    ses->rcv_padt  = relay_rcv_padt;
++}
+diff -r -N -u ppp-2.4.0.orig/pppd/plugins/pppoe/pppoe_server.c ppp-2.4.0/pppd/plugins/pppoe/pppoe_server.c
+--- ppp-2.4.0.orig/pppd/plugins/pppoe/pppoe_server.c	Wed Dec 31 19:00:00 1969
++++ ppp-2.4.0/pppd/plugins/pppoe/pppoe_server.c	Sun Aug  6 11:39:28 2000
+@@ -0,0 +1,143 @@
++/* PPPoE support library "libpppoe"
++ *
++ * Copyright 2000 Michal Ostrowski <mostrows@styx.uwaterloo.ca>,
++ *		  Jamal Hadi Salim <hadi@cyberus.ca>
++ *
++ *  This program is free software; you can redistribute it and/or
++ *  modify it under the terms of the GNU General Public License
++ *  as published by the Free Software Foundation; either version
++ *  2 of the License, or (at your option) any later version.
++ */
++#include "pppoe.h"
++#include <unistd.h>
++
++static unsigned int pcid=1111;
++static int srv_rcv_padi(struct session* ses, 
++			struct pppoe_packet *p_in,
++			struct pppoe_packet **p_out){
++    struct pppoe_con *newpc = NULL;
++    struct pppoe_tag *tag;
++    
++    poe_dbglog(ses,"Srv Recv'd packet: %P\n",p_in);
++    
++    
++    ses->curr_pkt.hdr = (struct pppoe_hdr*) ses->curr_pkt.buf;
++    ses->curr_pkt.hdr->ver  = 1;
++    ses->curr_pkt.hdr->type = 1;
++
++    tag = get_tag(p_in->hdr,PTT_SRV_NAME);
++
++    if(!tag )
++	return 0;
++
++    if( ntohs(tag->tag_len)==0 ){
++	ses->curr_pkt.tags[TAG_SRV_NAME] = ses->filt->stag ;
++    }else if( tag->tag_len != ses->filt->stag->tag_len
++	      || !memcmp( tag+1, ses->filt->stag, ntohs(tag->tag_len)) ){
++	return 0;
++    }else{
++	ses->curr_pkt.tags[TAG_SRV_NAME] = tag;
++    }
++
++    ses->curr_pkt.tags[ TAG_AC_NAME] = ses->filt->ntag ;
++    ses->curr_pkt.tags[ TAG_HOST_UNIQ ] = get_tag(p_in->hdr,PTT_HOST_UNIQ);
++    
++    memcpy(&ses->remote, &p_in->addr, sizeof(struct sockaddr_ll));
++    memcpy( &ses->curr_pkt.addr, &ses->remote , sizeof(struct sockaddr_ll));
++    
++    ses->curr_pkt.hdr->code =  PADO_CODE;
++    
++    
++    ses->curr_pkt.tags[ TAG_RELAY_SID ] = get_tag(p_in->hdr,PTT_RELAY_SID);
++
++    send_disc(ses, &ses->curr_pkt);
++    poe_dbglog(ses,"Srv Sent packet: %P\n",&ses->curr_pkt);
++    
++    return 0;
++}
++
++
++static int srv_rcv_padr(struct session* ses, 
++			struct pppoe_packet *p_in,
++			struct pppoe_packet **p_out){
++    struct pppoe_tag *tag;
++
++    poe_dbglog(ses,"Recv'd packet: %P\n",p_in);
++    
++
++
++    /* Run checks to ensure this packets asks for 
++       what we're willing to offer */
++
++    tag = get_tag(p_in->hdr,PTT_SRV_NAME);
++
++    if(!tag || tag->tag_len == 0 ){
++	p_in->tags[TAG_SRV_NAME] = ses->filt->stag;
++
++    }else if( tag->tag_len != ses->filt->stag->tag_len
++	     || !memcmp(tag + 1 , ses->filt->stag, ntohs(tag->tag_len)) ){
++	return 0;
++    }else{
++	p_in->tags[TAG_SRV_NAME] = tag;
++    }
++
++    tag = get_tag(p_in->hdr,PTT_AC_NAME);
++    if( !tag || tag->tag_len==0 ){
++	p_in->tags[TAG_AC_NAME] = ses->filt->ntag;
++    }else if( tag->tag_len != ses->filt->ntag->tag_len
++	  || !memcmp(tag + 1, ses->filt->ntag, ntohs(tag->tag_len)) ){
++	return 0;
++    }else{
++	p_in->tags[TAG_AC_NAME] = tag;
++    }
++
++    
++    
++    
++    pcid = ++pcid & 0x0000ffff ;
++    if(pcid == 0 ){
++	pcid = 1111;
++    }
++    
++    p_in->hdr->sid  = ntohs(pcid);
++    
++    p_in->hdr->code = PADS_CODE;
++    send_disc(ses, p_in);
++    
++    poe_dbglog(ses,"Sent packet: %P\n",p_in);
++    
++    ses->sp.sa_family = AF_PPPOX;
++    ses->sp.sa_protocol=PX_PROTO_OE;
++    ses->sp.sa_addr.pppoe.sid = p_in->hdr->sid;
++    memcpy(ses->sp.sa_addr.pppoe.dev, ses->name, IFNAMSIZ);
++    memcpy(ses->sp.sa_addr.pppoe.remote, p_in->addr.sll_addr, ETH_ALEN);
++    memcpy(&ses->remote, &p_in->addr, sizeof(struct sockaddr_ll));
++    return 1;
++}
++
++static int srv_rcv_padt(struct session* ses, 
++			struct pppoe_packet *p_in,
++			struct pppoe_packet **p_out){
++    return 0;
++}
++
++
++
++int srv_init_ses(struct session *ses, char* from)
++{
++    int retval;
++    retval = client_init_ses(ses, from);
++    ses->init_disc = NULL;
++    ses->rcv_pado  = NULL;
++    ses->rcv_pads  = NULL;
++    ses->rcv_padi  = srv_rcv_padi;
++    ses->rcv_padr  = srv_rcv_padr;
++    ses->rcv_padt  = srv_rcv_padt;
++
++    /* retries forever */
++    ses->retries   = -1;
++
++    return retval;
++}
++
++
+Binary files ppp-2.4.0.orig/pppd/plugins/pppoe/pppoed and ppp-2.4.0/pppd/plugins/pppoe/pppoed differ
+diff -r -N -u ppp-2.4.0.orig/pppd/plugins/pppoe/pppoed.c ppp-2.4.0/pppd/plugins/pppoe/pppoed.c
+--- ppp-2.4.0.orig/pppd/plugins/pppoe/pppoed.c	Wed Dec 31 19:00:00 1969
++++ ppp-2.4.0/pppd/plugins/pppoe/pppoed.c	Sun Aug  6 11:39:28 2000
+@@ -0,0 +1,283 @@
++/* PPPoE support library "libpppoe"
++ *
++ * Copyright 2000 Jamal Hadi Salim <hadi@cyberus.ca>
++ *
++ *  This program is free software; you can redistribute it and/or
++ *  modify it under the terms of the GNU General Public License
++ *  as published by the Free Software Foundation; either version
++ *  2 of the License, or (at your option) any later version.
++ */
++
++#include "pppoe.h"
++
++int detached=1;
++void
++sigproc (int src)
++{
++    int i;
++    fprintf (stderr,"Received signal %d", src);
++}
++
++void
++sigchild (int src)
++{
++    pid_t pid;
++    int status;
++    int i;
++    pid = waitpid (-1, &status, WNOHANG);
++    
++    if (!detached)
++	fprintf (stderr,"Child received signal %d PID %d, status %d", src, pid, status);
++    if (pid < 1) {
++	return;
++    }
++}
++
++void
++print_help ()
++{
++    
++    fprintf (stdout,"\npppoe version %d.%d build %d", VERSION_MAJOR, VERSION_MINOR,
++	     VERSION_DATE);
++    fprintf (stdout,"\nrecognized options are:");
++    fprintf (stdout,"\n -I <interface> : overrides the default interface of eth0");
++    fprintf (stdout,"\n -S : starts pppoed in server mode");
++    fprintf (stdout,"\n -R <num_retries>: forces pppoed to be restarted num_retries");
++    fprintf (stdout,"\n                   should the other end be detected to be dead.");
++    fprintf (stdout,"\n                   Needs lcp_echo. Read the INSTALL file instructions");
++    fprintf (stdout,"\n -F <filename> : specifies additional ppp options file");
++    fprintf (stdout,"\n -C <filename> : ppp options file in /etc/ppp/peers/");
++    fprintf (stdout,"\n -d <level> : sets debug level");
++    fprintf (stdout,"\n -D : prevents pppoed from detaching itself and running in the background");
++    fprintf (stdout,"\n -P <path to pppd> : selects a different pppd. Defaults to " _PATH_PPPD);
++    fprintf (stdout,"\n -A <AC name> to select a specific AC by name");
++    fprintf (stdout,"\n -E <AC service name> to select a specific AC service by name");
++    fprintf (stdout,"\n -G Do service discovery only");
++    fprintf (stdout,"\n -H Do service discovery and connection (no pppd)\n");
++}
++
++
++int 
++get_args (int argc, char **argv,struct session *sess)
++{
++    struct filter *filt;
++    struct host_tag *tg;
++    int opt;
++    
++
++    sess->opt_debug = 0;
++    DEB_DISC=0;
++    DEB_DISC2=0;
++    sess->log_to_fd = 1;
++    sess->np = 0;
++    sess->opt_daemonize = 0;
++    
++    sess->log_to_fd = fileno (stdout);
++    
++/* defaults to eth0 */
++    strcpy (sess->name, "eth0");
++    
++    
++    if ((sess->filt=malloc(sizeof(struct filter))) == NULL) {
++        poe_error (sess,"failed to malloc for Filter ");
++        poe_die (-1);
++    }
++    
++    filt=sess->filt;  /* makes the code more readable */
++    memset(filt,0,sizeof(struct filter));
++    
++    filt->num_restart=1;
++    
++/* set default filters; move this to routine */
++    /* parse options */
++    
++    while ((opt = getopt (argc, argv, "A:C:E:d:DR:I:F:L:V:P:SN:GH")) != -1)
++	
++	switch (opt) {
++	case 'R':			/* sets number of retries */
++	    filt->num_restart = strtol (optarg, (char **) NULL, 10);
++	    filt->num_restart += 1;
++	    break;
++	case 'I':			/* sets interface */
++	    if (strlen (optarg) >= IFNAMSIZ) {
++		poe_error (sess,"interface name cannot exceed %d characters", IFNAMSIZ - 1);
++		return (-1);
++	    }
++	    strncpy (sess->name, optarg, strlen(optarg)+1);
++	    break;
++	case 'C':			/* name of the file in /etc/ppp/peers */
++	    if (NULL != filt->fname) {
++		poe_error (sess,"-F can not be used with -C");
++		return (-1);
++	    }
++	    if (strlen(optarg) > MAX_FNAME) {
++		poe_error (sess,"file name cannot exceed %d characters", MAX_FNAME - 1);
++		return (-1);
++	    }
++	    filt->fname=malloc(strlen(optarg));
++	    strncpy (filt->fname, optarg, strlen(optarg));
++	    filt->peermode=1;
++	    break;
++	case 'F':			/* sets the options file */
++	    if (NULL != filt->fname) {
++		poe_error (sess,"-F can not be used with -C");
++		return (-1);
++	    }
++	    
++	    if (strlen(optarg) > MAX_FNAME) {
++		poe_error (sess,"file name cannot exceed %d characters", MAX_FNAME - 1);
++		return (-1);
++	    }
++	    filt->fname=malloc(strlen(optarg)+1);
++	    strncpy (filt->fname, optarg, strlen(optarg)+1);
++	    
++	    poe_info (sess,"selected %s as filename\n",filt->fname);
++	    break;
++	case 'D':			/* don't daemonize */
++	    sess->opt_daemonize = 1;
++	    detached=0;
++	    break;
++	case 'd':			/* debug level */
++	    sess->opt_debug = strtol (optarg, (char **) NULL, 10);
++	    if (sess->opt_debug & 0x0002)
++		DEB_DISC=1;
++	    if (sess->opt_debug & 0x0004)
++		DEB_DISC2=1;
++	    break;
++	case 'P':			/* sets the pppd binary */
++	    if (strlen(optarg) > MAX_FNAME) {
++		poe_error (sess,"pppd binary cant exceed %d characters", MAX_FNAME - 1);
++		return (-1);
++	    }
++	    filt->pppd=malloc(strlen(optarg));
++	    strncpy (filt->pppd, optarg, strlen(optarg));
++	    break;
++	case 'H':			
++	    sess->np = 2;
++	    break;
++	case 'G':			
++	    sess->np = 1;
++	    break;
++	case 'V':			/* version */
++	    fprintf (stdout,"pppoe version %d.%d build %d", VERSION_MAJOR,
++		     VERSION_MINOR, VERSION_DATE);
++	    return (0);
++	case 'S':			/* server mode */
++	    sess->type = SESSION_SERVER;
++	    break;
++	case 'A':			/* AC override */
++	    poe_info (sess,"AC name override to %s", optarg);
++	    if (strlen (optarg) > 255) {
++		poe_error (sess," AC name too long 
++			  (maximum allowed 256 chars)");
++		poe_die(-1);
++	    }
++	    if ((sess->filt->ntag= malloc (sizeof (struct pppoe_tag) + 
++					   strlen (optarg)))== NULL) {
++		poe_error (sess,"failed to malloc for AC name");
++		poe_die(-1);
++	    }
++	    sess->filt->ntag->tag_len=htons(strlen(optarg));
++	    sess->filt->ntag->tag_type=PTT_AC_NAME;
++	    poe_error (sess," pppoe_ac_name: AC name Override %p\n",
++		       sess->filt->ntag);
++	    strcpy(sess->filt->ntag->tag_data,optarg);
++	    break;
++	case 'E':			/* AC service name override */
++	    poe_info (sess,"AC service name override to %s", optarg);
++	    if (strlen (optarg) > 255) {
++		poe_error (sess," Service name too long 
++	          (maximum allowed 256 chars)");
++		poe_die(-1);
++	    }
++	    
++	    if ((filt->stag = malloc (strlen (optarg) + sizeof (struct pppoe_tag))) == NULL) {
++		poe_error (sess,"failed to malloc for service name: %m");
++		return (-1);
++	    }
++	    
++	    filt->stag->tag_len = htons (strlen (optarg));
++	    filt->stag->tag_type = PTT_SRV_NAME;
++	    strcpy ((char *) (filt->stag->tag_data), optarg);
++	    break;
++	default:
++	    poe_error (sess,"Unknown option '%c'", optopt);
++	    print_help ();
++	    return (-1);
++	}
++    
++    
++    return (1);
++    
++}
++
++
++int main(int argc, char** argv){
++    int ret;
++    struct filter *filt;
++    struct session *ses = (struct session *)malloc(sizeof(struct session));
++    char buf[256];
++    ses=(void *)malloc(sizeof(struct session));
++    
++    if(!ses){
++	return -1;
++    }
++    memset(ses,0,sizeof(struct session));
++    
++    
++    
++    openlog ("pppoed", LOG_PID | LOG_NDELAY, LOG_PPPOE);
++    setlogmask (LOG_UPTO (ses->opt_debug ? LOG_DEBUG : LOG_INFO));
++    
++    
++    if ((get_args (argc,(char **) argv,ses)) <1)
++        poe_die(-1);
++    
++    filt=ses->filt;  /* makes the code more readable */
++    
++    if (!ses->np) {
++	poe_create_pidfile (ses);
++//	signal (SIGINT, &sigproc);
++//	signal (SIGTERM, &sigproc);
++	signal (SIGCHLD, &sigchild);
++    }
++    
++    if(ses->type == SESSION_CLIENT){
++
++	poe_info(ses,"calling client_init_ses\n");
++	ret = client_init_ses(ses,ses->name);
++    
++	if( ret < 0 ){
++	    return -1;
++	}
++
++	while (ses->filt->num_restart > 0)
++	{
++	    poe_info(ses,"Restart number %d ",ses->filt->num_restart);
++	    ppp_connect (ses);
++	    ses->filt->num_restart--;
++	}
++
++    }else if( ses->type == SESSION_SERVER ){
++
++	poe_info(ses,"calling srv_init_ses\n");
++	ret = srv_init_ses(ses,ses->name);
++
++	if( ret < 0 ){
++	    return -1;
++	}
++
++	ret = 1;
++	while(ret>=0)
++	    ret = ppp_connect(ses);
++    
++    }
++
++    
++    
++    
++    poe_info(ses,"ppp_connect came back! %d",ret);
++    
++    exit(0);
++    
++}
+Binary files ppp-2.4.0.orig/pppd/plugins/pppoe/pppoefwd and ppp-2.4.0/pppd/plugins/pppoe/pppoefwd differ
+diff -r -N -u ppp-2.4.0.orig/pppd/plugins/pppoe/pppoefwd.c ppp-2.4.0/pppd/plugins/pppoe/pppoefwd.c
+--- ppp-2.4.0.orig/pppd/plugins/pppoe/pppoefwd.c	Wed Dec 31 19:00:00 1969
++++ ppp-2.4.0/pppd/plugins/pppoe/pppoefwd.c	Sun Aug  6 11:39:28 2000
+@@ -0,0 +1,61 @@
++#include "pppoe.h"
++
++void fatal (char *fmt, ...)
++{
++    va_list pvar;
++
++#if defined(__STDC__)
++    va_start(pvar, fmt);
++#else
++    char *fmt;
++    va_start(pvar);
++    fmt = va_arg(pvar, char *);
++#endif
++
++    vprintf( fmt, pvar);
++    va_end(pvar);
++
++    exit(1);			/* as promised */
++}
++
++void info (char *fmt, ...)
++{
++    va_list pvar;
++
++#if defined(__STDC__)
++    va_start(pvar, fmt);
++#else
++    char *fmt;
++    va_start(pvar);
++    fmt = va_arg(pvar, char *);
++#endif
++
++    vprintf( fmt, pvar);
++    va_end(pvar);
++
++}
++
++
++int main(int argc, char** argv){
++    int ret;
++    struct session *ses = (struct session *)malloc(sizeof(struct session));
++
++    if(!ses) return -1;
++
++    ret = relay_init_ses(ses,argv[1],argv[2]);
++    
++    if( ret < 0 ){
++	return -1;
++    }
++
++    ses->log_to_fd = 1;
++    ses->opt_debug=1;
++    while(1)
++	ret = session_connect(ses);
++    
++    
++    
++    return ret;
++
++
++}
+diff -r -N -u ppp-2.4.0.orig/pppd/plugins/pppoe/pppoehash.c ppp-2.4.0/pppd/plugins/pppoe/pppoehash.c
+--- ppp-2.4.0.orig/pppd/plugins/pppoe/pppoehash.c	Wed Dec 31 19:00:00 1969
++++ ppp-2.4.0/pppd/plugins/pppoe/pppoehash.c	Sun Aug  6 11:39:28 2000
+@@ -0,0 +1,91 @@
++/* PPPoE support library "libpppoe"
++ *
++ * Copyright 2000 Michal Ostrowski <mostrows@styx.uwaterloo.ca>,
++ *		  Jamal Hadi Salim <hadi@cyberus.ca>
++ *
++ *  This program is free software; you can redistribute it and/or
++ *  modify it under the terms of the GNU General Public License
++ *  as published by the Free Software Foundation; either version
++ *  2 of the License, or (at your option) any later version.
++ */
++#include "pppoe.h"
++
++
++#define PPPOE_HASH_SIZE 16
++
++
++static inline int keycmp(char *a, char *b, int x, int y){
++    return x==y && !memcmp(a,b,x);
++}
++
++static int hash_con(int key_len, char* key)
++{
++    int i = 0;
++    char hash[sizeof(int)]={0,};
++
++    for (i = 0; i < key_len ; ++i)
++	hash[i% sizeof(int)] = hash[i%sizeof(int)] ^ key[i];
++
++    i = (*((int*)hash)) ;
++    i &= PPPOE_HASH_SIZE - 1;
++
++    return i;
++}	
++
++static struct pppoe_con *con_ht[PPPOE_HASH_SIZE] = { 0, };
++
++struct pppoe_con *get_con(int len, char *key)
++{
++    int hash = hash_con(len, key);
++    struct pppoe_con *ret;
++
++    ret = con_ht[hash];
++
++    while (ret && !keycmp(ret->key,key, ret->key_len, len))
++	ret = ret->next;
++
++    return ret;
++}
++
++int store_con(struct pppoe_con *pc)
++{
++    int hash = hash_con(pc->key_len, pc->key);
++    struct pppoe_con *ret;
++
++    ret = con_ht[hash];
++    while (ret) {
++	if (!keycmp(ret->key, pc->key, ret->key_len, pc->key_len))
++	    return -EALREADY;
++	
++	ret = ret->next;
++    }
++
++    if (!ret) {
++	pc->next = con_ht[hash];
++	con_ht[hash] = pc;
++    }
++
++    return 0;
++}
++
++struct pppoe_con *delete_con(unsigned long len, char *key)
++{
++    int hash = hash_con(len, key);
++    struct pppoe_con *ret, **src;
++
++    ret = con_ht[hash];
++    src = &con_ht[hash];
++
++    while (ret) {
++	if (keycmp(ret->key,key, ret->key_len, len)) {
++	    *src = ret->next;
++	    break;
++	}
++	
++	src = &ret->next;
++	ret = ret->next;
++    }
++
++    return ret;
++}
++
+diff -r -N -u ppp-2.4.0.orig/pppd/plugins/pppoe/utils.c ppp-2.4.0/pppd/plugins/pppoe/utils.c
+--- ppp-2.4.0.orig/pppd/plugins/pppoe/utils.c	Wed Dec 31 19:00:00 1969
++++ ppp-2.4.0/pppd/plugins/pppoe/utils.c	Sun Aug  6 11:39:28 2000
+@@ -0,0 +1,667 @@
++
++/*
++ * utils.c - various utility functions used in pppoed.
++ *
++ * mostly stolen from ppp-2.3.10 by Marc Boucher <marc@mbsi.ca>
++ *
++ * Feb 18/2000 Made fully re-entrant (JHS)
++ *
++ * Copyright (c) 1999 The Australian National University.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms are permitted
++ * provided that the above copyright poe_notice and this paragraph are
++ * duplicated in all such forms and that any documentation,
++ * advertising materials, and other materials related to such
++ * distribution and use acknowledge that the software was developed
++ * by the Australian National University.  The name of the University
++ * may not be used to endorse or promote products derived from this
++ * software without specific prior written permission.
++ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
++ * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
++ */
++
++#include <stdio.h>		/* stdio               */
++#include <stdlib.h>		/* strtoul(), realloc() */
++#include <string.h>		/* memcpy()             */
++#include <unistd.h>		/* STDIN_FILENO,exec    */
++#include <errno.h>		/* errno                */
++
++#include <sys/time.h>
++
++#include <net/ethernet.h>
++#include <netinet/in.h>
++
++#include <stdarg.h>
++#include <ctype.h>
++#include <syslog.h>
++#include <limits.h>
++#include <paths.h>
++
++#include "pppoe.h"
++
++static char pidfilename[PATH_MAX];	/* name of pid file */
++
++/*
++static int detached = 0;
++   log_to_fd = -1;
++ */
++
++static void vslp_printer (void *, char *,...);
++static void format_packet (struct pppoe_packet *, int, void (*)(void *, char *,...), void *);
++static void format_tag (struct pppoe_tag *, void (*)(void *, char *,...), void *);
++struct buffer_poe_info {
++  char *ptr;
++  int len;
++};
++
++void poe_die (int status);
++
++
++/*
++ * vpoe_slprintf - like vsprintf, except we
++ * also specify the length of the output buffer, and we handle
++ * %r (recursive format), %m (poe_error message), %v (visible string),
++ * %q (quoted string), %t (current time) and %E (Ether address) formats.
++ * Doesn't do floating-point formats.
++ * Returns the number of chars put into buf.
++ */
++#define OUTCHAR(c)	(buflen > 0? (--buflen, *buf++ = (c)): 0)
++
++int
++vpoe_slprintf (char *buf, int buflen, char *fmt, va_list args)
++{
++  int c, i, n;
++  int width, prec, fillch;
++  int base, len, neg, quoted;
++  unsigned long val = 0;
++  char *str, *f, *buf0;
++  unsigned char *p;
++  char num[32];
++  time_t t;
++  static char hexchars[] = "0123456789abcdef";
++  struct buffer_poe_info bufpoe_info;
++
++  buf0 = buf;
++  --buflen;
++  while (buflen > 0) {
++    for (f = fmt; *f != '%' && *f != 0; ++f);
++    if (f > fmt) {
++      len = f - fmt;
++      if (len > buflen)
++	len = buflen;
++      memcpy (buf, fmt, len);
++      buf += len;
++      buflen -= len;
++      fmt = f;
++    }
++    if (*fmt == 0)
++      break;
++    c = *++fmt;
++    width = 0;
++    prec = -1;
++    fillch = ' ';
++    if (c == '0') {
++      fillch = '0';
++      c = *++fmt;
++    }
++    if (c == '*') {
++      width = va_arg (args, int);
++      c = *++fmt;
++    }
++    else {
++      while (isdigit (c)) {
++	width = width * 10 + c - '0';
++	c = *++fmt;
++      }
++    }
++    if (c == '.') {
++      c = *++fmt;
++      if (c == '*') {
++	prec = va_arg (args, int);
++	c = *++fmt;
++      }
++      else {
++	prec = 0;
++	while (isdigit (c)) {
++	  prec = prec * 10 + c - '0';
++	  c = *++fmt;
++	}
++      }
++    }
++    str = 0;
++    base = 0;
++    neg = 0;
++    ++fmt;
++    switch (c) {
++    case 'd':
++      i = va_arg (args, int);
++      if (i < 0) {
++	neg = 1;
++	val = -i;
++      }
++      else
++	val = i;
++      base = 10;
++      break;
++    case 'o':
++      val = va_arg (args, unsigned int);
++      base = 8;
++      break;
++    case 'x':
++    case 'X':
++      val = va_arg (args, unsigned int);
++      base = 16;
++      break;
++    case 'p':
++      val = (unsigned long) va_arg (args, void *);
++      base = 16;
++      neg = 2;
++      break;
++    case 's':
++      str = va_arg (args, char *);
++      break;
++    case 'c':
++      num[0] = va_arg (args, int);
++      num[1] = 0;
++      str = num;
++      break;
++    case 'm':
++      str = strerror (errno);
++      break;
++    case 'E':
++      p = va_arg (args, unsigned char *);
++      for (n = ETH_ALEN; n > 0; --n) {
++	c = *p++;
++	OUTCHAR (hexchars[(c >> 4) & 0xf]);
++	OUTCHAR (hexchars[c & 0xf]);
++	if (n > 1)
++	  OUTCHAR (':');
++      }
++      continue;
++    case 'r':
++      f = va_arg (args, char *);
++#ifndef __powerpc__
++      n = vpoe_slprintf (buf, buflen + 1, f, va_arg (args, va_list));
++#else
++      /* On the powerpc, a va_list is an array of 1 structure */
++      n = vpoe_slprintf (buf, buflen + 1, f, va_arg (args, void *));
++#endif
++      buf += n;
++      buflen -= n;
++      continue;
++    case 't':
++      time (&t);
++      str = ctime (&t);
++      str += 4;			/* chop off the day name */
++      str[15] = 0;		/* chop off year and newline */
++      break;
++    case 'v':			/* "visible" string */
++    case 'q':			/* quoted string */
++      quoted = c == 'q';
++      p = va_arg (args, unsigned char *);
++      if (fillch == '0' && prec >= 0) {
++	n = prec;
++      }
++      else {
++	n = strlen ((char *) p);
++	if (prec >= 0 && n > prec)
++	  n = prec;
++      }
++      while (n > 0 && buflen > 0) {
++	c = *p++;
++	--n;
++	if (!quoted && c >= 0x80) {
++	  OUTCHAR ('M');
++	  OUTCHAR ('-');
++	  c -= 0x80;
++	}
++	if (quoted && (c == '"' || c == '\\'))
++	  OUTCHAR ('\\');
++	if (c < 0x20 || (0x7f <= c && c < 0xa0)) {
++	  if (quoted) {
++	    OUTCHAR ('\\');
++	    switch (c) {
++	    case '\t':
++	      OUTCHAR ('t');
++	      break;
++	    case '\n':
++	      OUTCHAR ('n');
++	      break;
++	    case '\b':
++	      OUTCHAR ('b');
++	      break;
++	    case '\f':
++	      OUTCHAR ('f');
++	      break;
++	    default:
++	      OUTCHAR ('x');
++	      OUTCHAR (hexchars[c >> 4]);
++	      OUTCHAR (hexchars[c & 0xf]);
++	    }
++	  }
++	  else {
++	    if (c == '\t')
++	      OUTCHAR (c);
++	    else {
++	      OUTCHAR ('^');
++	      OUTCHAR (c ^ 0x40);
++	    }
++	  }
++	}
++	else
++	  OUTCHAR (c);
++      }
++      continue;
++    case 'P':			/* print PPPoE packet */
++      bufpoe_info.ptr = buf;
++      bufpoe_info.len = buflen + 1;
++      p = va_arg (args, unsigned char *);
++      n = va_arg (args, int);
++      format_packet ((struct pppoe_packet *) p, n, vslp_printer, &bufpoe_info);
++      buf = bufpoe_info.ptr;
++      buflen = bufpoe_info.len - 1;
++      continue;
++    case 'T':			/* print PPPoE tag */
++      bufpoe_info.ptr = buf;
++      bufpoe_info.len = buflen + 1;
++      p = va_arg (args, unsigned char *);
++      format_tag ((struct pppoe_tag *) p, vslp_printer, &bufpoe_info);
++      buf = bufpoe_info.ptr;
++      buflen = bufpoe_info.len - 1;
++      continue;
++    case 'B':
++      p = va_arg (args, unsigned char *);
++      for (n = prec; n > 0; --n) {
++	c = *p++;
++	if (fillch == ' ')
++	  OUTCHAR (' ');
++	OUTCHAR (hexchars[(c >> 4) & 0xf]);
++	OUTCHAR (hexchars[c & 0xf]);
++      }
++      continue;
++    default:
++      *buf++ = '%';
++      if (c != '%')
++	--fmt;			/* so %z outputs %z etc. */
++      --buflen;
++      continue;
++    }
++    if (base != 0) {
++      str = num + sizeof (num);
++      *--str = 0;
++      while (str > num + neg) {
++	*--str = hexchars[val % base];
++	val = val / base;
++	if (--prec <= 0 && val == 0)
++	  break;
++      }
++      switch (neg) {
++      case 1:
++	*--str = '-';
++	break;
++      case 2:
++	*--str = 'x';
++	*--str = '0';
++	break;
++      }
++      len = num + sizeof (num) - 1 - str;
++    }
++    else {
++      len = strlen (str);
++      if (prec >= 0 && len > prec)
++	len = prec;
++    }
++    if (width > 0) {
++      if (width > buflen)
++	width = buflen;
++      if ((n = width - len) > 0) {
++	buflen -= n;
++	for (; n > 0; --n)
++	  *buf++ = fillch;
++      }
++    }
++    if (len > buflen)
++      len = buflen;
++    memcpy (buf, str, len);
++    buf += len;
++    buflen -= len;
++  }
++  *buf = 0;
++  return buf - buf0;
++}
++
++/*
++ * vslp_printer - used in processing a %P format
++ */
++static void
++vslp_printer (void *arg, char *fmt,...)
++{
++  int n;
++  va_list pvar;
++  struct buffer_poe_info *bi;
++
++  va_start (pvar, fmt);
++
++  bi = (struct buffer_poe_info *) arg;
++  n = vpoe_slprintf (bi->ptr, bi->len, fmt, pvar);
++  va_end (pvar);
++
++  bi->ptr += n;
++  bi->len -= n;
++}
++
++/*
++ * format_packet - make a readable representation of a packet,
++ * calling `printer(arg, format, ...)' to output it.
++ */
++static void
++format_packet (struct pppoe_packet *p,
++	       int len,
++	       void (*printer) (void *, char *,...),
++	       void *arg)
++{
++  struct pppoe_tag *t;
++
++  printer (arg, "Ether addr: %E\n", p->addr.sll_addr);
++
++  switch ((unsigned) ntohs (p->addr.sll_protocol)) {
++  case ETH_P_PPPOE_DISC:
++    printer (arg, " (PPPOE Discovery)\n");
++    break;
++  case ETH_P_PPPOE_SESS:
++    printer (arg, " (PPPOE Session)\n");
++    break;
++  }
++
++  printer (arg, " PPPoE hdr: ver=0x%01x type=0x%01x code=0x%02x "
++	   "sid=0x%04x length=0x%04x ", (unsigned) p->hdr->ver,
++	   (unsigned) p->hdr->type, (unsigned) p->hdr->code, (unsigned) p->hdr->sid,
++	   (unsigned) ntohs (p->hdr->length));
++
++  switch (p->hdr->code) {
++  case PADI_CODE:
++    printer (arg, "(PADI)\n");
++    break;
++  case PADO_CODE:
++    printer (arg, "(PADO)\n");
++    break;
++  case PADR_CODE:
++    printer (arg, "(PADR)\n");
++    break;
++  case PADS_CODE:
++    printer (arg, "(PADS)\n");
++    break;
++  case PADT_CODE:
++    printer (arg, "(PADT)\n");
++    break;
++  default:
++    printer (arg, "(Unknown)\n");
++  }
++
++#if 0
++  if (ntohs (p->addr.sll_protocol) != ETH_P_PPPOE_DISC) {
++      len = ntohs (p->length);
++
++    if (len > 64)
++      printer (arg, " %.64B ...", (p + 1));
++    else
++      printer (arg, " %.*B", len, p + 1);
++
++    return;
++  }
++#endif
++
++  for(t = (struct pppoe_tag *) (&p->hdr->tag);
++      (t < (struct pppoe_tag *) ((char *) (&p->hdr->tag) + ntohs (p->hdr->length))) &&
++	  ntohs (t->tag_type) != PTT_EOL;
++      t = (struct pppoe_tag *) ((char *) (t + 1) + ntohs (t->tag_len))) {
++      format_tag (t, printer, arg);
++  }
++}
++
++/*
++ * format_tag - make a readable representation of a tag,
++ * calling `printer(arg, format, ...)' to output it.
++ */
++static void
++format_tag (struct pppoe_tag *t,
++	       void (*printer) (void *, char *,...),
++	       void *arg)
++{
++    printer (arg, " PPPoE tag: type=%04x length=%04x ",
++	     ntohs (t->tag_type), ntohs (t->tag_len));
++    switch ( t->tag_type ) {
++    case PTT_EOL:
++      printer (arg, "(End of list)");
++      break;
++    case PTT_SRV_NAME:
++      printer (arg, "(Service name)");
++      break;
++    case PTT_AC_NAME:
++      printer (arg, "(AC Name)");
++      break;
++    case PTT_HOST_UNIQ:
++      printer (arg, "(Host Uniq)");
++      break;
++    case PTT_AC_COOKIE:
++      printer (arg, "(AC Cookie)");
++      break;
++    case PTT_VENDOR:
++      printer (arg, "(Vendor Specific)");
++      break;
++    case PTT_RELAY_SID:
++      printer (arg, "(Relay Session ID)");
++      break;
++    case PTT_SRV_ERR:
++      printer (arg, "(Service Name Error)");
++      break;
++    case PTT_SYS_ERR:
++      printer (arg, "(AC System Error)");
++      break;
++    case PTT_GEN_ERR:
++      printer (arg, "(Generic Error)");
++      break;
++    default:
++      printer (arg, "(Unknown)");
++    }
++    if (ntohs (t->tag_len) > 0)
++      switch ( t->tag_type ) {
++      case PTT_SRV_NAME:
++      case PTT_AC_NAME:
++      case PTT_SRV_ERR:
++      case PTT_SYS_ERR:
++      case PTT_GEN_ERR:	/* ascii data */
++	{
++	  char *buf;
++	  buf = malloc (ntohs (t->tag_len) + 1);
++	  memset (buf, 0, ntohs (t->tag_len) + 1);
++	  strncpy (buf, (char *) (t + 1), ntohs (t->tag_len));
++//	  buf[ntohs (t->tag_len)] = '\0';
++	  printer (arg, " data (UTF-8): %s", buf);
++	  free (buf);
++	  break;
++	}
++
++      case PTT_HOST_UNIQ:
++      case PTT_AC_COOKIE:
++      case PTT_RELAY_SID:
++	printer (arg, " data (bin): %.*B", ntohs (t->tag_len), (char *) (t + 1));
++	break;
++
++      default:
++	printer (arg, " unrecognized data");
++      }
++}
++
++/*
++ * poe_logit - does the hard work for poe_fatal et al.
++ */
++static void
++poe_logit (struct session *ses,int level, char *fmt, va_list args)
++{
++  int n;
++  char buf[256];
++
++  n = vpoe_slprintf (buf, sizeof (buf), fmt, args);
++  syslog (level, "%s", buf);
++  if (log_to_fd >= 0 && (level != LOG_DEBUG || ses->opt_debug)) {
++    if (buf[n - 1] != '\n')
++      buf[n++] = '\n';
++    if (write (log_to_fd, buf, n) != n)
++      log_to_fd = -1;
++  }
++}
++
++/*
++ * poe_fatal - log an poe_error message and poe_die horribly.
++ */
++void
++poe_fatal (struct session *ses, char *fmt,...)
++{
++  va_list pvar;
++
++  va_start (pvar, fmt);
++
++  poe_logit (ses,LOG_ERR, fmt, pvar);
++  va_end (pvar);
++
++  poe_die(1);			/* as promised */
++}
++
++/*
++ * poe_error - log an poe_error message.
++ */
++void
++poe_error (struct session *ses,char *fmt,...)
++{
++  va_list pvar;
++
++  va_start (pvar, fmt);
++
++  poe_logit (ses,LOG_ERR, fmt, pvar);
++  va_end (pvar);
++}
++
++/*
++ * poe_warn - log a poe_warning message.
++ */
++void
++poe_warn (struct session *ses,char *fmt,...)
++{
++  va_list pvar;
++
++  va_start (pvar, fmt);
++
++  poe_logit (ses,LOG_WARNING, fmt, pvar);
++  va_end (pvar);
++}
++
++#if 0
++/*
++ * poe_notice - log a poe_notice-level message.
++ */
++void
++poe_notice (int log_to_fd ,char *fmt,...)
++{
++  va_list pvar;
++
++  va_start (pvar, fmt);
++
++  poe_logit (log_to_fd,LOG_NOTICE, fmt, pvar);
++  va_end (pvar);
++}
++
++#endif
++/*
++ * poe_info - log an poe_informational message.
++ */
++void
++poe_info (struct session *ses,char *fmt,...)
++{
++  va_list pvar;
++
++  va_start (pvar, fmt);
++
++  poe_logit (ses,LOG_INFO, fmt, pvar);
++  va_end (pvar);
++}
++
++/*
++ * poe_dbglog - log a debug message.
++ */
++void
++poe_dbglog (struct session *ses ,char *fmt,...)
++{
++  va_list pvar;
++
++  va_start (pvar, fmt);
++
++  poe_logit (ses,LOG_DEBUG, fmt, pvar);
++  va_end (pvar);
++}
++
++/*
++ * Create a file containing our process ID.
++ */
++void
++poe_create_pidfile (struct session *ses)
++{
++  FILE *pidfile;
++
++  sprintf (pidfilename, "%s%s.pid", _PATH_VARRUN, "pppoed");
++  if ((pidfile = fopen (pidfilename, "w")) != NULL) {
++    fprintf (pidfile, "%d\n", getpid ());
++    (void) fclose (pidfile);
++  }
++  else {
++    poe_error (ses,"Failed to create pid file %s: %m", pidfilename);
++    pidfilename[0] = 0;
++  }
++}
++
++/*
++ * detach - detach us from the controlling terminal.
++ */
++void
++poe_detach (struct session *ses)
++{
++  if (ses->detached)
++    return;
++
++  if ((daemon (0, 0)) < 0) {
++    poe_error (ses,"Couldn't detach (daemon failed: %m)");
++#if 0
++    poe_die (1);			/* or just return? */
++#endif
++  }
++  ses->detached = 1;
++  ses->log_to_fd = -1;
++  /* update pid files if they have been written already */
++  if (pidfilename[0])
++    poe_create_pidfile (ses);
++}
++
++/*
++ * cleanup - restore anything which needs to be restored before we exit
++ */
++/* ARGSUSED */
++static void
++cleanup ()
++{
++  if (pidfilename[0] != 0 && unlink (pidfilename) < 0 && errno != ENOENT)
++    syslog (LOG_INFO,"unable to delete pid file ");
++  pidfilename[0] = 0;
++}
++
++/*
++ * poe_die - clean up state and exit with the specified status.
++ */
++void
++poe_die (int status)
++{
++  cleanup ();
++  syslog (LOG_INFO, "Exit.");
++  exit (status);
++}
+diff -r -N -u ppp-2.4.0.orig/pppd/pppd.h ppp-2.4.0/pppd/pppd.h
+--- ppp-2.4.0.orig/pppd/pppd.h	Thu Jul  6 07:17:03 2000
++++ ppp-2.4.0/pppd/pppd.h	Mon Aug  7 08:49:03 2000
+@@ -175,6 +175,7 @@
+ extern char	*progname;	/* Name of this program */
+ extern int	redirect_stderr;/* Connector's stderr should go to file */
+ extern char	peer_authname[];/* Authenticated name of peer */
++extern bool     no_override;    /* don't override previously-set options */
+ extern int	privileged;	/* We were run by real-uid root */
+ extern int	need_holdoff;	/* Need holdoff period after link terminates */
+ extern char	**script_env;	/* Environment variables for scripts */
+@@ -253,6 +254,7 @@
+ extern bool	multilink;	/* enable multilink operation */
+ extern bool	noendpoint;	/* don't send or accept endpt. discrim. */
+ extern char	*bundle_name;	/* bundle name for multilink */
++extern struct stat devstat;	/* device status set in set_devname() */
+ 
+ #ifdef PPP_FILTER
+ extern struct	bpf_program pass_filter;   /* Filter for pkts to pass */
+@@ -355,13 +357,17 @@
+ void notify __P((struct notifier *, int));
+ 
+ /* Procedures exported from tty.c. */
+-void tty_init __P((void));
++int tty_init __P((void));
++int options_for_tty __P((void));
++int setspeed_tty __P((const char*));
++int setdevname_tty __P((const char*));
+ void tty_device_check __P((void));
+ void tty_check_options __P((void));
+ int  connect_tty __P((void));
+ void disconnect_tty __P((void));
+ void tty_close_fds __P((void));
+ void cleanup_tty __P((void));
++int  sys_config_tty __P((int));  /* Prepare tty for conversion to PPP */
+ 
+ /* Procedures exported from utils.c. */
+ void log_packet __P((u_char *, int, char *, int));
+@@ -448,12 +454,6 @@
+ void remove_fd __P((int));	/* Remove fd from set to wait for */
+ int  read_packet __P((u_char *)); /* Read PPP packet */
+ int  get_loop_output __P((void)); /* Read pkts from loopback */
+-void ppp_send_config __P((int, int, u_int32_t, int, int));
+-				/* Configure i/f transmit parameters */
+-void ppp_set_xaccm __P((int, ext_accm));
+-				/* Set extended transmit ACCM */
+-void ppp_recv_config __P((int, int, u_int32_t, int, int));
+-				/* Configure i/f receive parameters */
+ int  ccp_test __P((int, u_char *, int, int));
+ 				/* Test support for compression scheme */
+ void ccp_flags_set __P((int, int, int));
+@@ -513,7 +513,7 @@
+ 			    int privileged));
+ 				/* Parse options from an options file */
+ int  options_from_user __P((void)); /* Parse options from user's .ppprc */
+-int  options_for_tty __P((void)); /* Parse options from /etc/ppp/options.tty */
++int  options_for_dev __P((const char*, const char*)); /* Parse options from device specific options file */
+ int  options_from_list __P((struct wordlist *, int privileged));
+ 				/* Parse options from a wordlist */
+ int  getword __P((FILE *f, char *word, int *newlinep, char *filename));
+@@ -524,6 +524,8 @@
+ 				/* Simplified number_option for decimal ints */
+ void add_options __P((option_t *)); /* Add extra options */
+ int parse_dotted_ip __P((char *, u_int32_t *));
++int dev_set_ok __P((void));
++
+ 
+ /*
+  * This structure is used to store information about certain
+@@ -558,6 +560,25 @@
+ extern void (*ip_up_hook) __P((void));
+ extern void (*ip_down_hook) __P((void));
+ extern void (*ip_choose_hook) __P((u_int32_t *));
++
++extern int (*connect_device_hook) __P((void));
++extern void (*disconnect_device_hook) __P((void));
++extern void (*cleanup_device_hook) __P((void));
++extern int (*dev_init_hook) __P((void));
++extern void (*close_device_hook) __P((void));
++
++extern int (*device_init_hook) __P((void));
++extern void (*device_check_hook) __P((void));
++extern void (*device_check_options_hook) __P((void));
++extern int (*dev_options_hook) __P((void));
++extern int (*setspeed_hook) __P((const char*));
++extern int (*setdevname_hook) __P((const char*));
++
++
++extern void (*recv_config_hook) __P((int, int, u_int32_t, int, int));
++extern void (*send_config_hook) __P((int, int, u_int32_t, int, int));
++extern void (*set_xaccm_hook) __P((int, ext_accm));
++
+ 
+ /*
+  * Inline versions of get/put char/short/long.
+diff -r -N -u ppp-2.4.0.orig/pppd/sys-linux.c ppp-2.4.0/pppd/sys-linux.c
+--- ppp-2.4.0.orig/pppd/sys-linux.c	Wed Jul 26 00:17:12 2000
++++ ppp-2.4.0/pppd/sys-linux.c	Sun Aug  6 11:56:40 2000
+@@ -142,7 +142,7 @@
+ static int restore_term        = 0;	/* 1 => we've munged the terminal */
+ static struct termios inittermios;	/* Initial TTY termios */
+ 
+-static int new_style_driver = 0;
++int new_style_driver = 0;
+ 
+ static char loop_name[20];
+ static unsigned char inbuf[512]; /* buffer for chars read from loopback */
+@@ -186,6 +186,14 @@
+ 
+ extern u_char	inpacket_buf[];	/* borrowed from main.c */
+ 
++void disestablish_ppp_tty __P((int)); /* disconnect tty from PPP */
++
++/* 
++ * Hook definitions
++ */
++void (*disestablish_ppp_hook) __P((int)) = disestablish_ppp_tty ;
++
++
+ /*
+  * SET_SA_FAMILY - set the sa_family field of a struct sockaddr,
+  * if it exists.
+@@ -357,51 +365,65 @@
+     return (1);
+ }
+ 
++
+ /********************************************************************
+  *
+- * establish_ppp - Turn the serial port into a ppp interface.
++ * sys_config_tty - Configure device for PPP
+  */
+-
+-int establish_ppp (int tty_fd)
++int sys_config_tty( int ttyfd )
+ {
+-    int x;
+-    int fd = -1;
+-
+-/*
+- * Ensure that the tty device is in exclusive mode.
+- */
+-    if (ioctl(tty_fd, TIOCEXCL, 0) < 0) {
++    /*
++     * Ensure that the tty device is in exclusive mode.
++     */
++    if ( isatty(ttyfd) && ioctl(ttyfd, TIOCEXCL, 0) < 0) {
+ 	if ( ! ok_error ( errno ))
+ 	    warn("Couldn't make tty exclusive: %m");
+     }
+-/*
+- * Demand mode - prime the old ppp device to relinquish the unit.
+- */
+-    if (!new_style_driver && looped
+-	&& ioctl(slave_fd, PPPIOCXFERUNIT, 0) < 0) {
+-	error("ioctl(transfer ppp unit): %m");
+-	return -1;
+-    }
+-/*
+- * Set the current tty to the PPP discpline
+- */
+ 
++    /*
++     * Set the current tty to the PPP discpline
++     */
++    
+ #ifndef N_SYNC_PPP
+ #define N_SYNC_PPP 14
+ #endif
+     ppp_disc = (new_style_driver && sync_serial)? N_SYNC_PPP: N_PPP;
+-    if (ioctl(tty_fd, TIOCSETD, &ppp_disc) < 0) {
++    if (ioctl(ttyfd, TIOCSETD, &ppp_disc) < 0) {
+ 	if ( ! ok_error (errno) ) {
+ 	    error("Couldn't set tty to PPP discipline: %m");
+ 	    return -1;
+ 	}
+     }
++    
++    
++    return ttyfd;
++}
++
++/********************************************************************
++ *
++ * establish_ppp - Turn the serial port into a ppp interface.
++ */
++
++int establish_ppp (int dev_fd)
++{
++    int x;
++    int fd = -1;
++
++    /*
++     * Demand mode - prime the old ppp device to relinquish the unit.
++     */
++    if (!new_style_driver && looped
++	&& ioctl(slave_fd, PPPIOCXFERUNIT, 0) < 0) {
++	error("ioctl(transfer ppp unit): %m");
++	return -1;
++    }
++
+ 
+     if (new_style_driver) {
+ 	/* Open another instance of /dev/ppp and connect the channel to it */
+ 	int flags;
+ 
+-	if (ioctl(tty_fd, PPPIOCGCHAN, &chindex) == -1) {
++	if (ioctl(dev_fd, PPPIOCGCHAN, &chindex) == -1) {
+ 	    error("Couldn't get channel number: %m");
+ 	    goto err;
+ 	}
+@@ -445,8 +467,8 @@
+ 	/*
+ 	 * Old-style driver: find out which interface we were given.
+ 	 */
+-	set_ppp_fd (tty_fd);
+-	if (ioctl(tty_fd, PPPIOCGUNIT, &x) < 0) {	
++	set_ppp_fd (dev_fd);
++	if (ioctl(dev_fd, PPPIOCGUNIT, &x) < 0) {	
+ 	    if (ok_error (errno))
+ 		goto err;
+ 	    fatal("ioctl(PPPIOCGUNIT): %m(%d)", errno);
+@@ -459,9 +481,9 @@
+ 	/*
+ 	 * Fetch the initial file flags and reset blocking mode on the file.
+ 	 */
+-	initfdflags = fcntl(tty_fd, F_GETFL);
++	initfdflags = fcntl(dev_fd, F_GETFL);
+ 	if (initfdflags == -1 ||
+-	    fcntl(tty_fd, F_SETFL, initfdflags | O_NONBLOCK) == -1) {
++	    fcntl(dev_fd, F_SETFL, initfdflags | O_NONBLOCK) == -1) {
+ 	    if ( ! ok_error (errno))
+ 		warn("Couldn't set device to non-blocking mode: %m");
+ 	}
+@@ -474,9 +496,10 @@
+      */
+     if (!looped)
+ 	set_kdebugflag (kdebugflag);
+-
+-    set_flags(ppp_fd, get_flags(ppp_fd) & ~(SC_RCV_B7_0 | SC_RCV_B7_1 |
+-					    SC_RCV_EVNP | SC_RCV_ODDP));
++    
++    if( S_ISCHR(devstat.st_mode) )
++	set_flags(ppp_fd, get_flags(ppp_fd) & ~(SC_RCV_B7_0 | SC_RCV_B7_1 |
++						SC_RCV_EVNP | SC_RCV_ODDP));
+ 
+     SYSDEBUG ((LOG_NOTICE, "Using version %d.%d.%d of PPP driver",
+ 	    driver_version, driver_modification, driver_patch));
+@@ -486,28 +509,49 @@
+  err_close:
+     close(fd);
+  err:
+-    if (ioctl(tty_fd, TIOCSETD, &tty_disc) < 0 && !ok_error(errno))
++    if (ioctl(dev_fd, TIOCSETD, &tty_disc) < 0 && !ok_error(errno))
+ 	warn("Couldn't reset tty to normal line discipline: %m");
+     return -1;
+ }
+ 
++
++
+ /********************************************************************
+  *
+- * disestablish_ppp - Restore the serial port to normal operation.
++ * disestablish_ppp - Restore the device to normal operation.
+  * This shouldn't call die() because it's called from die().
+  */
++void disestablish_ppp(int dev_fd)
++{
++    if (!hungup) {
+ 
+-void disestablish_ppp(int tty_fd)
++	disestablish_ppp_hook(dev_fd);
++
++    }
++    initfdflags = -1;
++
++    if (new_style_driver) {
++	close(ppp_fd);
++	ppp_fd = -1;
++	if (!looped && ifunit >= 0 && ioctl(ppp_dev_fd, PPPIOCDETACH) < 0)
++	    error("Couldn't release PPP unit: %m");
++	if (!multilink)
++	    remove_fd(ppp_dev_fd);
++    }
++}
++
++
++void disestablish_ppp_tty(int tty_fd)
+ {
+     if (!hungup) {
+-/*
+- * Flush the tty output buffer so that the TIOCSETD doesn't hang.
+- */
++	/*
++	 * Flush the tty output buffer so that the TIOCSETD doesn't hang.
++	 */
+ 	if (tcflush(tty_fd, TCIOFLUSH) < 0)
+ 	    warn("tcflush failed: %m");
+-/*
+- * Restore the previous line discipline
+- */
++	/*
++	 * Restore the previous line discipline
++	 */
+ 	if (ioctl(tty_fd, TIOCSETD, &tty_disc) < 0) {
+ 	    if ( ! ok_error (errno))
+ 		error("ioctl(TIOCSETD, N_TTY): %m");
+diff -r -N -u ppp-2.4.0.orig/pppd/sys-sunos4.c ppp-2.4.0/pppd/sys-sunos4.c
+--- ppp-2.4.0.orig/pppd/sys-sunos4.c	Wed Dec 22 20:38:19 1999
++++ ppp-2.4.0/pppd/sys-sunos4.c	Sun Aug  6 11:39:28 2000
+@@ -238,6 +238,15 @@
+     return stat("/dev/ppp", &buf) >= 0;
+ }
+ 
++
++/*
++ * Do tty-specific initialization.
++ * Only tty's are supported, so defer everything to establish_ppp
++ */
++
++int sys_config_tty( int ttyfd ){};
++
++
+ /*
+  * establish_ppp - Turn the serial port into a ppp interface.
+  */
+diff -r -N -u ppp-2.4.0.orig/pppd/sys-svr4.c ppp-2.4.0/pppd/sys-svr4.c
+--- ppp-2.4.0.orig/pppd/sys-svr4.c	Thu Apr 13 06:42:06 2000
++++ ppp-2.4.0/pppd/sys-svr4.c	Sun Aug  6 11:39:28 2000
+@@ -871,6 +871,14 @@
+ }
+ 
+ /*
++ * Do tty-specific initialization.
++ * Only tty's are supported, so defer everything to establish_ppp
++ */
++
++int sys_config_tty( int ttyfd ){};
++
++
++/*
+  * establish_ppp - Turn the serial port into a ppp interface.
+  */
+ int
+diff -r -N -u ppp-2.4.0.orig/pppd/tty.c ppp-2.4.0/pppd/tty.c
+--- ppp-2.4.0.orig/pppd/tty.c	Mon Jul 24 10:58:15 2000
++++ ppp-2.4.0/pppd/tty.c	Thu Oct 12 16:53:13 2000
+@@ -46,6 +46,7 @@
+ #include <arpa/inet.h>
+ 
+ #include "pppd.h"
++#include "pathnames.h"
+ #include "fsm.h"
+ #include "lcp.h"
+ 
+@@ -159,18 +160,163 @@
+ /*
+  * tty_init - do various tty-related initializations.
+  */
+-void tty_init()
++int tty_init()
+ {
++    struct stat statbuf;
++    int fdflags;
+     add_notifier(&pidchange, maybe_relock, 0);
++
++
++    /* default holdoff to 0 if no connect script has been given */
++    if (connect_script == 0 && !holdoff_specified)
++	holdoff = 0;
++
++    if (using_pty) {
++	if (!default_device) {
++	    option_error("%s option precludes specifying device name",
++			 notty? "notty": "pty");
++	    exit(EXIT_OPTION_ERROR);
++	}
++	if (ptycommand != NULL && notty) {
++	    option_error("pty option is incompatible with notty option");
++	    exit(EXIT_OPTION_ERROR);
++	}
++	if (pty_socket != NULL && (ptycommand != NULL || notty)) {
++	    option_error("socket option is incompatible with pty and notty");
++	    exit(EXIT_OPTION_ERROR);
++	}
++	default_device = notty;
++	lockflag = 0;
++	modem = 0;
++	if (notty && log_to_fd <= 1)
++	    log_to_fd = -1;
++    } else {
++	/*
++	 * If the user has specified a device which is the same as
++	 * the one on stdin, pretend they didn't specify any.
++	 * If the device is already open read/write on stdin,
++	 * we assume we don't need to lock it, and we can open it as root.
++	 */
++	if (fstat(0, &statbuf) >= 0 && S_ISCHR(statbuf.st_mode)
++	    && statbuf.st_rdev == devstat.st_rdev) {
++	    default_device = 1;
++	    fdflags = fcntl(0, F_GETFL);
++	    if (fdflags != -1 && (fdflags & O_ACCMODE) == O_RDWR)
++		privopen = 1;
++	}
++    }
++
++
++    /*
++     * Don't send log messages to the serial port, it tends to
++     * confuse the peer. :-)
++     */
++    if (log_to_fd >= 0 && fstat(log_to_fd, &statbuf) >= 0
++	&& S_ISCHR(statbuf.st_mode) && statbuf.st_rdev == devstat.st_rdev)
++	log_to_fd = -1;
++
++
++    if (default_device)
++	nodetach = 1;
++
++    return 1;
++    
++}
++
++
++/*
++ * options_for_tty - See if an options file exists for the serial
++ * device, and if so, interpret options from it.
++ */
++int options_for_tty()
++{
++    char *dev = devnam;
++
++    if (strncmp(dev, "/dev/", 5) == 0)
++	dev += 5;
++    if (dev[0] == 0 || strcmp(dev, "tty") == 0)
++	return 1;		/* don't look for /etc/ppp/options.tty */
++    return options_for_dev(_PATH_TTYOPT, dev);
++}
++
++
++/*
++ * setspeed_tty - Set the speed.
++ */
++int
++setspeed_tty(arg)
++    const char *arg;
++{
++    char *ptr;
++    int spd;
++
++    if (no_override && inspeed != 0)
++	return 1;
++    spd = strtol(arg, &ptr, 0);
++    if (ptr == arg || *ptr != 0 || spd == 0)
++	return 0;
++    if (!no_override || inspeed == 0)
++	inspeed = spd;
++    return 1;
++}
++
++
++/*
++ * setdevname - Set the device name.
++ */
++int
++setdevname_tty(cp)
++    const char *cp;
++{
++    struct stat statbuf;
++    char dev[MAXPATHLEN];
++
++    if (*cp == 0)
++	return 0;
++
++    if (strncmp("/dev/", cp, 5) != 0) {
++	strlcpy(dev, "/dev/", sizeof(dev));
++	strlcat(dev, cp, sizeof(dev));
++	cp = dev;
++    }
++
++    /*
++     * Check if there is a character device by this name.
++     */
++    if (stat(cp, &statbuf) < 0) {
++	if (errno == ENOENT)
++	    return 0;
++	option_error("Couldn't stat %s: %m", cp);
++	return -1;
++    }
++    if (!S_ISCHR(statbuf.st_mode)) {
++	option_error("%s is not a character device", cp);
++	return -1;
++    }
++
++    if(!dev_set_ok())
++	return -1;
++
++    devstat = statbuf;
++    strlcpy(devnam, cp, sizeof(devnam));
++
+     add_options(tty_options);
++
++    return 1;
+ }
+ 
++
+ /*
+  * tty_device_check - work out which tty device we are using
+  * and read its options file.
+  */
+ void tty_device_check()
+ {
++	if (demand & connect_script == 0) {
++		option_error("connect script is required for demand-dialling\n");
++		exit(EXIT_OPTION_ERROR);
++	}
++
+ 	using_pty = notty || ptycommand != NULL || pty_socket != NULL;
+ 	if (using_pty)
+ 		return;
+@@ -473,7 +619,8 @@
+ 	if (connector != NULL || ptycommand != NULL)
+ 		listen_time = connect_delay;
+ 
+-	return ttyfd;
++	return sys_config_tty(ttyfd);
++
+ }
+ 
+ 
+diff -r -N -u ppp-2.4.0.orig/sunos4/Makefile ppp-2.4.0/sunos4/Makefile
+--- ppp-2.4.0.orig/sunos4/Makefile	Tue Mar 24 22:09:35 1998
++++ ppp-2.4.0/sunos4/Makefile	Wed Dec 31 19:00:00 1969
+@@ -1,57 +0,0 @@
+-#
+-# Makefile for STREAMS modules for SunOS 4.
+-#
+-# $Id$
+-#
+-
+-include Makedefs
+-
+-LD = /usr/bin/ld		# make sure we don't get gnu ld
+-
+-# Defining __$(ARCH)__ is for gcc's broken version of sun/vddrv.h.
+-ARCH = `/bin/arch -k`
+-DEFINES= -DKERNEL -D_KERNEL -DSUNOS4 -D$(ARCH) -D__$(ARCH)__ \
+-	 -DDEBUG -DNO_DLPI -DSNIT_SUPPORT
+-CFLAGS= $(DEFINES) -I../include $(COPTS)
+-
+-MODULES= ppp_mod.o ppp_ahdl_mod.o ppp_comp_mod.o if_ppp_mod.o
+-
+-all:	$(MODULES)
+-
+-ppp_mod.o:	ppp.o ppp_vdcmd.o
+-	$(LD) -r -o ppp_mod.o ppp.o ppp_vdcmd.o
+-
+-ppp_ahdl_mod.o: ppp_ahdlc.o ppp_ahdlc_vdcmd.o
+-	$(LD) -r -o ppp_ahdl_mod.o ppp_ahdlc.o ppp_ahdlc_vdcmd.o
+-
+-COMP_OBJS = ppp_comp.o bsd-comp.o deflate.o zlib.o vjcompress.o \
+-	ppp_comp_vdcmd.o
+-ppp_comp_mod.o: $(COMP_OBJS)
+-	$(LD) -r -o $@ $(COMP_OBJS)
+-
+-if_ppp.o: ../modules/if_ppp.c
+-	$(CC) $(CFLAGS) -c $?
+-bsd-comp.o: ../modules/bsd-comp.c
+-	$(CC) $(CFLAGS) -c $?
+-deflate.o: ../modules/deflate.c
+-	$(CC) $(CFLAGS) -c $?
+-ppp.o:	../modules/ppp.c
+-	$(CC) $(CFLAGS) -c $?
+-ppp_ahdlc.o: ../modules/ppp_ahdlc.c
+-	$(CC) $(CFLAGS) -c $?
+-ppp_comp.o: ../modules/ppp_comp.c
+-	$(CC) $(CFLAGS) -c $?
+-vjcompress.o: ../modules/vjcompress.c
+-	$(CC) $(CFLAGS) -c $?
+-zlib.o:	../common/zlib.c
+-	$(CC) $(CFLAGS) -c $?
+-
+-if_ppp_mod.o:	if_ppp.o if_ppp_vdcmd.o
+-	$(LD) -r -o if_ppp_mod.o if_ppp.o if_ppp_vdcmd.o
+-
+-install: all
+-	$(INSTALL) $(MODULES) $(BINDIR)
+-	./ppp.INSTALL
+-
+-clean:
+-	rm -f ppp ppp_comp ppp_ahdl *.o *~ core
