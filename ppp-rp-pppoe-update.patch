@@ -163,14 +163,6 @@ diff -urN ppp-2.4.2-20020901.org/pppd/plugins/rp-pppoe/discovery.c ppp-2.4.2-200
  	    while(1) {
  		r = select(conn->discoverySocket+1, &readable, NULL, NULL, &tv);
  		if (r >= 0 || errno != EINTR) break;
-@@ -621,7 +621,6 @@
- 
-     /* If we're only printing access concentrator names, we're done */
-     if (conn->printACNames) {
--	printf("--------------------------------------------------\n");
- 	exit(0);
-     }
- 
 @@ -641,4 +640,3 @@
      conn->discoveryState = STATE_SESSION;
      return;
@@ -1008,24 +1000,6 @@ diff -urN ppp-2.4.2-20020901.org/pppd/plugins/rp-pppoe/plugin.c ppp-2.4.2-200209
 diff -urN ppp-2.4.2-20020901.org/pppd/plugins/rp-pppoe/pppoe.h ppp-2.4.2-20020901/pppd/plugins/rp-pppoe/pppoe.h
 --- ppp-2.4.2-20020901.org/pppd/plugins/rp-pppoe/pppoe.h	Sun Sep  1 20:54:50 2002
 +++ ppp-2.4.2-20020901/pppd/plugins/rp-pppoe/pppoe.h	Sun Sep  1 20:55:21 2002
-@@ -9,14 +9,12 @@
- * This program may be distributed according to the terms of the GNU
- * General Public License, version 2 or (at your option) any later version.
- *
--* $Id$
-+* LIC: GPL
-+*
-+* $Id$
- *
- ***********************************************************************/
- 
--#ifdef __sun__
--#define __EXTENSIONS__
--#endif
--
- #include "config.h"
- 
- #if defined(HAVE_NETPACKET_PACKET_H) || defined(HAVE_LINUX_IF_PACKET_H)
 @@ -160,6 +158,12 @@
  #define CODE_PADR           0x19
  #define CODE_PADS           0x65
