@@ -88,7 +88,7 @@ Hat çekirdeði PPP desteðini bir modül olarak içerir. (IPv6)
 Summary:        Stuff needed to build plugins for pppd
 Summary(pl):    Rzeczy potrzebne do budowania wtyczek dla pppd
 Group:          Development/Libraries
-Requires:       %{name} = %{version}
+Requires:       %{name} = %{epoch}:%{version}
 
 %description plugin-devel
 Development files needed to build plugins for pppd.
