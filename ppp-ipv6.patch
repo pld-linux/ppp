@@ -1,21 +1,24 @@
-diff -urN ppp-2.3.11.org/pppd/sys-linux.c ppp-2.3.11/pppd/sys-linux.c
---- ppp-2.3.11.org/pppd/sys-linux.c	Tue Feb 29 00:43:28 2000
-+++ ppp-2.3.11/pppd/sys-linux.c	Tue Feb 29 00:56:40 2000
-@@ -90,6 +90,7 @@
- #endif
- 
- #ifdef INET6
-+#include "ipv6cp.h"
- #ifndef _LINUX_IN6_H
- /*
-  *    This is in linux/include/net/ipv6.h.
-@@ -279,7 +280,8 @@
- #ifdef INET6
-     sock6_fd = socket(AF_INET6, SOCK_DGRAM, 0);
-     if (sock6_fd < 0)
--	fatal("Couldn't create IPv6 socket: %m(%d)", errno);
-+	if (ipv6cp_protent.enabled_flag)
-+		fatal("Couldn't create IPv6 socket: %m(%d)", errno);
- #endif
- 
-     FD_ZERO(&in_fds);
+diff -urN ppp-2.4.0.org/pppd/ipv6cp.c ppp-2.4.0/pppd/ipv6cp.c
+--- ppp-2.4.0.org/pppd/ipv6cp.c	Mon Oct 23 00:12:05 2000
++++ ppp-2.4.0/pppd/ipv6cp.c	Mon Oct 23 00:18:53 2000
+@@ -187,7 +187,7 @@
+       "Accept peer's interface identifier for us", 1 },
+     { "ipv6cp-use-ipaddr", o_bool, &ipv6cp_allowoptions[0].use_ip,
+       "Use (default) IPv4 address as interface identifier", 0 },
+-#if defined(SOL2)
++#if defined(SOL2) || defined(__linux__)
+     { "ipv6cp-use-persistent", o_bool, &ipv6cp_wantoptions[0].use_persistent,
+       "Use uniquely-available persistent value for link local address", 1 },
+ #endif /* defined(SOL2) */
+diff -urN ppp-2.4.0.org/pppd/ipv6cp.h ppp-2.4.0/pppd/ipv6cp.h
+--- ppp-2.4.0.org/pppd/ipv6cp.h	Mon Oct 23 00:12:05 2000
++++ ppp-2.4.0/pppd/ipv6cp.h	Mon Oct 23 00:20:01 2000
+@@ -109,7 +109,7 @@
+     int opt_local;		/* ourtoken set by option */
+     int opt_remote;		/* histoken set by option */
+     int use_ip;			/* use IP as interface identifier */
+-#if defined(SOL2)
++#if defined(SOL2) || defined(__linux__)
+     int use_persistent;		/* use uniquely persistent value for address */
+ #endif /* defined(SOL2) */
+     int neg_vj;			/* Van Jacobson Compression? */
