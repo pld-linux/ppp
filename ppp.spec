@@ -13,7 +13,7 @@ Summary(tr):	PPP sunucu s黵eci
 Summary(zh_CN):	PPP 配置和管理软件包.
 Name:		ppp
 Version:	2.4.2
-Release:	5
+Release:	6
 Epoch:		3
 License:	distributable
 Group:		Networking/Daemons
@@ -91,7 +91,7 @@ Hat 鏴kirde餴 PPP deste餴ni bir mod黮 olarak i鏴rir. (IPv6)
 Summary:	Stuff needed to build plugins for pppd
 Summary(pl):	Rzeczy potrzebne do budowania wtyczek dla pppd
 Group:		Development/Libraries
-Requires:	%{name} = %{epoch}:%{version}
+# doesn't require base
 
 %description plugin-devel
 Development files needed to build plugins for pppd.
@@ -103,7 +103,7 @@ Pliki nag丑wkowe potrzebne do budowania wtyczek dla pppd.
 Summary:	PPPoATM plugin for pppd
 Summary(pl):	Wtyczka PPPoATM dla pppd
 Group:		Libraries
-Requires:	%{name} = %{epoch}:%{version}
+Requires:	%{name} = %{epoch}:%{version}-%{release}
 
 %description plugin-pppoatm
 PPPoATM plugin for pppd.
