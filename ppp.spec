@@ -11,7 +11,7 @@ Summary(pt_BR):	Servidor ppp para Linux
 Summary(tr):	PPP sunucu süreci
 Name:		ppp
 Version:	2.4.1
-Release:	4
+Release:	5
 Epoch:		2
 License:	distributable
 Group:		Networking/Daemons
