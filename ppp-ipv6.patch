@@ -1,0 +1,21 @@
+diff -urN ppp-2.3.11.org/pppd/sys-linux.c ppp-2.3.11/pppd/sys-linux.c
+--- ppp-2.3.11.org/pppd/sys-linux.c	Tue Feb 29 00:43:28 2000
++++ ppp-2.3.11/pppd/sys-linux.c	Tue Feb 29 00:56:40 2000
+@@ -90,6 +90,7 @@
+ #endif
+ 
+ #ifdef INET6
++#include "ipv6cp.h"
+ #ifndef _LINUX_IN6_H
+ /*
+  *    This is in linux/include/net/ipv6.h.
+@@ -279,7 +280,8 @@
+ #ifdef INET6
+     sock6_fd = socket(AF_INET6, SOCK_DGRAM, 0);
+     if (sock6_fd < 0)
+-	fatal("Couldn't create IPv6 socket: %m(%d)", errno);
++	if (ipv6cp_protent.enabled_flag)
++		fatal("Couldn't create IPv6 socket: %m(%d)", errno);
+ #endif
+ 
+     FD_ZERO(&in_fds);
