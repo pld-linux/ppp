@@ -1,7 +1,8 @@
-#
-# _with_pppoe - with PPPoE support (which requires kernel 2.4)
 # _with_pppoatm - with PPPoATM support (which requires kernel 2.4 and atm-devel)
-# _without_cbcp - without CBCP (MS CallBack Configuration Protocol)
+# TODO:
+# - use some external radiusclient if exists?
+# - fix ppp over atm
+%define snap	20020809
 Summary:	ppp daemon package for Linux
 Summary(de):	ppp-Dämonpaket für Linux
 Summary(es):	Servidor ppp para Linux
@@ -12,12 +13,12 @@ Summary(ru):	äÅÍÏÎ ppp
 Summary(tr):	PPP sunucu süreci
 Summary(zh_CN):	PPP ÅäÖÃºÍ¹ÜÀíÈí¼þ°ü.
 Name:		ppp
-Version:	2.4.1
-Release:	13
+Version:	2.4.2
+Release:	0.%{snap}.0
 Epoch:		2
 License:	distributable
 Group:		Networking/Daemons
-Source0:	ftp://ftp.samba.org/pub/ppp/%{name}-%{version}.tar.gz
+Source0:	cvs://pserver.samba.org/ppp/%{name}-%{version}-%{snap}.tar.gz
 Source1:	%{name}.pamd
 Source2:	%{name}.pon
 Source3:	%{name}.poff
@@ -27,20 +28,10 @@ Patch0:		%{name}-make.patch
 Patch1:		%{name}-expect.patch
 Patch2:		%{name}-debian_scripts.patch
 Patch3:		%{name}-static.patch
-Patch4:		%{name}-CBCP.patch
-Patch5:		%{name}-pam_session.patch
-Patch6:		%{name}-wtmp.patch
-Patch7:		%{name}-opt.patch
-Patch8:		http://www.shoshin.uwaterloo.ca/~mostrows/%{name}-2.4.1-%{name}oe.patch2
-Patch9:		%{name}-opt-%{name}oe.patch
 #http://www.sfgoth.com/~mitch/linux/atm/pppoatm/pppoatm-pppd-vs-2.4.0b2+240600.diff.gz
-Patch10:	%{name}-%{name}oatm.patch
-Patch11:	%{name}-reap.patch
-Patch12:	%{name}-warnings.patch
-Patch13:	%{name}-zlib-sec.patch
-Patch14:	%{name}-pidfile-owner.patch
-Patch15:	%{name}-2.4.1-openssl-0.9.6-mppe-patch.gz
-Patch16:	%{name}-2.4.1-MSCHAPv2-fix.patch.gz
+Patch4:		%{name}-pppoatm.patch
+Patch5:		%{name}-pidfile-owner.patch
+Patch6:		%{name}-typos.patch
 URL:		http://www.samba.org/ppp/
 BuildRequires:	pam-devel
 %{?_with_pppoatm:BuildRequires:	linux-atm-devel}
@@ -87,45 +78,22 @@ Bu paket PPP desteði için belgeler ve sunucu sürecini içerir. Çekirdek
 sürümünun 2.2.11'dan daha yüksek olmasýný gerektirir. Öntanýmlý Red
 Hat çekirdeði PPP desteðini bir modül olarak içerir. (IPv6)
 
-%package pppoatm
-Summary:	PPP Over ATM plugin
-Summary(pl):	Wtyczka PPP-po-ATM
-Group:		Networking/Daemons
-Requires:	%{name} = %{version}
-
-%description pppoatm
-PPP Over ATM plugin.
-
-%description pppoatm -l pl
-Wtyczka PPP-po-ATM.
-
 %prep
-%setup -q
+%setup -q -n %{name}-%{version}-%{snap}
 %patch0 -p1
 %patch1 -p1
 %patch2 -p1
 %patch3 -p1
-%patch4 -p1
+%{?_with_pppoatm:%patch4 -p1}
 %patch5 -p1
 %patch6 -p1
-%{!?_with_pppoe:%patch7 -p1}
-%{?_with_pppoe:%patch8 -p1}
-%{?_with_pppoe:%patch9 -p1}
-%{?_with_pppoatm:%patch10 -p1}
-%patch11 -p1
-%patch12 -p1
-%patch13 -p1
-%patch14 -p1
-%patch15 -p1
-%patch16 -p1
 
 %build
+find pppd/plugins/radius/radiusclient -exec touch "{}" ";"
 %configure
-%{__make} OPT_FLAGS="%{rpmcflags}" \
-	CC=%{__cc} \
-	%{!?_without_cbcp:CBCP=1}
-
-%{?_with_pppoe:%{__make} OPT_FLAGS="%{rpmcflags}" CC=%{__cc} -C pppd/plugins/pppoe}
+%{__make} \
+	OPT_FLAGS="%{rpmcflags}" \
+	CC=%{__cc}
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -135,8 +103,6 @@ install -d $RPM_BUILD_ROOT{%{_sbindir},%{_bindir},%{_mandir}/man{1,8}} \
 
 %{__make} install \
 	DESTDIR=$RPM_BUILD_ROOT
-
-%{?_with_pppoe:install pppd/plugins/pppoe/pppoed $RPM_BUILD_ROOT%{_sbindir}}
 
 install %{SOURCE2} $RPM_BUILD_ROOT%{_bindir}/pon
 install %{SOURCE3} $RPM_BUILD_ROOT%{_bindir}/poff
@@ -159,29 +125,35 @@ install %{SOURCE1} $RPM_BUILD_ROOT/etc/pam.d/ppp
 %clean
 rm -rf $RPM_BUILD_ROOT
 
+%post -p /sbin/ldconfig
+%postun -p /sbin/ldconfig
+
 %files
 %defattr(644,root,root,755)
 %doc README.linux debian/README.debian scripts
-%doc debian/win95.ppp README.MSCHAP80 FAQ debian/ppp-2.3.0.STATIC.README
-%doc README.MPPE
+%doc debian/win95.ppp README.MSCHAP8* FAQ debian/ppp-2.3.0.STATIC.README
+%doc README.MPPE README.pppoe README.cbcp README.pwfd TODO
 %attr(755,root,root) %{_bindir}/*
 %attr(755,root,root) %{_sbindir}/chat
-%attr(755,root,root) %{_sbindir}/pppstats
-%attr(755,root,root) %{_sbindir}/pppd
-%{?_with_pppoe:%attr(755,root,root) %{_sbindir}/pppoed}
-%if %{?_with_pppoatm:1}%{!?_with_pppoatm:0}%{?_with_pppoe:1}%{!?_with_pppoe:0}
+%attr(755,root,root) %{_sbindir}/ppp*
+%attr(755,root,root) %{_sbindir}/rad*
 %dir %{_libdir}/pppd
-%dir %{_libdir}/pppd/%{version}
-%endif
-%{?_with_pppoatm:%attr(755,root,root) %{_libdir}/pppd/%{version}/minconn.so}
-%{?_with_pppoatm:%attr(755,root,root) %{_libdir}/pppd/%{version}/passprompt.so}
-%{?_with_pppoe:%attr(755,root,root) %{_libdir}/pppd/%{version}/pppoe.so}
+%dir %{_libdir}/pppd/*.*
+%attr(755,root,root) %{_libdir}/pppd/*.*/minconn.so
+%attr(755,root,root) %{_libdir}/pppd/*.*/pass*.so
+%attr(755,root,root) %{_libdir}/pppd/*.*/rp-pppoe.so
+%attr(755,root,root) %{_libdir}/pppd/*.*/rad*.so
+%{?_with_pppoatm:%attr(755,root,root) %{_libdir}/pppd/*.*/pppoatm.so}
+%attr(755,root,root) %{_libdir}/*.so.*
+
 %{_mandir}/man8/*
 %lang(fr) %{_mandir}/fr/man8/*
 %lang(ja) %{_mandir}/ja/man8/*
 %lang(ko) %{_mandir}/ko/man8/*
 %lang(pl) %{_mandir}/pl/man8/*
 
+%dir %{_sysconfdir}/radiusclient
+%attr(640,root,root) %config(missingok,noreplace) %verify(not md5 size mtime) %{_sysconfdir}/radiusclient/*
 %attr(600,root,root) %config(missingok,noreplace) %verify(not md5 size mtime) %{_sysconfdir}/ppp/*-secrets
 %attr(644,root,root) %config(missingok,noreplace) %verify(not md5 size mtime) %{_sysconfdir}/ppp/options*
 %attr(640,root,root) %config(noreplace) %verify(not md5 size mtime) /etc/pam.d/ppp
@@ -189,7 +161,3 @@ rm -rf $RPM_BUILD_ROOT
 %attr(640,root,root) %ghost /var/log/ppp.log
 
 %dir %{_sysconfdir}/ppp/peers
-
-%{?_with_pppoatm:%files pppoatm}
-%{?_with_pppoatm:%defattr(644,root,root,755)}
-%{?_with_pppoatm:%attr(755,root,root) %{_libdir}/pppd/%{version}/pppoatm.so}
