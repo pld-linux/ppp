@@ -81,15 +81,15 @@ Hat çekirdeði PPP desteðini bir modül olarak içerir. (IPv6)
 
 %package plugin-devel
 Summary:        Stuff needed to build plugins for pppd
-Summary(pl):    Rzeczy potrzebne do budowy wytczek dla pppd
+Summary(pl):    Rzeczy potrzebne do budowania wtyczek dla pppd
 Group:          Development/Libraries
 Requires:       %{name} = %{version}
 
 %description plugin-devel
-Developement files needed to build plugins for pppd
+Development files needed to build plugins for pppd.
 
-%description -l pl plugin-devel
-Pliki nag³ówkowe potrzebne do budowy wtyczek dla pppd
+%description plugin-devel -l pl
+Pliki nag³ówkowe potrzebne do budowania wtyczek dla pppd.
 
 %prep
 %setup -q -n %{name}-%{version}-%{snap}
@@ -144,7 +144,7 @@ install %{SOURCE1} $RPM_BUILD_ROOT/etc/pam.d/ppp
 %clean
 rm -rf $RPM_BUILD_ROOT
 
-%post -p /sbin/ldconfig
+%post	-p /sbin/ldconfig
 %postun -p /sbin/ldconfig
 
 %files
