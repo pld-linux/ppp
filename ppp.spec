@@ -1,6 +1,6 @@
 #
-# _without_pppoe - without PPPoE support (which requires kernel 2.4)
-# _without_pppoatm - without PPPoATM support (which requires kernel 2.4 and atm-devel)
+# _with_pppoe - without PPPoE support (which requires kernel 2.4)
+# _with_pppoatm - without PPPoATM support (which requires kernel 2.4 and atm-devel)
 # _without_cbcp - without CBCP (MS CallBack Configuration Protocol)
 Summary:	ppp daemon package for Linu
 Summary(de):	ppp-Dämonpaket für Linux
@@ -38,7 +38,7 @@ Patch11:	%{name}-reap.patch
 Patch12:	%{name}-warnings.patch
 URL:		http://www.samba.org/ppp/
 BuildRequires:	pam-devel
-%{?!_without_pppoatm:BuildRequires:	atm-devel}
+%{?_with_pppoatm:BuildRequires:	atm-devel}
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
@@ -102,10 +102,10 @@ Wtyczka PPP-po-ATM.
 %patch4 -p1
 %patch5 -p1
 %patch6 -p1
-%{?_without_pppoe:%patch7 -p1}
-%{!?_without_pppoe:%patch8 -p1}
-%{!?_without_pppoe:%patch9 -p1}
-%{!?_without_pppoatm:%patch10 -p1}
+%{!?_with_pppoe:%patch7 -p1}
+%{?_with_pppoe:%patch8 -p1}
+%{?_with_pppoe:%patch9 -p1}
+%{?_with_pppoatm:%patch10 -p1}
 %patch11 -p1
 %patch12 -p1
 
@@ -152,13 +152,13 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_sbindir}/chat
 %attr(755,root,root) %{_sbindir}/pppstats
 %attr(755,root,root) %{_sbindir}/pppd
-%if %{!?_without_pppoatm:1}%{?_without_pppoatm:0}%{!?_without_pppoatm:1}%{?_without_pppoatm:0}
+%if %{?_with_pppoatm:1}%{!?_with_pppoatm:0}%{?_with_pppoatm:1}%{!?_with_pppoatm:0}
 %dir %{_libdir}/pppd
 %dir %{_libdir}/pppd/%{version}
 %endif
-%{!?_without_pppoatm:%attr(755,root,root) %{_libdir}/pppd/%{version}/minconn.so}
-%{!?_without_pppoatm:%attr(755,root,root) %{_libdir}/pppd/%{version}/passprompt.so}
-%{!?_without_pppoe:%attr(755,root,root) %{_libdir}/pppd/%{version}/pppoe.so}
+%{?_with_pppoatm:%attr(755,root,root) %{_libdir}/pppd/%{version}/minconn.so}
+%{?_with_pppoatm:%attr(755,root,root) %{_libdir}/pppd/%{version}/passprompt.so}
+%{?_with_pppoe:%attr(755,root,root) %{_libdir}/pppd/%{version}/pppoe.so}
 %{_mandir}/man8/*
 %lang(fr) %{_mandir}/fr/man8/*
 %lang(ja) %{_mandir}/ja/man8/*
@@ -171,6 +171,6 @@ rm -rf $RPM_BUILD_ROOT
 
 %dir %{_sysconfdir}/ppp/peers
 
-%{!?_without_pppoatm:%files pppoatm}
-%{!?_without_pppoatm:%defattr(644,root,root,755)}
-%{!?_without_pppoatm:%attr(755,root,root) %{_libdir}/pppd/%{version}/pppoatm.so}
+%{?_with_pppoatm:%files pppoatm}
+%{?_with_pppoatm:%defattr(644,root,root,755)}
+%{?_with_pppoatm:%attr(755,root,root) %{_libdir}/pppd/%{version}/pppoatm.so}
