@@ -57,18 +57,15 @@ IPv6, too.
 %description -l de
 Dies ist der Dämon und die Dokumentation für PPP-Support. Erfordert
 einen Kernel höher als 2.2.11, der mit PPP-Support gebaut ist. Die
-Standard- Red-Hat-Kernel schließen PPP-Support als Modul ein. (IPv6)
+Standard-Kernel schließen PPP-Support als Modul ein. (IPv6)
 
 %description -l es
 Este es el servidor y la documentación para soporte PPP. Requiere un
-kernel superior al 2.0. Los kernels padrón de la Conectiva incluyen
-soporte PPP como módulo.
+kernel superior al 2.0.
 
 %description -l fr
 Ceci est le démon et la documentation pour le support PPP. Cela
 réclame un noyau supérieur au 2.2.11 et construit avec le support PPP.
-Le noyau par défaut de Red Hat contient le support PPP sous forme de
-module. (IPv6)
 
 %description -l pl
 Pakiet zawiera demona i dokumentacjê umo¿liwiaj±c± korzystanie z
@@ -78,16 +75,14 @@ wsparcie dla PPP skompilowane jako modu³. (IPv6)
 
 %description -l pt_BR
 Este é o servidor e a documentação para suporte PPP. Ele requer um
-kernel superior ao 2.0. Os kernels-padrão da Conectiva incluem suporte
-PPP como módulo.
+kernel superior ao 2.0.
 
 %description -l ru
 äÅÍÏÎ, ËÏÎÆÉÇÕÒÁÃÉÏÎÎÙÅ ÆÁÊÌÙ É ÄÏËÕÍÅÎÔÁÃÉÑ ÄÌÑ ĞÏÄÄÅÒÖËÉ PPP.
 
 %description -l tr
 Bu paket PPP desteği için belgeler ve sunucu sürecini içerir. Çekirdek
-sürümünun 2.2.11'dan daha yüksek olmasını gerektirir. Öntanımlı Red
-Hat çekirdeği PPP desteğini bir modül olarak içerir. (IPv6)
+sürümünun 2.2.11'dan daha yüksek olmasını gerektirir.
 
 %package plugin-devel
 Summary:	Stuff needed to build plugins for pppd
