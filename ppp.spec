@@ -55,7 +55,7 @@ sürümünun 2.2.11'dan daha yüksek olmasýný gerektirir. Öntanýmlý Red Hat
 
 %build
 %configure
-make RPM_OPT_FLAGS="$RPM_OPT_FLAGS"
+make OPT_FLAGS="$RPM_OPT_FLAGS"
 
 %install
 rm -rf $RPM_BUILD_ROOT
