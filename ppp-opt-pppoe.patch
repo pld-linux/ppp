@@ -5,7 +5,7 @@ diff -Nur ppp-2.4.1.orig/pppd/plugins/Makefile.linux ppp-2.4.1/pppd/plugins/Make
  CC	= gcc
 -CFLAGS	= -g -O2 -I.. -I../../include -fPIC
 -LDFLAGS	= -shared
-+CFLAGS	+= -g -I.. -I../../include -fPIC
++CFLAGS	= $(OPT_FLAGS) -I.. -I../../include -fPIC
 +LDFLAGS	+= -shared
  INSTALL	= install
  
@@ -28,7 +28,7 @@ diff -Nur ppp-2.4.1.orig/pppd/plugins/pppoe/Makefile.linux ppp-2.4.1/pppd/plugin
  CC	= gcc
 -CFLAGS	= -g  -I.. -I../.. -I../../../include -D_linux_=1 -fPIC
 -LDFLAGS	= -shared
-+CFLAGS	+= -g  -I.. -I../.. -I../../../include -D_linux_=1 -fPIC
++CFLAGS	= $(OPT_FLAGS)  -I.. -I../.. -I../../../include -D_linux_=1 -fPIC
 +LDFLAGS	+= -shared
  
  all: pppoe.so pppoed

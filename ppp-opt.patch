@@ -3,7 +3,7 @@
 @@ -1,5 +1,5 @@
  CC	= gcc
 -CFLAGS	= -g -O2 -I.. -I../../include -fPIC
-+CFLAGS	+= -I.. -I../../include -fPIC
++CFLAGS	= $(OPT_FLAGS) -I.. -I../../include -fPIC
  LDFLAGS	= -shared
  INSTALL	= install
  
