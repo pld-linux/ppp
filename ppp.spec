@@ -12,13 +12,13 @@ Summary(ru):	äÅÍÏÎ ppp
 Summary(tr):	PPP sunucu süreci
 Summary(zh_CN):	PPP ÅäÖÃºÍ¹ÜÀíÈí¼þ°ü.
 Name:		ppp
-Version:	2.4.2
-Release:	7.5
+Version:	2.4.3
+Release:	0.1
 Epoch:		3
 License:	distributable
 Group:		Networking/Daemons
 Source0:	ftp://ftp.samba.org/pub/%{name}/%{name}-%{version}.tar.gz
-# Source0-md5:	362bcf218fba8afbb9afbee7471e5dac
+# Source0-md5:	848f6c3cafeb6074ffeb293c3af79b7c
 Source1:	%{name}.pamd
 Source2:	%{name}.pon
 Source3:	%{name}.poff
@@ -34,15 +34,14 @@ Patch4:		%{name}-pppoatm.patch
 Patch5:		%{name}-pidfile-owner.patch
 Patch6:		%{name}-rp-pppoe-update.patch
 Patch7:		%{name}-rp-pppoe-macaddr.patch
-Patch8:		%{name}-radius.patch
-Patch9:		%{name}-pcap.patch
 Patch10:	%{name}-lib64.patch
-Patch11:	%{name}-udev.patch
 Patch12:	http://public.planetmirror.com/pub/mppe/pppd-2.4.2-chapms-strip-domain.patch.gz
 URL:		http://www.samba.org/ppp/
 BuildRequires:	autoconf
 BuildRequires:	automake
 BuildRequires:	libpcap-devel >= 2:0.8.1
+BuildRequires:	srp-devel
+BuildRequires:	radiusclient-devel
 BuildRequires:	libtool
 %{?with_pppoatm:BuildRequires:	linux-atm-devel}
 BuildRequires:	pam-devel
@@ -124,26 +123,12 @@ Wtyczka PPPoATM dla pppd.
 %patch5 -p1
 %patch6 -p1
 %patch7 -p1
-%patch8 -p1
-%patch9 -p1
 %if "%{_lib}" == "lib64"
 %patch10 -p1
 %endif
-%patch11 -p1
 %patch12 -p1
 
 %build
-cd pppd/plugins/radius/radiusclient
-# cannot use system radiusclient 0.3.2 - this version is modified
-# (contains some extensions which made it incompatible with original)
-# lt must be rebuilt (old libtool didn't use PIC on ppc-linux)
-%{__libtoolize}
-%{__aclocal}
-%{__autoconf}
-%{__autoheader}
-%{__automake}
-%configure
-cd ../../../..
 # note: not autoconf configure
 %configure
 %{__make} \
@@ -157,7 +142,7 @@ install -d $RPM_BUILD_ROOT{%{_sbindir},%{_bindir},%{_mandir}/man{1,8}} \
 	$RPM_BUILD_ROOT/etc/logrotate.d
 
 %{__make} install \
-	DESTDIR=$RPM_BUILD_ROOT
+	DESTDIR=$RPM_BUILD_ROOT%{_prefix}
 
 install %{SOURCE2} $RPM_BUILD_ROOT%{_bindir}/pon
 install %{SOURCE3} $RPM_BUILD_ROOT%{_bindir}/poff
@@ -201,6 +186,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_libdir}/pppd/*.*/pass*.so
 %attr(755,root,root) %{_libdir}/pppd/*.*/rp-pppoe.so
 %attr(755,root,root) %{_libdir}/pppd/*.*/rad*.so
+%attr(755,root,root) %{_libdir}/pppd/*.*/winbind.so
 
 %{_mandir}/man8/*
 %lang(fr) %{_mandir}/fr/man8/*
