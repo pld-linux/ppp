@@ -149,6 +149,9 @@ rm -f scripts/README
 
 install %{SOURCE1} $RPM_BUILD_ROOT/etc/pam.d/ppp
 
+cd $RPM_BUILD_ROOT%{_libdir}/pppd/
+ln -s %{version}* plugins
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
@@ -165,6 +168,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_sbindir}/ppp*
 %dir %{_libdir}/pppd
 %dir %{_libdir}/pppd/*.*
+%{_libdir}/pppd/plugins
 %attr(755,root,root) %{_libdir}/pppd/*.*/minconn.so
 %attr(755,root,root) %{_libdir}/pppd/*.*/pass*.so
 %attr(755,root,root) %{_libdir}/pppd/*.*/rp-pppoe.so
