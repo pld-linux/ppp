@@ -1,0 +1,12 @@
+diff -urN ppp-2.4.2-20020901.org/pppd/chap_ms.c ppp-2.4.2-20020901/pppd/chap_ms.c
+--- ppp-2.4.2-20020901.org/pppd/chap_ms.c	Sun Sep  1 20:54:50 2002
++++ ppp-2.4.2-20020901/pppd/chap_ms.c	Sun Sep  1 21:05:32 2002
+@@ -581,7 +581,7 @@
+     response->UseNT[0] = 1;
+ #endif
+ 
+-    cstate->resp_length = MS_CHAP_RESPONSE_LENGTH;
++    cstate->resp_length = MS_CHAP_RESPONSE_LEN;
+ 
+ #ifdef MPPE
+     Set_Start_Key(rchallenge, secret, secret_len);
