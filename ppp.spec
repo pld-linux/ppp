@@ -23,7 +23,7 @@ Source1:	%{name}.pamd
 Source2:	%{name}.pon
 Source3:	%{name}.poff
 Source4:	%{name}-non-english-man-pages.tar.bz2
-# Source4-md5: 15efa68633c9f18a3211965f91bd0a6f
+# Source4-md5: 3801b59005bef8f52856300fe3167a64
 Source5:	%{name}.logrotate
 Patch0:		%{name}-make.patch
 Patch1:		%{name}-expect.patch
