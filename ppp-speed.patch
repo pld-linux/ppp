@@ -5,7 +5,7 @@ diff -ru ppp-org/pppd/sys-linux.c ppp-patched/pppd/sys-linux.c
  #ifdef B460800
      { 460800, B460800 },
  #endif
-+#ifdef B460800
++#ifdef B921600
 +    { 921600, B921600 },
 +#endif
      { 0, 0 }
