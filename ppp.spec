@@ -4,20 +4,19 @@ Summary(fr):	Paquetage du démon ppp pour Linux 2.2.11 et supérieur
 Summary(tr):	PPP sunucu süreci
 Summary(pl):	Demon PPP dla Linux 2.2.11 i wy¿szych
 Name:		ppp
-Version:	2.3.10
+Version:	2.3.11
 Release:	1 
 Copyright:	distributable
 Group:		Networking/Daemons
 Group(pl):	Sieciowe/Demony
 Source0:	ftp://cs.anu.edu.au/pub/software/ppp/%{name}-%{version}.tar.gz
-Source1:	pppd-2.3.7-pamd.conf
-Source2:	kernel-2.2.10-ppp.patch.gz
-#Patch0:	ppp-2.3.9-ipv6-990816.patch.gz
-Patch1:		ppp-make.patch
-Patch2:		ppp-expect.patch
-Patch3:		ppp-debian_scripts.patch
-Patch4:		ppp-static.patch
-#Patch5:	ppp-2.3.9-patch1
+Source1:	ppp.pamd
+Source2:	ppp.pon
+Source3:	ppp.poff
+Patch0:		ppp-make.patch
+Patch1:		ppp-expect.patch
+Patch2:		ppp-debian_scripts.patch
+Patch3:		ppp-static.patch
 BuildRequires:	pam-devel
 Buildroot:	/tmp/%{name}-%{version}-root
 
@@ -49,14 +48,10 @@ sürümünun 2.2.11'dan daha yüksek olmasýný gerektirir. Öntanýmlý Red Hat
 
 %prep
 %setup -q 
-#%patch0 -p1 
-%patch1 -p1
+%patch0 -p1
+%patch1 -p1 
 %patch2 -p1 
-%patch3 -p1 
-%patch4 -p1
-#cd pppd
-#%patch5 -p0
-#cd ..
+%patch3 -p1
 
 %build
 %configure
@@ -66,29 +61,26 @@ make RPM_OPT_FLAGS="$RPM_OPT_FLAGS -DINET6"
 rm -rf $RPM_BUILD_ROOT
 
 install -d $RPM_BUILD_ROOT{%{_sbindir},%{_bindir},%{_mandir}/man{1,8}} \
-	$RPM_BUILD_ROOT/etc/{pam.d,ppp/{peers,chatscripts}}
+	$RPM_BUILD_ROOT/etc/{pam.d,ppp}
 
 make install \
-	TOPDIR=$RPM_BUILD_ROOT \
-	MANDIR=$RPM_BUILD_ROOT%{_mandir}
+	DESTDIR=$RPM_BUILD_ROOT
 
-install %{SOURCE2}		   .
-install etc.ppp/chap-secrets 	   $RPM_BUILD_ROOT/etc/ppp
-install debian/{plog,poff,pon}	   $RPM_BUILD_ROOT%{_bindir}
-install debian/*.1		   $RPM_BUILD_ROOT%{_mandir}/man1
-install debian/pap-secrets	   $RPM_BUILD_ROOT/etc/ppp
-install debian/options		   $RPM_BUILD_ROOT/etc/ppp
-install debian/options.ttyXX	   $RPM_BUILD_ROOT/etc/ppp
-install debian/provider		   $RPM_BUILD_ROOT/etc/ppp/peers
-install debian/provider.chatscript $RPM_BUILD_ROOT/etc/ppp/chatscripts/provider
+install %{SOURCE2}		   	$RPM_BUILD_ROOT%{_bindir}/pon
+install %{SOURCE3}		   	$RPM_BUILD_ROOT%{_bindir}/poff
+install debian/plog			$RPM_BUILD_ROOT%{_bindir}
+install etc.ppp/chap-secrets		$RPM_BUILD_ROOT/etc/ppp
+install debian/pap-secrets		$RPM_BUILD_ROOT/etc/ppp
+install debian/options			$RPM_BUILD_ROOT/etc/ppp
+install debian/options.ttyXX		$RPM_BUILD_ROOT/etc/ppp
 
 rm -f scripts/README
 
-install %{SOURCE1} $RPM_BUILD_ROOT/etc/pam.d/ppp
+install %{SOURCE1}			$RPM_BUILD_ROOT/etc/pam.d/ppp
 
 strip $RPM_BUILD_ROOT%{_sbindir}/*
 
-gzip -9nf $RPM_BUILD_ROOT%{_mandir}/man[18]/* \
+gzip -9nf $RPM_BUILD_ROOT%{_mandir}/man8/* \
 	README.linux debian/README.debian debian/win95.ppp \
 	README.MSCHAP80 FAQ debian/ppp-2.3.0.STATIC.README
 
@@ -99,18 +91,12 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(644,root,root,755)
 %doc {README.linux,debian/README.debian}.gz scripts
 %doc {debian/win95.ppp,README.MSCHAP80,FAQ,debian/ppp-2.3.0.STATIC.README}.gz
-%doc kernel-2.2.10-ppp.patch.gz
 %attr(755,root,root) %{_bindir}/*
 %attr(755,root,root) %{_sbindir}/chat
 %attr(755,root,root) %{_sbindir}/pppstats
 %attr(755,root,root) %{_sbindir}/pppd
-%{_mandir}/man[18]/*
-
-%attr(711,root,root) %dir /etc/ppp/peers
-%attr(711,root,root) %dir /etc/ppp/chatscripts
+%{_mandir}/man8/*
 
 %attr(600,root,root) %config %verify(not size mtime md5) /etc/ppp/*-secrets
 %attr(644,root,root) %config %verify(not size mtime md5) /etc/ppp/options*
 %attr(640,root,root) %config %verify(not size mtime md5) /etc/pam.d/ppp
-%attr(640,root,root) %config %verify(not size mtime md5) /etc/ppp/peers/provider
-%attr(640,root,root) %config %verify(not size mtime md5) /etc/ppp/chatscripts/provider
