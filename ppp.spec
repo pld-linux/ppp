@@ -6,13 +6,14 @@ Summary(fr):	Paquetage du démon ppp pour Linux 2.2.11 et supérieur
 Summary(tr):	PPP sunucu süreci
 Summary(pl):	Demon PPP dla Linux 2.2.11 i wy¿szych
 Name:		ppp
-Version:	2.4.0
-Release:	6
+Version:	2.4.1
+Release:	1
 Epoch:		2
 License:	Distributable
 Group:		Networking/Daemons
 Group(de):	Netzwerkwesen/Server
 Group(pl):	Sieciowe/Serwery
+URL:		http://www.samba.org/ppp/
 Source0:	ftp://ftp.linuxcare.com.au/pub/ppp/%{name}-%{version}.tar.gz
 Source1:	%{name}.pamd
 Source2:	%{name}.pon
@@ -22,14 +23,11 @@ Patch1:		%{name}-expect.patch
 Patch2:		%{name}-debian_scripts.patch
 Patch3:		%{name}-static.patch
 Patch4:		%{name}-CBCP.patch
-Patch5:		%{name}-speed.patch
-Patch6:		%{name}-pam_session.patch
-Patch7:		%{name}-wtmp.patch
-Patch8:		%{name}-opt.patch
-Patch9:		http://www.math.uwaterloo.ca/~mostrows/ppp-2.4.0-pppoe.patch2
-Patch10:	%{name}-opt-pppoe.patch
-# Patch 10 was built out of the following:
-#http://www.math.uwaterloo.ca/~mostrows/pppd.patch.240600
+Patch5:		%{name}-pam_session.patch
+Patch6:		%{name}-wtmp.patch
+Patch7:		%{name}-opt.patch
+Patch8:		http://www.shoshin.uwaterloo.ca/~mostrows/%{name}-2.4.1-pppoe.patch2
+Patch9:		%{name}-opt-%{name}oe.patch
 #http://www.sfgoth.com/~mitch/linux/atm/pppoatm/pppoatm-pppd-vs-2.4.0b2+240600.diff.gz
 #Patch10:		ppp-pppoatm.patch
 BuildRequires:	pam-devel
@@ -72,10 +70,9 @@ Hat çekirdeði PPP desteðini bir modül olarak içerir. (IPv6)
 %patch4 -p1
 %patch5 -p1
 %patch6 -p1
-%patch7 -p1
-%{?_without_pppoe:%patch8 -p1}
+%{?_without_pppoe:%patch7 -p1}
+%{!?_without_pppoe:%patch8 -p1}
 %{!?_without_pppoe:%patch9 -p1}
-%{!?_without_pppoe:%patch10 -p1}
 %build
 %configure
 %{__make} OPT_FLAGS="%{rpmcflags}" \
@@ -119,8 +116,8 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_sbindir}/pppstats
 %attr(755,root,root) %{_sbindir}/pppd
 %{!?_without_pppoe:%dir %{_libdir}/pppd}
-%{!?_without_pppoe:%dir %{_libdir}/pppd/plugins}
-%{!?_without_pppoe:%attr(755,root,root) %{_libdir}/pppd/plugins/*}
+%{!?_without_pppoe:%dir %{_libdir}/pppd/%{version}}
+%{!?_without_pppoe:%attr(755,root,root) %{_libdir}/pppd/%{version}/*}
 %{_mandir}/man8/*
 
 %attr(600,root,root) %config %verify(not size mtime md5) %{_sysconfdir}/ppp/*-secrets
