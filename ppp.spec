@@ -13,7 +13,7 @@ Summary(tr):	PPP sunucu s黵eci
 Summary(zh_CN):	PPP 配置和管理软件包.
 Name:		ppp
 Version:	2.4.2
-Release:	7
+Release:	7.5
 Epoch:		3
 License:	distributable
 Group:		Networking/Daemons
@@ -38,6 +38,7 @@ Patch8:		%{name}-radius.patch
 Patch9:		%{name}-pcap.patch
 Patch10:	%{name}-lib64.patch
 Patch11:	%{name}-udev.patch
+Patch12:	http://public.planetmirror.com/pub/mppe/pppd-2.4.2-chapms-strip-domain.patch.gz
 URL:		http://www.samba.org/ppp/
 BuildRequires:	autoconf
 BuildRequires:	automake
@@ -129,6 +130,7 @@ Wtyczka PPPoATM dla pppd.
 %patch10 -p1
 %endif
 %patch11 -p1
+%patch12 -p1
 
 %build
 cd pppd/plugins/radius/radiusclient
