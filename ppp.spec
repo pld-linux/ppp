@@ -152,23 +152,19 @@ rm -f scripts/README
 
 install %{SOURCE1} $RPM_BUILD_ROOT/etc/pam.d/ppp
 
-gzip -9nf README.linux debian/README.debian debian/win95.ppp \
-	README.MSCHAP80 FAQ debian/ppp-2.3.0.STATIC.README \
-	README.MPPE
-
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
-%doc {README.linux,debian/README.debian}.gz scripts
-%doc {debian/win95.ppp,README.MSCHAP80,FAQ,debian/ppp-2.3.0.STATIC.README}.gz
-%doc README.MPPE.gz
+%doc README.linux debian/README.debian scripts
+%doc debian/win95.ppp README.MSCHAP80 FAQ debian/ppp-2.3.0.STATIC.README
+%doc README.MPPE
 %attr(755,root,root) %{_bindir}/*
 %attr(755,root,root) %{_sbindir}/chat
 %attr(755,root,root) %{_sbindir}/pppstats
 %attr(755,root,root) %{_sbindir}/pppd
-%if %{?_with_pppoatm:1}%{!?_with_pppoatm:0}%{?_with_pppoatm:1}%{!?_with_pppoatm:0}
+%if %{?_with_pppoatm:1}%{!?_with_pppoatm:0}%{?_with_pppoe:1}%{!?_with_pppoe:0}
 %dir %{_libdir}/pppd
 %dir %{_libdir}/pppd/%{version}
 %endif
