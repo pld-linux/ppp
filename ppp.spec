@@ -5,7 +5,7 @@ Summary(tr):	PPP sunucu süreci
 Summary(pl):	Demon PPP dla Linux 2.2.11 i wy¿szych
 Name:		ppp
 Version:	2.3.11
-Release:	3
+Release:	4
 Copyright:	distributable
 Group:		Networking/Daemons
 Group(pl):	Sieciowe/Demony
