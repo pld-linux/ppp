@@ -1,10 +1,10 @@
-Summary:	ppp daemon package for linux 1.3.xx and greater
-Summary(de):	ppp-Dämonpaket für Linux 1.3.xx und höher 
-Summary(fr):	Paquetage du démon ppp pour Linux 1.3.xx et supérieur
+Summary:	ppp daemon package for linux 2.2.0 and greater
+Summary(de):	ppp-Dämonpaket für Linux 2.2.0 und höher 
+Summary(fr):	Paquetage du démon ppp pour Linux 2.2.0 et supérieur
 Summary(tr):	PPP sunucu süreci
-Summary(pl):	Demon PPP dla Linux 1.3.x i wy¿szych
+Summary(pl):	Demon PPP dla Linux 2.2.0 i wy¿szych
 Name:		ppp
-Version:	2.3.8
+Version:	2.3.9
 Release:	1 
 Copyright:	distributable
 Group:		Networking/Daemons
@@ -12,61 +12,62 @@ Group(pl):	Sieciowe/Demony
 Source0:	ftp://cs.anu.edu.au/pub/software/ppp/%{name}-%{version}.tar.gz
 Source1:	pppd-2.3.7-pamd.conf
 Patch0:		ppp-make.patch
-Patch1:		ppp-auth.patch
-Patch2:		ppp-expect.patch
-Patch3:		ppp-debian_scripts.patch
-Patch4:		ppp-static.patch
-Patch5:		ppp-log.patch
-Patch6:		ppp-2.3.8-patch1
+Patch1:		ppp-expect.patch
+Patch2:		ppp-debian_scripts.patch
+Patch3:		ppp-static.patch
+Patch4:		ppp-log.patch
+Patch5:		ppp-2.3.9-patch1
+Requires:	/dev/ppp
 Buildroot:	/tmp/%{name}-%{version}-root
 
 %description
 This is the daemon and documentation for PPP support.  It requires a kernel
-greater than 2.0 which is built with PPP support. The default kernels include 
+greater than 2.2.0 which is built with PPP support. The default kernels include 
 PPP support as a module.
 
 %description -l de
 Dies ist der Dämon und die Dokumentation für PPP-Support. Erfordert
-einen Kernel höher als 2.0, der mit PPP-Support gebaut ist. Die Standard-
+einen Kernel höher als 2.2.0, der mit PPP-Support gebaut ist. Die Standard-
 Red-Hat-Kernel schließen PPP-Support als Modul ein.
 
 %description -l fr
 Ceci est le démon et la documentation pour le support PPP. Cela réclame
-un noyau supérieur au 2.0 et construit avec le support PPP. Le noyau par
+un noyau supérieur au 2.2.0 et construit avec le support PPP. Le noyau par
 défaut de Red Hat contient le support PPP sous forme de module.
 
 %description -l tr
 Bu paket PPP desteði için belgeler ve sunucu sürecini içerir. Çekirdek
-sürümünun 2.0'dan daha yüksek olmasýný gerektirir. Öntanýmlý Red Hat
+sürümünun 2.2.0'dan daha yüksek olmasýný gerektirir. Öntanýmlý Red Hat
 çekirdeði PPP desteðini bir modül olarak içerir.
 
 %description -l pl
 Pakiet zawiera demona i dokumentacjê umo¿liwiaj±c± korzystanie z protoko³u
-PPP. Wymaga jadra 2.0 - lub wy¿szych - z wkompilowan± obs³ug± protoko³u PPP. 
+PPP. Wymaga jadra 2.2.0 - lub wy¿szych - z wkompilowan± obs³ug± protoko³u PPP. 
 Standardowe j±dro z dytrybucji zawiera wsparcie dla PPP skompilowane jako 
 modu³.
 
 %prep
 %setup -q 
 %patch0 -p1 
-%patch1 -p1 -b .auth
+%patch1 -p1
 %patch2 -p1 
 %patch3 -p1 
 %patch4 -p1
-%patch5 -p1
-%patch6 -p1
+cd pppd
+%patch5 -p0
+cd ..
 
 %build
 %configure
-make RPM_OPT_FLAGS="$RPM_OPT_FLAGS" 
+make RPM_OPT_FLAGS="$RPM_OPT_FLAGS -DINET6"
 
 %install
 rm -rf $RPM_BUILD_ROOT
 
-install -d $RPM_BUILD_ROOT%{sbindir}
-install -d $RPM_BUILD_ROOT%{bindir}
-install -d $RPM_BUILD_ROOT%{mandir}/man1
-install -d $RPM_BUILD_ROOT%{mandir}/man8
+install -d $RPM_BUILD_ROOT%{_sbindir}
+install -d $RPM_BUILD_ROOT%{_bindir}
+install -d $RPM_BUILD_ROOT%{_mandir}/man1
+install -d $RPM_BUILD_ROOT%{_mandir}/man8
 install -d $RPM_BUILD_ROOT/etc/pam.d
 install -d $RPM_BUILD_ROOT/etc/ppp/peers
 install -d $RPM_BUILD_ROOT/etc/ppp/chatscripts
@@ -103,7 +104,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_bindir}/*
 %attr(755,root,root) %{_sbindir}/chat
 %attr(755,root,root) %{_sbindir}/pppstats
-%attr(0755,root,root) %{_sbindir}/pppd
+%attr(755,root,root) %{_sbindir}/pppd
 %{_mandir}/man[18]/*
 
 %attr(711,root,root) %dir /etc/ppp/peers
