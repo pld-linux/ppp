@@ -13,7 +13,7 @@ Summary(tr):	PPP sunucu s黵eci
 Summary(zh_CN):	PPP 配置和管理软件包.
 Name:		ppp
 Version:	2.4.2
-Release:	6
+Release:	7
 Epoch:		3
 License:	distributable
 Group:		Networking/Daemons
