@@ -18,8 +18,7 @@ Patch0:		%{name}-make.patch
 Patch1:		%{name}-expect.patch
 Patch2:		%{name}-debian_scripts.patch
 Patch3:		%{name}-static.patch
-Patch4:		%{name}-ipv6.patch
-Patch5:		%{name}-CBCP.patch
+Patch4:		%{name}-CBCP.patch
 BuildRequires:	pam-devel
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
@@ -58,7 +57,6 @@ Hat çekirdeði PPP desteðini bir modül olarak içerir. (IPv6)
 %patch2 -p1 
 %patch3 -p1
 %patch4 -p1
-%patch5 -p1
 
 %build
 %configure
