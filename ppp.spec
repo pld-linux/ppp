@@ -36,6 +36,7 @@ Patch6:		%{name}-rp-pppoe-update.patch
 Patch7:		%{name}-rp-pppoe-macaddr.patch
 Patch8:		%{name}-radius.patch
 Patch9:		%{name}-pcap.patch
+Patch10:	%{name}-lib64.patch
 URL:		http://www.samba.org/ppp/
 BuildRequires:	autoconf
 BuildRequires:	automake
@@ -123,6 +124,9 @@ Wtyczka PPPoATM dla pppd.
 %patch7 -p1
 %patch8 -p1
 %patch9 -p1
+%if "%{_lib}" == "lib64"
+%patch10 -p1
+%endif
 
 %build
 cd pppd/plugins/radius/radiusclient
