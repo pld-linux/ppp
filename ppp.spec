@@ -14,7 +14,7 @@ Summary(zh_CN):	PPP 配置和管理软件包.
 Name:		ppp
 Version:	2.4.2
 Release:	0.1
-Epoch:		2
+Epoch:		3
 License:	distributable
 Group:		Networking/Daemons
 Source0:	ftp://ftp.samba.org/pub/%{name}/%{name}-%{version}.tar.gz
