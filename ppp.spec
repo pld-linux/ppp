@@ -83,6 +83,7 @@ install debian/options		   $RPM_BUILD_ROOT/etc/ppp
 install debian/options.ttyXX	   $RPM_BUILD_ROOT/etc/ppp
 install debian/provider		   $RPM_BUILD_ROOT/etc/ppp/peers
 install debian/provider.chatscript $RPM_BUILD_ROOT/etc/ppp/chatscripts/provider
+install pppd/*.8		   $RPM_BUILD_ROOT%{_mandir}/man8/*
 
 rm -f scripts/README
 
