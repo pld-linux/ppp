@@ -6,7 +6,7 @@ diff -Nru ppp-2.3.11/chat/Makefile.linux ppp-2.3.11.new/chat/Makefile.linux
  CDEFS=	$(CDEF1) $(CDEF2) $(CDEF3) $(CDEF4)
  
 -CFLAGS=	-O2 -g -pipe $(CDEFS)
-+CFLAGS=	-pipe $(CDEFS) -Wall $(RPM_OPT_FLAGS)
++CFLAGS=	-pipe $(CDEFS) -Wall $(OPT_FLAGS)
  
  INSTALL= install
  
@@ -41,7 +41,7 @@ diff -Nru ppp-2.3.11/pppd/Makefile.linux ppp-2.3.11.new/pppd/Makefile.linux
  # CC = gcc
  #
 -COPTS = -O2 -pipe -Wall -g
-+COPTS = $(RPM_OPT_FLAGS) -pipe -Wall
++COPTS = $(OPT_FLAGS) -pipe -Wall
  LIBS =
  
  ifneq ($(wildcard /usr/lib/libcrypt.*),)
@@ -68,7 +68,7 @@ diff -Nru ppp-2.3.11/pppdump/Makefile.linux ppp-2.3.11.new/pppdump/Makefile.linu
 +++ ppp-2.3.11.new/pppdump/Makefile.linux	Sat Feb 19 19:08:27 2000
 @@ -1,4 +1,4 @@
 -CFLAGS= -O -I../include/net
-+CFLAGS= $(RPM_OPT_FLAGS) -I../include/net
++CFLAGS= $(OPT_FLAGS) -I../include/net
  OBJS = pppdump.o bsd-comp.o deflate.o zlib.o
  
  INSTALL= install
@@ -77,7 +77,7 @@ diff -Nru ppp-2.3.11/pppdump/Makefile.linux ppp-2.3.11.new/pppdump/Makefile.linu
  
  pppdump: $(OBJS)
 -	$(CC) -o pppdump $(OBJS)
-+	$(CC) $(RPM_OPT_FLAGS) -o pppdump $(OBJS)
++	$(CC) $(OPT_FLAGS) -o pppdump $(OBJS)
  
  clean:
  	rm -f pppdump $(OBJS) *~
@@ -91,7 +91,7 @@ diff -Nru ppp-2.3.11/pppstats/Makefile.linux ppp-2.3.11.new/pppstats/Makefile.li
 -#CC = gcc
 -COPTS = -O
 +CC = gcc
-+COPTS = $(RPM_OPT_FLAGS) -Wall
++COPTS = $(OPT_FLAGS) -Wall
  COMPILE_FLAGS = -D_linux_ -I../include
  LIBS =
  
