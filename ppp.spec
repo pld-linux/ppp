@@ -68,7 +68,7 @@ make install TOPDIR=$RPM_BUILD_ROOT
 
 install etc.ppp/chap-secrets 	   $RPM_BUILD_ROOT/etc/ppp
 install debian/{plog,poff,pon}	   $RPM_BUILD_ROOT/usr/bin
-install debian/*.1		   $RPM_BUILD_ROOT/usr/man/man1
+install debian/*.1		   $RPM_BUILD_ROOT%{_mandir}/man1
 install debian/pap-secrets	   $RPM_BUILD_ROOT/etc/ppp
 install debian/options		   $RPM_BUILD_ROOT/etc/ppp
 install debian/options.ttyXX	   $RPM_BUILD_ROOT/etc/ppp
@@ -81,7 +81,7 @@ install %{SOURCE1} $RPM_BUILD_ROOT/etc/pam.d/ppp
 
 strip $RPM_BUILD_ROOT/usr/sbin/*
 
-gzip -9nf $RPM_BUILD_ROOT/usr/man/man[18]/* \
+gzip -9nf $RPM_BUILD_ROOT%{_mandir}/man[18]/* \
 	README.linux debian/README.debian debian/win95.ppp \
 	README.MSCHAP80 FAQ debian/ppp-2.3.0.STATIC.README
 
@@ -97,7 +97,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) /usr/sbin/chat
 %attr(755,root,root) /usr/sbin/pppstats
 %attr(0755,root,root) /usr/sbin/pppd
-/usr/man/man[18]/*
+%{_mandir}/man[18]/*
 
 %attr(711,root,root) %dir /etc/ppp/peers
 %attr(711,root,root) %dir /etc/ppp/chatscripts
