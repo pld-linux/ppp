@@ -72,7 +72,9 @@ install -d $RPM_BUILD_ROOT/etc/pam.d
 install -d $RPM_BUILD_ROOT/etc/ppp/peers
 install -d $RPM_BUILD_ROOT/etc/ppp/chatscripts
 
-make install TOPDIR=$RPM_BUILD_ROOT
+make install \
+	TOPDIR=$RPM_BUILD_ROOT \
+	MANDIR=$RPM_BUILD_ROOT%{_mandir}
 
 install %{SOURCE2}		   .
 install etc.ppp/chap-secrets 	   $RPM_BUILD_ROOT/etc/ppp
@@ -83,7 +85,6 @@ install debian/options		   $RPM_BUILD_ROOT/etc/ppp
 install debian/options.ttyXX	   $RPM_BUILD_ROOT/etc/ppp
 install debian/provider		   $RPM_BUILD_ROOT/etc/ppp/peers
 install debian/provider.chatscript $RPM_BUILD_ROOT/etc/ppp/chatscripts/provider
-install pppd/*.8		   $RPM_BUILD_ROOT%{_mandir}/man8/*
 
 rm -f scripts/README
 
