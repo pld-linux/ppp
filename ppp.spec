@@ -15,7 +15,7 @@ Release:	8
 Epoch:		2
 License:	distributable
 Group:		Networking/Daemons
-Source0:	ftp://ftp.linuxcare.com.au/pub/ppp/%{name}-%{version}.tar.gz
+Source0:	ftp://ftp.samba.org/pub/ppp/%{name}-%{version}.tar.gz
 Source1:	%{name}.pamd
 Source2:	%{name}.pon
 Source3:	%{name}.poff
