@@ -18,7 +18,7 @@ diff -urN ppp-2.4.2-20020809.org/pppd/Makefile.linux ppp-2.4.2-20020809/pppd/Mak
  # CC = gcc
  #
 -COPTS = -O2 -pipe -Wall -g
-+COPTS = $(OPT_FLAGS) -pipe -Wall -g
++COPTS = $(OPT_FLAGS) -pipe -Wall
  LIBS =
  
  # Uncomment the next 2 lines to include support for Microsoft's
@@ -121,7 +121,7 @@ diff -urN ppp-2.4.2-20020809.org/pppstats/Makefile.linux ppp-2.4.2-20020809/ppps
 @@ -1,12 +1,12 @@
  CC	= gcc
 -COPTS	= -O2 -g
-+COPTS	= -g $(OPT_FLAGS)
++COPTS	= $(OPT_FLAGS)
  CFLAGS	= $(COPTS) -I.. -I../../include -fPIC
  LDFLAGS	= -shared
 -INSTALL	= install -o root
@@ -141,7 +141,7 @@ diff -urN ppp-2.4.2-20020809.org/pppstats/Makefile.linux ppp-2.4.2-20020809/ppps
  VERSION=3.3
  
 -COPTS=-O2 -g
-+COPTS=-g $(OPT_FLAGS)
++COPTS=$(OPT_FLAGS)
  CFLAGS=$(COPTS) -I../../../include/linux
  all: rp-pppoe.so
  
