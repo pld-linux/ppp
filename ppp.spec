@@ -22,30 +22,32 @@ BuildRequires:	pam-devel
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
-This is the daemon and documentation for PPP support.  It requires a kernel
-greater than 2.2.11 which is built with PPP support. The default kernels
-include PPP support as a module. This version supports IPv6, too.
+This is the daemon and documentation for PPP support. It requires a
+kernel greater than 2.2.11 which is built with PPP support. The
+default kernels include PPP support as a module. This version supports
+IPv6, too.
 
 %description -l de
 Dies ist der Dämon und die Dokumentation für PPP-Support. Erfordert
-einen Kernel höher als 2.2.11, der mit PPP-Support gebaut ist. Die Standard-
-Red-Hat-Kernel schließen PPP-Support als Modul ein. (IPv6)
+einen Kernel höher als 2.2.11, der mit PPP-Support gebaut ist. Die
+Standard- Red-Hat-Kernel schließen PPP-Support als Modul ein. (IPv6)
 
 %description -l fr
-Ceci est le démon et la documentation pour le support PPP. Cela réclame
-un noyau supérieur au 2.2.11 et construit avec le support PPP. Le noyau par
-défaut de Red Hat contient le support PPP sous forme de module. (IPv6)
+Ceci est le démon et la documentation pour le support PPP. Cela
+réclame un noyau supérieur au 2.2.11 et construit avec le support PPP.
+Le noyau par défaut de Red Hat contient le support PPP sous forme de
+module. (IPv6)
 
 %description -l pl
-Pakiet zawiera demona i dokumentacjê umo¿liwiaj±c± korzystanie z protoko³u
-PPP. Wymaga jadra 2.2.11 - lub wy¿szych - z wkompilowan± obs³ug± protoko³u PPP. 
-Standardowe j±dro z dytrybucji zawiera wsparcie dla PPP skompilowane jako 
-modu³. (IPv6)
+Pakiet zawiera demona i dokumentacjê umo¿liwiaj±c± korzystanie z
+protoko³u PPP. Wymaga jadra 2.2.11 - lub wy¿szych - z wkompilowan±
+obs³ug± protoko³u PPP. Standardowe j±dro z dytrybucji zawiera wsparcie
+dla PPP skompilowane jako modu³. (IPv6)
 
 %description -l tr
 Bu paket PPP desteði için belgeler ve sunucu sürecini içerir. Çekirdek
-sürümünun 2.2.11'dan daha yüksek olmasýný gerektirir. Öntanýmlý Red Hat
-çekirdeði PPP desteðini bir modül olarak içerir. (IPv6)
+sürümünun 2.2.11'dan daha yüksek olmasýný gerektirir. Öntanýmlý Red
+Hat çekirdeði PPP desteðini bir modül olarak içerir. (IPv6)
 
 %prep
 %setup -q 
@@ -68,13 +70,14 @@ install -d $RPM_BUILD_ROOT{%{_sbindir},%{_bindir},%{_mandir}/man{1,8}} \
 make install \
 	DESTDIR=$RPM_BUILD_ROOT
 
-install %{SOURCE2}		   	$RPM_BUILD_ROOT%{_bindir}/pon
-install %{SOURCE3}		   	$RPM_BUILD_ROOT%{_bindir}/poff
-install debian/plog			$RPM_BUILD_ROOT%{_bindir}
-install etc.ppp/chap-secrets		$RPM_BUILD_ROOT/etc/ppp
-install debian/pap-secrets		$RPM_BUILD_ROOT/etc/ppp
-install debian/options			$RPM_BUILD_ROOT/etc/ppp
-install debian/options.ttyXX		$RPM_BUILD_ROOT/etc/ppp
+install %{SOURCE2} $RPM_BUILD_ROOT%{_bindir}/pon
+install %{SOURCE3} $RPM_BUILD_ROOT%{_bindir}/poff
+install debian/plog $RPM_BUILD_ROOT%{_bindir}
+
+install etc.ppp/chap-secrets $RPM_BUILD_ROOT%{_sysconfdir}/ppp
+install debian/pap-secrets $RPM_BUILD_ROOT%{_sysconfdir}/ppp
+install debian/options $RPM_BUILD_ROOT%{_sysconfdir}/ppp
+install debian/options.ttyXX $RPM_BUILD_ROOT%{_sysconfdir}/ppp
 
 rm -f scripts/README
 
@@ -99,8 +102,8 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_sbindir}/pppd
 %{_mandir}/man8/*
 
-%attr(600,root,root) %config %verify(not size mtime md5) /etc/ppp/*-secrets
-%attr(644,root,root) %config %verify(not size mtime md5) /etc/ppp/options*
+%attr(600,root,root) %config %verify(not size mtime md5) %{_sysconfdir}/ppp/*-secrets
+%attr(644,root,root) %config %verify(not size mtime md5) %{_sysconfdir}/ppp/options*
 %attr(640,root,root) %config %verify(not size mtime md5) /etc/pam.d/ppp
 
-%dir /etc/ppp/peers
+%dir %{_sysconfdir}/ppp/peers
