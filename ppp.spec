@@ -21,6 +21,7 @@ Source0:	ftp://ftp.linuxcare.com.au/pub/ppp/%{name}-%{version}.tar.gz
 Source1:	%{name}.pamd
 Source2:	%{name}.pon
 Source3:	%{name}.poff
+Source4:	%{name}-non-english-man-pages.tar.bz2
 Patch0:		%{name}-make.patch
 Patch1:		%{name}-expect.patch
 Patch2:		%{name}-debian_scripts.patch
@@ -126,6 +127,7 @@ install etc.ppp/chap-secrets $RPM_BUILD_ROOT%{_sysconfdir}/ppp
 install debian/pap-secrets $RPM_BUILD_ROOT%{_sysconfdir}/ppp
 install debian/options $RPM_BUILD_ROOT%{_sysconfdir}/ppp
 install debian/options.ttyXX $RPM_BUILD_ROOT%{_sysconfdir}/ppp
+bzip2 -dc %{SOURCE2} | tar xf - -C $RPM_BUILD_ROOT%{_mandir}
 
 rm -f scripts/README
 
@@ -153,6 +155,10 @@ rm -rf $RPM_BUILD_ROOT
 %{!?_without_pppoatm:%attr(755,root,root) %{_libdir}/pppd/%{version}/passprompt.so}
 %{!?_without_pppoe:%attr(755,root,root) %{_libdir}/pppd/%{version}/pppoe.so}
 %{_mandir}/man8/*
+%lang(fr) %{_mandir}/fr/man8/*
+%lang(ja) %{_mandir}/ja/man8/*
+%lang(ko) %{_mandir}/ko/man8/*
+%lang(pl) %{_mandir}/pl/man8/*
 
 %attr(600,root,root) %config(missingok,noreplace) %verify(not md5 size mtime) %{_sysconfdir}/ppp/*-secrets
 %attr(644,root,root) %config(missingok) %verify(not md5 size mtime) %{_sysconfdir}/ppp/options*
