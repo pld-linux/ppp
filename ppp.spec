@@ -14,7 +14,7 @@ Summary(tr):	PPP sunucu s黵eci
 Summary(zh_CN):	PPP 配置和管理软件包.
 Name:		ppp
 Version:	2.4.2
-Release:	3
+Release:	4
 Epoch:		2
 License:	distributable
 Group:		Networking/Daemons
@@ -35,8 +35,11 @@ Patch4:		%{name}-pppoatm.patch
 Patch5:		%{name}-pidfile-owner.patch
 Patch6:		%{name}-rp-pppoe-update.patch
 Patch7:		%{name}-rp-pppoe-macaddr.patch
+Patch8:		%{name}-radius.patch
 URL:		http://www.samba.org/ppp/
+BuildRequires:	autoconf
 BuildRequires:	automake
+BuildRequires:	libtool
 %{?with_pppoatm:BuildRequires:	linux-atm-devel}
 BuildRequires:	pam-devel
 Requires:	pam >= 0.77.3
@@ -117,15 +120,19 @@ Wtyczka PPPoATM dla pppd.
 %patch5 -p1
 %patch6 -p1
 %patch7 -p1
+%patch8 -p1
 
 %build
 cd pppd/plugins/radius/radiusclient
-# touch seems no longer needed?
-#find . -exec touch "{}" ";"
-cp -f /usr/share/automake/config.* .
-%configure2_13 \
-	--enable-shared \
-	--enable-static
+# cannot use system radiusclient 0.3.2 - this version is modified
+# (contains some extensions which made it incompatible with original)
+# lt must be rebuilt (old libtool didn't use PIC on ppc-linux)
+%{__libtoolize}
+%{__aclocal}
+%{__autoconf}
+%{__autoheader}
+%{__automake}
+%configure
 cd ../../../..
 # note: not autoconf configure
 %configure
