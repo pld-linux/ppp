@@ -4,7 +4,7 @@ Summary(fr):	Paquetage du démon ppp pour Linux 1.3.xx et supérieur
 Summary(tr):	PPP sunucu süreci
 Summary(pl):	Demon PPP dla Linux 1.3.x i wy¿szych
 Name:		ppp
-Version:	2.3.7
+Version:	2.3.8
 Release:	1 
 Copyright:	distributable
 Group:		Networking/Daemons
@@ -55,14 +55,19 @@ modu³.
 %patch5 -p1
 
 %build
-./configure %{_target_platform}
+%configure
 make RPM_OPT_FLAGS="$RPM_OPT_FLAGS" 
 
 %install
 rm -rf $RPM_BUILD_ROOT
 
-install -d $RPM_BUILD_ROOT/usr/{sbin,bin,man/man{1,8}} \
-	$RPM_BUILD_ROOT/etc/{ppp/{chatscripts,peers},pam.d}
+install -d $RPM_BUILD_ROOT%{sbindir}
+install -d $RPM_BUILD_ROOT%{bindir}
+install -d $RPM_BUILD_ROOT%{mandir}/man1
+install -d $RPM_BUILD_ROOT%{mandir}/man8
+install -d $RPM_BUILD_ROOT/etc/pam.d
+install -d $RPM_BUILD_ROOT/etc/ppp/peers
+install -d $RPM_BUILD_ROOT/etc/ppp/chatscripts
 
 make install TOPDIR=$RPM_BUILD_ROOT
 
@@ -109,6 +114,10 @@ rm -rf $RPM_BUILD_ROOT
 %attr(640,root,root) %config %verify(not size mtime md5) /etc/ppp/chatscripts/provider
 
 %changelog
+* Sun Jun 06 1999 Jan Rêkorajski <baggins@pld.org.pl>
+  [2.3.8-1]
+- small fixes
+
 * Wed Apr 28 1999 Piotr Czerwiñski <pius@pld.org.pl>
   [2.3.7-1]
 - updated to 2.3.7,
