@@ -1,38 +1,6 @@
-diff -urN ppp-2.4.2-20020901.org/pppd/plugins/rp-pppoe/Makefile.linux ppp-2.4.2-20020901/pppd/plugins/rp-pppoe/Makefile.linux
---- ppp-2.4.2-20020901.org/pppd/plugins/rp-pppoe/Makefile.linux	Sun Sep  1 20:54:50 2002
-+++ ppp-2.4.2-20020901/pppd/plugins/rp-pppoe/Makefile.linux	Sun Sep  1 20:55:29 2002
-@@ -14,7 +14,7 @@
- #***********************************************************************
- 
- # Version is set ONLY IN THE MAKEFILE!  Don't delete this!
--VERSION=3.3
-+VERSION=3.5
- 
- CFLAGS+=-I../../../include/linux
- all: rp-pppoe.so
 diff -urN ppp-2.4.2-20020901.org/pppd/plugins/rp-pppoe/common.c ppp-2.4.2-20020901/pppd/plugins/rp-pppoe/common.c
 --- ppp-2.4.2-20020901.org/pppd/plugins/rp-pppoe/common.c	Sun Sep  1 20:54:50 2002
 +++ ppp-2.4.2-20020901/pppd/plugins/rp-pppoe/common.c	Sun Sep  1 20:55:21 2002
-@@ -11,13 +11,18 @@
- * This program may be distributed according to the terms of the GNU
- * General Public License, version 2 or (at your option) any later version.
- *
-+* LIC: GPL
-+*
- ***********************************************************************/
- 
- static char const RCSID[] =
--"$Id$";
-+"$Id$";
-+/* For vsnprintf prototype */
-+#define _ISOC99_SOURCE 1
- 
- #include "pppoe.h"
- 
-+
- #ifdef HAVE_SYSLOG_H
- #include <syslog.h>
- #endif
 @@ -25,6 +30,7 @@
  #include <string.h>
  #include <errno.h>
@@ -41,64 +9,6 @@ diff -urN ppp-2.4.2-20020901.org/pppd/plugins/rp-pppoe/common.c ppp-2.4.2-200209
  
  #ifdef HAVE_UNISTD_H
  #include <unistd.h>
-@@ -93,7 +99,7 @@
- * tag -- will be filled in with tag contents
- *%RETURNS:
- * A pointer to the tag if one of the specified type is found; NULL
--* otherwise. 
-+* otherwise.
- *%DESCRIPTION:
- * Looks for a specific tag type.
- ***********************************************************************/
-@@ -248,21 +254,38 @@
-     unsigned char *mssopt = NULL;
-     UINT16_t csum;
- 
--    int len;
-+    int len, minlen;
- 
--    /* Is it IPv4? */
--    if (packet->payload[0] != 0x00 ||
--	packet->payload[1] != 0x21) {
--	/* Nope, ignore it */
--	return;
--    }
-+    /* check PPP protocol type */
-+    if (packet->payload[0] & 0x01) {
-+        /* 8 bit protocol type */
-+
-+        /* Is it IPv4? */
-+        if (packet->payload[0] != 0x21) {
-+            /* Nope, ignore it */
-+            return;
-+        }
-+
-+        ipHdr = packet->payload + 1;
-+	minlen = 41;
-+    } else {
-+        /* 16 bit protocol type */
- 
--    ipHdr = packet->payload + 2;
-+        /* Is it IPv4? */
-+        if (packet->payload[0] != 0x00 ||
-+            packet->payload[1] != 0x21) {
-+            /* Nope, ignore it */
-+            return;
-+        }
-+
-+        ipHdr = packet->payload + 2;
-+	minlen = 42;
-+    }
- 
-     /* Is it too short? */
-     len = (int) ntohs(packet->length);
--    if (len < 42) {
--	/* 20 byte IP header; 20 byte TCP header; 2 byte PPP protocol */
-+    if (len < minlen) {
-+	/* 20 byte IP header; 20 byte TCP header; at least 1 or 2 byte PPP protocol */
- 	return;
-     }
- 
 @@ -423,7 +446,7 @@
  	cursor += elen + TAG_HDR_SIZE;
  	plen += elen + TAG_HDR_SIZE;
@@ -194,20 +104,6 @@ diff -urN ppp-2.4.2-20020901.org/pppd/plugins/rp-pppoe/debug.c ppp-2.4.2-2002090
 diff -urN ppp-2.4.2-20020901.org/pppd/plugins/rp-pppoe/discovery.c ppp-2.4.2-20020901/pppd/plugins/rp-pppoe/discovery.c
 --- ppp-2.4.2-20020901.org/pppd/plugins/rp-pppoe/discovery.c	Sun Sep  1 20:54:50 2002
 +++ ppp-2.4.2-20020901/pppd/plugins/rp-pppoe/discovery.c	Sun Sep  1 20:55:21 2002
-@@ -6,10 +6,12 @@
- *
- * Copyright (C) 1999 by Roaring Penguin Software Inc.
- *
-+* LIC: GPL
-+*
- ***********************************************************************/
- 
- static char const RCSID[] =
--"$Id$";
-+"$Id$";
- 
- #include "pppoe.h"
- 
 @@ -322,12 +324,12 @@
      pc.serviceNameOK = (conn->serviceName) ? 0 : 1;
      pc.seenACName    = 0;
@@ -1094,22 +990,6 @@ diff -urN ppp-2.4.2-20020901.org/pppd/plugins/rp-pppoe/plugin.c ppp-2.4.2-200209
  
  #define _PATH_ETHOPT         _ROOT_PATH "/etc/ppp/options."
  
-@@ -275,13 +278,9 @@
-     int fd;
-     struct ifreq ifr;
- 
--    /* Only do it if name is "ethXXX" or "nic-XXXX.  In latter case,
--       strip off the "nic-" */
-+    /* Only do it if name is "ethXXX" */
-     /* Thanks to Russ Couturier for this fix */
--    if (strlen(cmd) > 4 && !strncmp(cmd, "nic-", 4)) {
--	/* Strip off "nic-" */
--	cmd += 4;
--    } else if (strlen(cmd) < 4 || strncmp(cmd, "eth", 3)) {
-+    if (strlen(cmd) < 4 || strncmp(cmd, "eth", 3)) {
- 	if (OldDevnameHook) return OldDevnameHook(cmd, argv, doit);
- 	return 0;
-     }
 @@ -399,12 +398,11 @@
  void
  rp_fatal(char const *str)
