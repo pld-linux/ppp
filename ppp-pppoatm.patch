@@ -1,34 +1,23 @@
 diff -urN ppp-2.4.1/pppd/plugins/Makefile.linux ppp-2.4.1.ppoatm/pppd/plugins/Makefile.linux
 --- ppp-2.4.1/pppd/plugins/Makefile.linux	Fri Jun 15 18:55:48 2001
 +++ ppp-2.4.1.ppoatm/pppd/plugins/Makefile.linux	Fri Jun 15 18:34:27 2001
-@@ -3,7 +3,7 @@
- LDFLAGS	+= -shared
- INSTALL	= install
+@@ -6,7 +6,7 @@
+ SUBDIRS := rp-pppoe
+ # Uncomment the next line to include the radius authentication plugin
+ SUBDIRS += radius
+-PLUGINS := minconn.so passprompt.so passwordfd.so
++PLUGINS := minconn.so passprompt.so passwordfd.so pppoatm.so
  
--all:	minconn.so passprompt.so pppoe/pppoe.so
-+all:	minconn.so passprompt.so pppoe/pppoe.so pppoatm.so
+ # include dependencies if present
+ ifeq (.depend,$(wildcard .depend))
+@@ -16,6 +16,7 @@
+ all:	$(PLUGINS)
+ 	for d in $(SUBDIRS); do $(MAKE) $(MFLAGS) -C $$d all; done
  
- pppoe/pppoe.so:
- 	$(MAKE) -C pppoe $(MFLAGS) pppoe.so
-@@ -14,12 +14,15 @@
- passprompt.so: passprompt.c
- 	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) passprompt.c
- 
-+pppoatm.so: pppoatm.c
-+	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) -D_linux_=1 -latm pppoatm.c
 +
- LIBDIR	= /usr/lib/pppd
+ %.so: %.c
+ 	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $^
  
--install: minconn.so passprompt.so pppoe/pppoe.so
-+install: minconn.so passprompt.so pppoe/pppoe.so pppoatm.so
- 	version=`awk -F '"' '/VERSION/ { print $$2; }' ../patchlevel.h`; \
- 	$(INSTALL) -d $(DESTDIR)$(LIBDIR)/$$version; \
- 	$(INSTALL) $? $(DESTDIR)$(LIBDIR)/$$version
- 
- clean:
--	rm -rf *.o *.so
-\ No newline at end of file
-+	rm -rf *.o *.so
 diff -urN ppp-2.4.1/pppd/plugins/pppoatm.c ppp-2.4.1.ppoatm/pppd/plugins/pppoatm.c
 --- ppp-2.4.1/pppd/plugins/pppoatm.c	Thu Jan  1 01:00:00 1970
 +++ ppp-2.4.1.ppoatm/pppd/plugins/pppoatm.c	Fri Jun 15 18:50:39 2001
