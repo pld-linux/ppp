@@ -5,19 +5,19 @@ Summary(tr):	PPP sunucu süreci
 Summary(pl):	Demon PPP dla Linux 2.2.11 i wy¿szych
 Name:		ppp
 Version:	2.4.0b2
-Release:	1
+Release:	2
 Copyright:	distributable
 Group:		Networking/Daemons
 Group(pl):	Sieciowe/Serwery
 Source0:	ftp://cs.anu.edu.au/pub/software/ppp/%{name}-%{version}.tar.gz
-Source1:	ppp.pamd
-Source2:	ppp.pon
-Source3:	ppp.poff
-Patch0:		ppp-make.patch
-Patch1:		ppp-expect.patch
-Patch2:		ppp-debian_scripts.patch
-Patch3:		ppp-static.patch
-Patch4:		ppp-ipv6.patch
+Source1:	%{name}.pamd
+Source2:	%{name}.pon
+Source3:	%{name}.poff
+Patch0:		%{name}-make.patch
+Patch1:		%{name}-expect.patch
+Patch2:		%{name}-debian_scripts.patch
+Patch3:		%{name}-static.patch
+Patch4:		%{name}-ipv6.patch
 BuildRequires:	pam-devel
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
@@ -59,13 +59,13 @@ Hat çekirdeði PPP desteðini bir modül olarak içerir. (IPv6)
 
 %build
 %configure
-%{__make} OPT_FLAGS="$RPM_OPT_FLAGS"
+%{__make} OPT_FLAGS="$RPM_OPT_FLAGS -DCBCP_SUPPORT"
 
 %install
 rm -rf $RPM_BUILD_ROOT
 
 install -d $RPM_BUILD_ROOT{%{_sbindir},%{_bindir},%{_mandir}/man{1,8}} \
-	$RPM_BUILD_ROOT/etc/{pam.d,ppp/peers}
+	$RPM_BUILD_ROOT%{_sysconfdir}/{pam.d,ppp/peers}
 
 %{__make} install \
 	DESTDIR=$RPM_BUILD_ROOT
