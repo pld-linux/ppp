@@ -1,5 +1,5 @@
 #
-# bcond_off_pppoe - without PPPoE support (which requires kernel 2.4)
+# _without_pppoe - without PPPoE support (which requires kernel 2.4)
 Summary:	ppp daemon package for linux 2.2.11 and greater
 Summary(de):	ppp-Dämonpaket für Linux 2.2.11 und höher 
 Summary(fr):	Paquetage du démon ppp pour Linux 2.2.11 et supérieur
@@ -73,9 +73,9 @@ Hat çekirdeði PPP desteðini bir modül olarak içerir. (IPv6)
 %patch5 -p1
 %patch6 -p1
 %patch7 -p1
-%{?bcond_off_pppoe:%patch8 -p1}
-%{!?bcond_off_pppoe:%patch9 -p1}
-%{!?bcond_off_pppoe:%patch10 -p1}
+%{?_without_pppoe:%patch8 -p1}
+%{!?_without_pppoe:%patch9 -p1}
+%{!?_without_pppoe:%patch10 -p1}
 %build
 %configure
 %{__make} OPT_FLAGS="%{rpmcflags}" \
@@ -118,9 +118,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_sbindir}/chat
 %attr(755,root,root) %{_sbindir}/pppstats
 %attr(755,root,root) %{_sbindir}/pppd
-%{!?bcond_off_pppoe:%dir %{_libdir}/pppd}
-%{!?bcond_off_pppoe:%dir %{_libdir}/pppd/plugins}
-%{!?bcond_off_pppoe:%attr(755,root,root) %{_libdir}/pppd/plugins/*}
+%{!?_without_pppoe:%dir %{_libdir}/pppd}
+%{!?_without_pppoe:%dir %{_libdir}/pppd/plugins}
+%{!?_without_pppoe:%attr(755,root,root) %{_libdir}/pppd/plugins/*}
 %{_mandir}/man8/*
 
 %attr(600,root,root) %config %verify(not size mtime md5) %{_sysconfdir}/ppp/*-secrets
