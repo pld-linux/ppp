@@ -4,7 +4,7 @@ Summary(fr):	Paquetage du démon ppp pour Linux 2.2.11 et supérieur
 Summary(tr):	PPP sunucu süreci
 Summary(pl):	Demon PPP dla Linux 2.2.11 i wy¿szych
 Name:		ppp
-Version:	2.3.9
+Version:	2.3.10
 Release:	1 
 Copyright:	distributable
 Group:		Networking/Daemons
@@ -12,12 +12,12 @@ Group(pl):	Sieciowe/Demony
 Source0:	ftp://cs.anu.edu.au/pub/software/ppp/%{name}-%{version}.tar.gz
 Source1:	pppd-2.3.7-pamd.conf
 Source2:	kernel-2.2.10-ppp.patch.gz
-Patch0:		ppp-2.3.9-ipv6-990816.patch.gz
+#Patch0:	ppp-2.3.9-ipv6-990816.patch.gz
 Patch1:		ppp-make.patch
 Patch2:		ppp-expect.patch
 Patch3:		ppp-debian_scripts.patch
 Patch4:		ppp-static.patch
-Patch5:		ppp-2.3.9-patch1
+#Patch5:	ppp-2.3.9-patch1
 Buildroot:	/tmp/%{name}-%{version}-root
 
 %description
@@ -48,14 +48,14 @@ sürümünun 2.2.11'dan daha yüksek olmasýný gerektirir. Öntanýmlý Red Hat
 
 %prep
 %setup -q 
-%patch0 -p1 
+#%patch0 -p1 
 %patch1 -p1
 %patch2 -p1 
 %patch3 -p1 
 %patch4 -p1
-cd pppd
-%patch5 -p0
-cd ..
+#cd pppd
+#%patch5 -p0
+#cd ..
 
 %build
 %configure
