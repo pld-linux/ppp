@@ -18,10 +18,12 @@ Epoch:		2
 License:	distributable
 Group:		Networking/Daemons
 Source0:	ftp://ftp.samba.org/pub/ppp/%{name}-%{version}.tar.gz
+# Source0-md5: fbc256801d5fcd8015039b149ae95eb0
 Source1:	%{name}.pamd
 Source2:	%{name}.pon
 Source3:	%{name}.poff
 Source4:	%{name}-non-english-man-pages.tar.bz2
+# Source4-md5: 15efa68633c9f18a3211965f91bd0a6f
 Source5:	%{name}.logrotate
 Patch0:		%{name}-make.patch
 Patch1:		%{name}-expect.patch
