@@ -83,10 +83,10 @@ sürümünun 2.2.11'dan daha yüksek olmasýný gerektirir. Öntanýmlý Red
 Hat çekirdeði PPP desteðini bir modül olarak içerir. (IPv6)
 
 %package plugin-devel
-Summary:        Stuff needed to build plugins for pppd
-Summary(pl):    Rzeczy potrzebne do budowania wtyczek dla pppd
-Group:          Development/Libraries
-Requires:       %{name} = %{epoch}:%{version}
+Summary:	Stuff needed to build plugins for pppd
+Summary(pl):	Rzeczy potrzebne do budowania wtyczek dla pppd
+Group:		Development/Libraries
+Requires:	%{name} = %{epoch}:%{version}
 
 %description plugin-devel
 Development files needed to build plugins for pppd.
