@@ -15,8 +15,6 @@ Release:	8
 Epoch:		2
 License:	distributable
 Group:		Networking/Daemons
-Group(de):	Netzwerkwesen/Server
-Group(pl):	Sieciowe/Serwery
 Source0:	ftp://ftp.linuxcare.com.au/pub/ppp/%{name}-%{version}.tar.gz
 Source1:	%{name}.pamd
 Source2:	%{name}.pon
@@ -84,8 +82,6 @@ Hat çekirdeði PPP desteðini bir modül olarak içerir. (IPv6)
 Summary:	PPP Over ATM plugin
 Summary(pl):	Wtyczka PPP-po-ATM
 Group:		Networking/Daemons
-Group(de):	Netzwerkwesen/Server
-Group(pl):	Sieciowe/Serwery
 Requires:	%{name} = %{version}
 
 %description pppoatm
