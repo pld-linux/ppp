@@ -1,51 +1,53 @@
-diff -urN ppp-2.4.1.org/chat/Makefile.linux ppp-2.4.1/chat/Makefile.linux
---- ppp-2.4.1.org/chat/Makefile.linux	Sun Jun 10 22:52:36 2001
-+++ ppp-2.4.1/chat/Makefile.linux	Sun Jun 10 22:52:53 2001
+diff -urN ppp-2.4.2-20020809.org/chat/Makefile.linux ppp-2.4.2-20020809/chat/Makefile.linux
+--- ppp-2.4.2-20020809.org/chat/Makefile.linux	Fri Aug  9 22:14:40 2002
++++ ppp-2.4.2-20020809/chat/Makefile.linux	Sat Aug 10 00:31:18 2002
 @@ -6,7 +6,7 @@
  CDEF4=	-DFNDELAY=O_NDELAY		# Old name value
  CDEFS=	$(CDEF1) $(CDEF2) $(CDEF3) $(CDEF4)
  
 -CFLAGS=	-O2 -g -pipe $(CDEFS)
-+CFLAGS=	-pipe $(CDEFS) -Wall $(OPT_FLAGS)
++CFLAGS=	$(OPT_FLAGS) -pipe $(CDEFS)
  
  INSTALL= install
  
-diff -urN ppp-2.4.1.org/linux/Makefile.top ppp-2.4.1/linux/Makefile.top
---- ppp-2.4.1.org/linux/Makefile.top	Sun Jun 10 22:52:36 2001
-+++ ppp-2.4.1/linux/Makefile.top	Sun Jun 10 22:52:53 2001
-@@ -2,7 +2,7 @@
- 
+diff -urN ppp-2.4.2-20020809.org/linux/Makefile.top ppp-2.4.2-20020809/linux/Makefile.top
+--- ppp-2.4.2-20020809.org/linux/Makefile.top	Fri Aug  9 22:14:40 2002
++++ ppp-2.4.2-20020809/linux/Makefile.top	Sat Aug 10 00:31:18 2002
+@@ -3,7 +3,7 @@
  
  BINDIR = $(DESTDIR)/usr/sbin
+ INCDIR = $(DESTDIR)/usr/include
 -MANDIR = $(DESTDIR)/usr/man
 +MANDIR = $(DESTDIR)/usr/share/man
  ETCDIR = $(DESTDIR)/etc/ppp
  
  # uid 0 = root
-diff -urN ppp-2.4.1.org/pppd/Makefile.linux ppp-2.4.1/pppd/Makefile.linux
---- ppp-2.4.1.org/pppd/Makefile.linux	Sun Jun 10 22:52:36 2001
-+++ ppp-2.4.1/pppd/Makefile.linux	Sun Jun 10 22:54:02 2001
-@@ -4,8 +4,8 @@
+diff -urN ppp-2.4.2-20020809.org/pppd/Makefile.linux ppp-2.4.2-20020809/pppd/Makefile.linux
+--- ppp-2.4.2-20020809.org/pppd/Makefile.linux	Fri Aug  9 22:14:40 2002
++++ ppp-2.4.2-20020809/pppd/Makefile.linux	Sat Aug 10 00:34:02 2002
+@@ -4,9 +4,9 @@
  #
  
  # Default installation locations
 -BINDIR = /usr/sbin
 -MANDIR = /usr/man
+-INCDIR = /usr/include
 +BINDIR = $(DESTDIR)/usr/sbin
 +MANDIR = $(DESTDIR)/usr/share/man
++INCDIR = $(DESTDIR)/usr/include
  
- PPPDSRCS = main.c magic.c fsm.c lcp.c ipcp.c upap.c chap.c md5.c ccp.c \
+ PPPDSRCS = main.c magic.c fsm.c lcp.c ipcp.c upap.c chap.c md5.c ccp.c ecp.c \
  	   ipxcp.c auth.c options.c sys-linux.c md4.c chap_ms.c cbcp.c \
-@@ -27,7 +27,7 @@
+@@ -30,7 +30,7 @@
  
  # CC = gcc
  #
 -COPTS = -O2 -pipe -Wall -g
-+COPTS = $(OPT_FLAGS) -pipe -Wall
++COPTS = $(OPT_FLAGS) -pipe -Wall -g
  LIBS =
  
  ifneq ($(wildcard /usr/lib/libcrypt.*),)
-@@ -50,7 +50,7 @@
+@@ -66,11 +66,11 @@
  
  HAS_SHADOW=y
  #USE_PAM=y
@@ -54,9 +56,14 @@ diff -urN ppp-2.4.1.org/pppd/Makefile.linux ppp-2.4.1/pppd/Makefile.linux
  
  PLUGIN=y
  
-@@ -112,14 +112,12 @@
- endif
+-#CBCP=y
++CBCP=y
  
+ MAXOCTETS=y
+ 
+@@ -160,13 +160,11 @@
+      CFLAGS += -DMAXOCTETS
+ endif
  
 -INSTALL= install -o root
 +INSTALL= install
@@ -66,46 +73,56 @@ diff -urN ppp-2.4.1.org/pppd/Makefile.linux ppp-2.4.1/pppd/Makefile.linux
 -	$(INSTALL) -s -c -m 555 pppd $(BINDIR)/pppd
 -	if chgrp pppusers $(BINDIR)/pppd 2>/dev/null; then \
 -	  chmod o-rx,u+s $(BINDIR)/pppd; fi
--	$(INSTALL) -c -m 444 pppd.8 $(MANDIR)/man8
-+	$(INSTALL) -c -m 755 pppd $(BINDIR)/pppd
-+	$(INSTALL) -c -m 644 pppd.8 $(MANDIR)/man8
++	$(INSTALL) -c -m 555 pppd $(BINDIR)/pppd
+ 	$(INSTALL) -c -m 444 pppd.8 $(MANDIR)/man8
  
  pppd: $(PPPDOBJS)
- 	$(CC) $(CFLAGS) $(LDFLAGS) -o pppd $(PPPDOBJS) $(LIBS)
-diff -urN ppp-2.4.1.org/pppdump/Makefile.linux ppp-2.4.1/pppdump/Makefile.linux
---- ppp-2.4.1.org/pppdump/Makefile.linux	Sun Jun 10 22:52:37 2001
-+++ ppp-2.4.1/pppdump/Makefile.linux	Sun Jun 10 22:52:53 2001
-@@ -1,4 +1,4 @@
--CFLAGS= -O -I../include/net
-+CFLAGS= $(OPT_FLAGS) -I../include/net
- OBJS = pppdump.o bsd-comp.o deflate.o zlib.o
+diff -urN ppp-2.4.2-20020809.org/pppd/plugins/Makefile.linux ppp-2.4.2-20020809/pppd/plugins/Makefile.linux
+--- ppp-2.4.2-20020809.org/pppd/plugins/Makefile.linux	Fri Aug  9 22:14:40 2002
++++ ppp-2.4.2-20020809/pppd/plugins/Makefile.linux	Sat Aug 10 00:31:52 2002
+@@ -1,7 +1,7 @@
+ CC	= gcc
+-CFLAGS	= -g -O2 -I.. -I../../include -D_linux_=1 -fPIC
++CFLAGS	= -g $(OPT_FLAGS) -I.. -I../../include -D_linux_=1 -fPIC
+ LDFLAGS	= -shared
+-INSTALL	= install -o root
++INSTALL	= install
  
- INSTALL= install
-@@ -6,7 +6,7 @@
- all:	pppdump
+ SUBDIRS = rp-pppoe radius
+ PLUGINS = minconn.so passprompt.so passwordfd.so
+diff -urN ppp-2.4.2-20020809.org/pppdump/Makefile.linux ppp-2.4.2-20020809/pppdump/Makefile.linux
+--- ppp-2.4.2-20020809.org/pppdump/Makefile.linux	Fri Aug  9 22:14:40 2002
++++ ppp-2.4.2-20020809/pppdump/Makefile.linux	Sat Aug 10 00:31:18 2002
+@@ -13,5 +13,5 @@
  
- pppdump: $(OBJS)
--	$(CC) -o pppdump $(OBJS)
-+	$(CC) $(OPT_FLAGS) -o pppdump $(OBJS)
- 
- clean:
- 	rm -f pppdump $(OBJS) *~
-diff -urN ppp-2.4.1.org/pppstats/Makefile.linux ppp-2.4.1/pppstats/Makefile.linux
---- ppp-2.4.1.org/pppstats/Makefile.linux	Sun Jun 10 22:52:37 2001
-+++ ppp-2.4.1/pppstats/Makefile.linux	Sun Jun 10 22:52:53 2001
-@@ -6,12 +6,12 @@
- PPPSTATSRCS = pppstats.c
+ install:
+ 	mkdir -p $(BINDIR) $(MANDIR)/man8
+-	$(INSTALL) -s -c pppdump $(BINDIR)
++	$(INSTALL) -c pppdump $(BINDIR)
+ 	$(INSTALL) -c -m 444 pppdump.8 $(MANDIR)/man8
+diff -urN ppp-2.4.2-20020809.org/pppstats/Makefile.linux ppp-2.4.2-20020809/pppstats/Makefile.linux
+--- ppp-2.4.2-20020809.org/pppstats/Makefile.linux	Fri Aug  9 22:14:40 2002
++++ ppp-2.4.2-20020809/pppstats/Makefile.linux	Sat Aug 10 00:31:18 2002
+@@ -7,11 +7,11 @@
  PPPSTATOBJS = pppstats.o
  
--#CC = gcc
+ #CC = gcc
 -COPTS = -O
-+CC = gcc
-+COPTS = $(OPT_FLAGS) -Wall
++COPTS = $(OPT_FLAGS)
  COMPILE_FLAGS = -D_linux_ -I../include
  LIBS =
  
 -INSTALL= install -o root -g daemon
-+INSTALL= install # -o root -g daemon
++INSTALL= install 
  
  CFLAGS = $(COPTS) $(COMPILE_FLAGS)
  
+@@ -19,7 +19,7 @@
+ 
+ install: pppstats
+ 	-mkdir -p $(MANDIR)/man8
+-	$(INSTALL) -s -c pppstats $(BINDIR)/pppstats
++	$(INSTALL) -c pppstats $(BINDIR)/pppstats
+ 	$(INSTALL) -c -m 444 pppstats.8 $(MANDIR)/man8/pppstats.8
+ 
+ pppstats: $(PPPSTATSRCS)
