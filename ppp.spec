@@ -11,7 +11,7 @@ Summary(pt_BR):	Servidor ppp para Linux
 Summary(tr):	PPP sunucu süreci
 Name:		ppp
 Version:	2.4.1
-Release:	11
+Release:	13
 Epoch:		2
 License:	distributable
 Group:		Networking/Daemons
@@ -36,6 +36,9 @@ Patch10:	%{name}-%{name}oatm.patch
 Patch11:	%{name}-reap.patch
 Patch12:	%{name}-warnings.patch
 Patch13:	%{name}-zlib-sec.patch
+Patch14:	%{name}-pidfile-owner.patch
+Patch15:	%{name}-2.4.1-openssl-0.9.6-mppe-patch.gz
+Patch16:	%{name}-2.4.1-MSCHAPv2-fix.patch.gz
 URL:		http://www.samba.org/ppp/
 BuildRequires:	pam-devel
 %{?_with_pppoatm:BuildRequires:	linux-atm-devel}
@@ -107,6 +110,9 @@ Wtyczka PPP-po-ATM.
 %patch11 -p1
 %patch12 -p1
 %patch13 -p1
+%patch14 -p1
+%patch15 -p1
+%patch16 -p1
 
 %build
 %configure
@@ -142,7 +148,8 @@ rm -f scripts/README
 install %{SOURCE1} $RPM_BUILD_ROOT/etc/pam.d/ppp
 
 gzip -9nf README.linux debian/README.debian debian/win95.ppp \
-	README.MSCHAP80 FAQ debian/ppp-2.3.0.STATIC.README
+	README.MSCHAP80 FAQ debian/ppp-2.3.0.STATIC.README \
+	README.MPPE
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -151,6 +158,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(644,root,root,755)
 %doc {README.linux,debian/README.debian}.gz scripts
 %doc {debian/win95.ppp,README.MSCHAP80,FAQ,debian/ppp-2.3.0.STATIC.README}.gz
+%doc README.MPPE.gz
 %attr(755,root,root) %{_bindir}/*
 %attr(755,root,root) %{_sbindir}/chat
 %attr(755,root,root) %{_sbindir}/pppstats
