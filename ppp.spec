@@ -55,7 +55,7 @@ modu³.
 %patch5 -p1
 
 %build
-./configure %{_target}
+./configure %{_target_platform}
 make RPM_OPT_FLAGS="$RPM_OPT_FLAGS" 
 
 %install
