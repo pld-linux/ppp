@@ -1,0 +1,85 @@
+--- ppp-2.4.2-20030613/pppd/plugins/radius/radiusclient/lib/Makefile.am.orig	2002-01-22 17:03:02.000000000 +0100
++++ ppp-2.4.2-20030613/pppd/plugins/radius/radiusclient/lib/Makefile.am	2003-11-27 21:41:06.736924808 +0100
+@@ -27,7 +27,7 @@
+ 
+ #lib_LIBRARIES = radiusclient
+ 
+-lib_LTLIBRARIES = libradiusclient.la
++noinst_LTLIBRARIES = libradiusclient.la
+ libradiusclient_la_SOURCES = buildreq.c clientid.c env.c sendserver.c \
+ 	avpair.c config.c dict.c ip_util.c log.c md5.c util.c lock.c
+ libradiusclient_la_LDFLAGS = -version-info $(LIBVERSION)
+--- ppp-2.4.2-20030613/pppd/plugins/radius/radiusclient/src/Makefile.am.orig	2002-01-22 17:03:04.000000000 +0100
++++ ppp-2.4.2-20030613/pppd/plugins/radius/radiusclient/src/Makefile.am	2003-11-27 21:40:25.229234936 +0100
+@@ -23,6 +23,7 @@
+ 
+ sbin_PROGRAMS = radlogin radstatus radacct radexample
+ radlogin_SOURCES = radlogin.c radius.c local.c
++radlogin_LDADD = $(LDADD) $(LIBCRYPT)
+ radacct_SOURCES = radacct.c
+ radstatus_SOURCES = radstatus.c
+ radexample_SOURCES = radexample.c
+--- ppp-2.4.2-20030613/pppd/plugins/radius/radiusclient/configure.in.orig	2002-01-22 17:03:00.000000000 +0100
++++ ppp-2.4.2-20030613/pppd/plugins/radius/radiusclient/configure.in	2003-11-27 21:39:35.520791768 +0100
+@@ -29,7 +29,8 @@
+ 
+ dnl Needed for normal compile
+ AC_PATH_PROG(AR, ar)
+-AM_PROG_LIBTOOL
++AC_PROG_LIBTOOL
++AC_DISABLE_STATIC
+ 
+ dnl HAVE_SHADOW_PASSWORDS
+ AC_MSG_CHECKING(whether to include shadow password support)
+@@ -47,8 +48,8 @@
+ )
+ 
+ dnl Checks for libraries.
+-AC_CHECK_LIB(nsl, gethostbyname)
+-AC_CHECK_LIB(socket, socket)
++AC_SEARCH_LIBS(nsl, gethostbyname)
++AC_SEARCH_LIBS(socket, socket)
+ if test "$shadow_passwords" = "yes"
+ then
+ 	AC_CHECK_LIB(c, getspnam,:,
+@@ -57,7 +58,8 @@
+                 )
+ 	)
+ fi
+-AC_CHECK_LIB(crypt, crypt)
++AC_CHECK_LIB(crypt, crypt, [LIBCRYPT="-lcrypt"], [LIBCRYPT=""])
++AC_SUBST(LIBCRYPT)
+ 
+ dnl Checks for header files.
+ AC_HEADER_DIRENT
+@@ -179,8 +181,6 @@
+ AC_SUBST(RC_LOG_FACILITY)
+ 
+ AM_CONFIG_HEADER(config.h)
+-LTLIBOBJS=`echo "$LIBOBJS" | sed 's/\.o/.lo/g'`
+-AC_SUBST(LTLIBOBJS)
+ AC_OUTPUT([
+ Makefile
+ include/Makefile lib/Makefile src/Makefile man/Makefile etc/Makefile
+--- ppp-2.4.2-20030613/pppd/plugins/radius/radiusclient/etc/Makefile.am.orig	2002-10-05 19:49:00.000000000 +0200
++++ ppp-2.4.2-20030613/pppd/plugins/radius/radiusclient/etc/Makefile.am	2003-11-27 21:48:06.456117792 +0100
+@@ -28,12 +28,12 @@
+ 	    <$(srcdir)/radiusclient.conf.in >radiusclient.conf
+ 
+ install-data-local: realms servers
+-	$(mkinstalldirs) $(pkgsysconfdir); \
+-        echo " $(INSTALL) -m600 $(srcdir)/realms $(pkgsysconfdir)/realms"; \
+-        $(INSTALL) -m600 $(srcdir)/realms $(pkgsysconfdir)/realms; \
+-        echo " $(INSTALL) -m600 $(srcdir)/servers $(pkgsysconfdir)/servers"; \
+-        $(INSTALL) -m600 $(srcdir)/servers $(pkgsysconfdir)/servers
++	$(mkinstalldirs) $(DESTDIR)$(pkgsysconfdir); \
++        echo " $(INSTALL) -m600 $(srcdir)/realms $(DESTDIR)$(pkgsysconfdir)/realms"; \
++        $(INSTALL) -m600 $(srcdir)/realms $(DESTDIR)$(pkgsysconfdir)/realms; \
++        echo " $(INSTALL) -m600 $(srcdir)/servers $(DESTDIR)$(pkgsysconfdir)/servers"; \
++        $(INSTALL) -m600 $(srcdir)/servers $(DESTDIR)$(pkgsysconfdir)/servers
+ 
+ uninstall-local:
+-	rm -f $(pkgsysconfdir)/realms
+-	rm -f $(pkgsysconfdir)/servers
++	rm -f $(DESTDIR)$(pkgsysconfdir)/realms
++	rm -f $(DESTDIR)$(pkgsysconfdir)/servers
