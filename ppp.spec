@@ -35,6 +35,7 @@ Patch5:		%{name}-pidfile-owner.patch
 Patch6:		%{name}-rp-pppoe-update.patch
 Patch7:		%{name}-rp-pppoe-macaddr.patch
 Patch8:		%{name}-radius.patch
+Patch9:		%{name}-pcap.patch
 URL:		http://www.samba.org/ppp/
 BuildRequires:	autoconf
 BuildRequires:	automake
@@ -111,15 +112,16 @@ Wtyczka PPPoATM dla pppd.
 
 %prep
 %setup -q 
-#%patch0 -p1
+%patch0 -p1
 %patch1 -p1
 %patch2 -p1
 %patch3 -p1
 %{?with_pppoatm:%patch4 -p1}
 %patch5 -p1
-#%patch6 -p1
+%patch6 -p1
 %patch7 -p1
 %patch8 -p1
+%patch9 -p1
 
 %build
 cd pppd/plugins/radius/radiusclient
@@ -179,7 +181,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(644,root,root,755)
 %doc README.linux debian/README.debian scripts
 %doc debian/win95.ppp README.MSCHAP8* FAQ debian/ppp-2.3.0.STATIC.README
-%doc README.MPPE README.pppoe README.cbcp README.pwfd TODO
+%doc README.MPPE README.pppoe README.cbcp README.pwfd 
 %attr(755,root,root) %{_bindir}/*
 %attr(755,root,root) %{_sbindir}/chat
 %attr(755,root,root) %{_sbindir}/ppp*
