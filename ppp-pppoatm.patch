@@ -10,10 +10,12 @@ diff -urN ppp-2.4.1/pppd/plugins/Makefile.linux ppp-2.4.1.ppoatm/pppd/plugins/Ma
  
  # include dependencies if present
  ifeq (.depend,$(wildcard .depend))
-@@ -16,6 +16,7 @@
+@@ -16,6 +16,9 @@
  all:	$(PLUGINS)
  	for d in $(SUBDIRS); do $(MAKE) $(MFLAGS) -C $$d all; done
  
++pppoatm.so: pppoatm.c
++	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) pppoatm.c -latm
 +
  %.so: %.c
  	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $^

@@ -1,6 +1,6 @@
 #
 # Conditional build:
-# _with_pppoatm - with PPPoATM support (which requires kernel 2.4 and atm-devel)
+%bcond_without	pppoatm	# without PPPoATM plugin (which requires kernel 2.4 and atm-devel)
 #
 %define snap	20030613
 Summary:	ppp daemon package for Linux
@@ -37,7 +37,7 @@ Patch6:		%{name}-rp-pppoe-update.patch
 Patch7:		%{name}-rp-pppoe-macaddr.patch
 URL:		http://www.samba.org/ppp/
 BuildRequires:	automake
-%{?_with_pppoatm:BuildRequires:	linux-atm-devel}
+%{?with_pppoatm:BuildRequires:	linux-atm-devel}
 BuildRequires:	pam-devel
 Requires:	pam >= 0.77.3
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
@@ -95,13 +95,25 @@ Development files needed to build plugins for pppd.
 %description plugin-devel -l pl
 Pliki nag³ówkowe potrzebne do budowania wtyczek dla pppd.
 
+%package plugin-pppoatm
+Summary:	PPPoATM plugin for pppd
+Summary(pl):	Wtyczka PPPoATM dla pppd
+Group:		Libraries
+Requires:	%{name} = %{epoch}:%{version}
+
+%description plugin-pppoatm
+PPPoATM plugin for pppd.
+
+%description plugin-pppoatm -l pl
+Wtyczka PPPoATM dla pppd.
+
 %prep
 %setup -q -n %{name}-%{version}-%{snap}
 %patch0 -p1
 %patch1 -p1
 %patch2 -p1
 %patch3 -p1
-%{?_with_pppoatm:%patch4 -p1}
+%{?with_pppoatm:%patch4 -p1}
 %patch5 -p1
 %patch6 -p1
 %patch7 -p1
@@ -148,7 +160,7 @@ rm -f scripts/README
 
 install %{SOURCE1} $RPM_BUILD_ROOT/etc/pam.d/ppp
 
-cd $RPM_BUILD_ROOT%{_libdir}/pppd/
+cd $RPM_BUILD_ROOT%{_libdir}/pppd
 ln -s %{version}* plugins
 
 %clean
@@ -172,7 +184,6 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_libdir}/pppd/*.*/pass*.so
 %attr(755,root,root) %{_libdir}/pppd/*.*/rp-pppoe.so
 %attr(755,root,root) %{_libdir}/pppd/*.*/rad*.so
-%{?_with_pppoatm:%attr(755,root,root) %{_libdir}/pppd/*.*/pppoatm.so}
 
 %{_mandir}/man8/*
 %lang(fr) %{_mandir}/fr/man8/*
@@ -193,3 +204,9 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_includedir}/pppd
 %{_includedir}/pppd/pppd.h
 %{_includedir}/pppd/patchlevel.h
+
+%if %{with pppoatm}
+%files plugin-pppoatm
+%defattr(644,root,root,755)
+%attr(755,root,root) %{_libdir}/pppd/*.*/pppoatm.so
+%endif
