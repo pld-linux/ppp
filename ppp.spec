@@ -17,6 +17,7 @@ Patch0:		ppp-make.patch
 Patch1:		ppp-expect.patch
 Patch2:		ppp-debian_scripts.patch
 Patch3:		ppp-static.patch
+Patch4:		ppp-ipv6.patch
 BuildRequires:	pam-devel
 Buildroot:	/tmp/%{name}-%{version}-root
 
@@ -52,6 +53,7 @@ sürümünun 2.2.11'dan daha yüksek olmasýný gerektirir. Öntanýmlý Red Hat
 %patch1 -p1 
 %patch2 -p1 
 %patch3 -p1
+%patch4 -p1
 
 %build
 %configure
