@@ -19,7 +19,7 @@ Patch2:		ppp-debian_scripts.patch
 Patch3:		ppp-static.patch
 Patch4:		ppp-ipv6.patch
 BuildRequires:	pam-devel
-Buildroot:	/tmp/%{name}-%{version}-root
+BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
 This is the daemon and documentation for PPP support.  It requires a kernel
