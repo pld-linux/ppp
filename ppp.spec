@@ -79,7 +79,7 @@ rm -f scripts/README
 
 install %{SOURCE1} $RPM_BUILD_ROOT/etc/pam.d/ppp
 
-strip $RPM_BUILD_ROOT/usr/sbin/*
+strip $RPM_BUILD_ROOT%{_sbindir}/*
 
 gzip -9nf $RPM_BUILD_ROOT%{_mandir}/man[18]/* \
 	README.linux debian/README.debian debian/win95.ppp \
@@ -94,9 +94,9 @@ rm -rf $RPM_BUILD_ROOT
 %doc {debian/win95.ppp,README.MSCHAP80,FAQ,debian/ppp-2.3.0.STATIC.README}.gz
 
 %attr(755,root,root) %{_bindir}/*
-%attr(755,root,root) /usr/sbin/chat
-%attr(755,root,root) /usr/sbin/pppstats
-%attr(0755,root,root) /usr/sbin/pppd
+%attr(755,root,root) %{_sbindir}/chat
+%attr(755,root,root) %{_sbindir}/pppstats
+%attr(0755,root,root) %{_sbindir}/pppd
 %{_mandir}/man[18]/*
 
 %attr(711,root,root) %dir /etc/ppp/peers
