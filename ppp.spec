@@ -29,22 +29,22 @@ Patch0:		%{name}-make.patch
 Patch1:		%{name}-expect.patch
 Patch2:		%{name}-debian_scripts.patch
 Patch3:		%{name}-static.patch
-#http://www.sfgoth.com/~mitch/linux/atm/pppoatm/pppoatm-pppd-vs-2.4.0b2+240600.diff.gz
-Patch4:		%{name}-pppoatm.patch
-Patch5:		%{name}-pidfile-owner.patch
-Patch6:		%{name}-rp-pppoe-update.patch
-Patch7:		%{name}-rp-pppoe-macaddr.patch
+Patch4:		%{name}-pidfile-owner.patch
+Patch5:		%{name}-rp-pppoe-update.patch
+Patch6:		%{name}-rp-pppoe-macaddr.patch
+Patch7:		http://public.planetmirror.com/pub/mppe/pppd-2.4.2-chapms-strip-domain.patch.gz
+Patch8:		%{name}-radius.patch
+Patch9:		%{name}-openssl.patch
 Patch10:	%{name}-lib64.patch
-Patch12:	http://public.planetmirror.com/pub/mppe/pppd-2.4.2-chapms-strip-domain.patch.gz
 URL:		http://www.samba.org/ppp/
 BuildRequires:	autoconf
 BuildRequires:	automake
 BuildRequires:	libpcap-devel >= 2:0.8.1
-BuildRequires:	srp-devel
-BuildRequires:	radiusclient-devel
 BuildRequires:	libtool
 %{?with_pppoatm:BuildRequires:	linux-atm-devel}
+BuildRequires:	openssl-devel
 BuildRequires:	pam-devel
+BuildRequires:	srp-devel
 Requires:	pam >= 0.77.3
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
@@ -120,21 +120,23 @@ Wtyczka PPPoATM dla pppd.
 %patch1 -p1
 %patch2 -p1
 %patch3 -p1
-%{?with_pppoatm:%patch4 -p1}
+%patch4 -p1
 %patch5 -p1
 %patch6 -p1
 %patch7 -p1
+%patch8 -p1
+%patch9 -p1
 %if "%{_lib}" == "lib64"
 %patch10 -p1
 %endif
-%patch12 -p1
 
 %build
 # note: not autoconf configure
 %configure
 %{__make} \
+	%{?with_pppoatm:HAVE_LIBATM=y} \
 	OPT_FLAGS="%{rpmcflags}" \
-	CC=%{__cc}
+	CC="%{__cc}"
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -143,6 +145,7 @@ install -d $RPM_BUILD_ROOT{%{_sbindir},%{_bindir},%{_mandir}/man{1,8}} \
 	$RPM_BUILD_ROOT/etc/logrotate.d
 
 %{__make} install \
+	%{?with_pppoatm:HAVE_LIBATM=y} \
 	DESTDIR=$RPM_BUILD_ROOT%{_prefix}
 
 install %{SOURCE2} $RPM_BUILD_ROOT%{_bindir}/pon
@@ -180,6 +183,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_bindir}/*
 %attr(755,root,root) %{_sbindir}/chat
 %attr(755,root,root) %{_sbindir}/ppp*
+%attr(755,root,root) %{_sbindir}/srp-entry
 %dir %{_libdir}/pppd
 %dir %{_libdir}/pppd/*.*
 %{_libdir}/pppd/plugins
