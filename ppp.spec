@@ -2,11 +2,11 @@
 # _without_pppoe - without PPPoE support (which requires kernel 2.4)
 # _without_pppoatm - without PPPoATM support (which requires kernel 2.4)
 # _without_cbcp - without CBCP (MS CallBack Configuration Protocol)
-Summary:	ppp daemon package for linux 2.2.11 and greater
+Summary:	ppp daemon package for Linux 2.2.11 and greater
 Summary(de):	ppp-Dämonpaket für Linux 2.2.11 und höher 
 Summary(fr):	Paquetage du démon ppp pour Linux 2.2.11 et supérieur
+Summary(pl):	Demon PPP dla Linuksa 2.2.11 i wy¿szych
 Summary(tr):	PPP sunucu süreci
-Summary(pl):	Demon PPP dla Linux 2.2.11 i wy¿szych
 Name:		ppp
 Version:	2.4.1
 Release:	2
@@ -87,39 +87,40 @@ PPP Over ATM plugin.
 %{!?_without_pppoe:%patch8 -p1}
 %{!?_without_pppoe:%patch9 -p1}
 %{!?_without_pppoatm:%patch10 -p1}
+
 %build
 %configure
 %{__make} OPT_FLAGS="%{rpmcflags}" \
 	%{!?_without_cbcp:CBCP=1}
 
 %install
-rm -rf $RPM_BUILD_ROOT
-install -d $RPM_BUILD_ROOT{%{_sbindir},%{_bindir},%{_mandir}/man{1,8}} \
+%{__rm} -rf $RPM_BUILD_ROOT
+%{__install} -d $RPM_BUILD_ROOT{%{_sbindir},%{_bindir},%{_mandir}/man{1,8}} \
 	$RPM_BUILD_ROOT%{_sysconfdir}/{pam.d,ppp/peers}
 
 %{__make} install \
 	DESTDIR=$RPM_BUILD_ROOT
 
-install %{SOURCE2} $RPM_BUILD_ROOT%{_bindir}/pon
-install %{SOURCE3} $RPM_BUILD_ROOT%{_bindir}/poff
-install debian/plog $RPM_BUILD_ROOT%{_bindir}
+%{__install} %{SOURCE2} $RPM_BUILD_ROOT%{_bindir}/pon
+%{__install} %{SOURCE3} $RPM_BUILD_ROOT%{_bindir}/poff
+%{__install} debian/plog $RPM_BUILD_ROOT%{_bindir}
 
-install etc.ppp/chap-secrets $RPM_BUILD_ROOT%{_sysconfdir}/ppp
-install debian/pap-secrets $RPM_BUILD_ROOT%{_sysconfdir}/ppp
-install debian/options $RPM_BUILD_ROOT%{_sysconfdir}/ppp
-install debian/options.ttyXX $RPM_BUILD_ROOT%{_sysconfdir}/ppp
+%{__install} etc.ppp/chap-secrets $RPM_BUILD_ROOT%{_sysconfdir}/ppp
+%{__install} debian/pap-secrets $RPM_BUILD_ROOT%{_sysconfdir}/ppp
+%{__install} debian/options $RPM_BUILD_ROOT%{_sysconfdir}/ppp
+%{__install} debian/options.ttyXX $RPM_BUILD_ROOT%{_sysconfdir}/ppp
 
-rm -f scripts/README
+%{__rm} -f scripts/README
 
-install %{SOURCE1} $RPM_BUILD_ROOT/etc/pam.d/ppp
+%{__install} %{SOURCE1} $RPM_BUILD_ROOT/etc/pam.d/ppp
 
-strip $RPM_BUILD_ROOT%{_sbindir}/*
+%{__strip} $RPM_BUILD_ROOT%{_sbindir}/*
 
-gzip -9nf README.linux debian/README.debian debian/win95.ppp \
+%{__gzip} -9nf README.linux debian/README.debian debian/win95.ppp \
 	README.MSCHAP80 FAQ debian/ppp-2.3.0.STATIC.README
 
 %clean
-rm -rf $RPM_BUILD_ROOT
+%{__rm} -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
@@ -136,9 +137,9 @@ rm -rf $RPM_BUILD_ROOT
 %{!?_without_pppoe:%attr(755,root,root) %{_libdir}/pppd/%{version}/pppoe.so}
 %{_mandir}/man8/*
 
-%attr(600,root,root) %config %verify(not size mtime md5) %{_sysconfdir}/ppp/*-secrets
-%attr(644,root,root) %config %verify(not size mtime md5) %{_sysconfdir}/ppp/options*
-%attr(640,root,root) %config %verify(not size mtime md5) /etc/pam.d/ppp
+%attr(600,root,root) %config(missingok) %verify(not md5 size mtime) %{_sysconfdir}/ppp/*-secrets
+%attr(644,root,root) %config(missingok) %verify(not md5 size mtime) %{_sysconfdir}/ppp/options*
+%attr(640,root,root) %config %verify(not md5 size mtime) /etc/pam.d/ppp
 
 %dir %{_sysconfdir}/ppp/peers
 
