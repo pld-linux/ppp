@@ -2,14 +2,16 @@
 # _without_pppoe - without PPPoE support (which requires kernel 2.4)
 # _without_pppoatm - without PPPoATM support (which requires kernel 2.4)
 # _without_cbcp - without CBCP (MS CallBack Configuration Protocol)
-Summary:	ppp daemon package for Linux 2.2.11 and greater
-Summary(de):	ppp-Dämonpaket für Linux 2.2.11 und höher
-Summary(fr):	Paquetage du démon ppp pour Linux 2.2.11 et supérieur
-Summary(pl):	Demon PPP dla Linuksa 2.2.11 i wy¿szych
+Summary:	ppp daemon package for Linu
+Summary(de):	ppp-Dämonpaket für Linux
+Summary(es):	Servidor ppp para Linux
+Summary(fr):	Paquetage du démon ppp pour Linux
+Summary(pl):	Demon PPP dla Linuksa
+Summary(pt_BR):	Servidor ppp para Linux
 Summary(tr):	PPP sunucu süreci
 Name:		ppp
 Version:	2.4.1
-Release:	2
+Release:	3
 Epoch:		2
 License:	distributable
 Group:		Networking/Daemons
@@ -27,10 +29,12 @@ Patch4:		%{name}-CBCP.patch
 Patch5:		%{name}-pam_session.patch
 Patch6:		%{name}-wtmp.patch
 Patch7:		%{name}-opt.patch
-Patch8:		http://www.shoshin.uwaterloo.ca/~mostrows/%{name}-2.4.1-pppoe.patch2
+Patch8:		http://www.shoshin.uwaterloo.ca/~mostrows/%{name}-2.4.1-%{name}oe.patch2
 Patch9:		%{name}-opt-%{name}oe.patch
 #http://www.sfgoth.com/~mitch/linux/atm/pppoatm/pppoatm-pppd-vs-2.4.0b2+240600.diff.gz
-Patch10:	%{name}-pppoatm.patch
+Patch10:	%{name}-%{name}oatm.patch
+Patch11:	%{name}-reap.patch
+Patch12:	%{name}-warnings.patch
 URL:		http://www.samba.org/ppp/
 BuildRequires:	pam-devel
 %{?!_without_pppoatm:BuildRequires:	atm-devel}
@@ -47,6 +51,11 @@ Dies ist der Dämon und die Dokumentation für PPP-Support. Erfordert
 einen Kernel höher als 2.2.11, der mit PPP-Support gebaut ist. Die
 Standard- Red-Hat-Kernel schließen PPP-Support als Modul ein. (IPv6)
 
+%description -l es
+Este es el servidor y la documentación para soporte PPP. Requiere un
+kernel superior al 2.0. Los kernels padrón de la Conectiva incluyen
+soporte PPP como módulo.
+
 %description -l fr
 Ceci est le démon et la documentation pour le support PPP. Cela
 réclame un noyau supérieur au 2.2.11 et construit avec le support PPP.
@@ -58,6 +67,11 @@ Pakiet zawiera demona i dokumentacjê umo¿liwiaj±c± korzystanie z
 protoko³u PPP. Wymaga j±dra 2.2.11 - lub wy¿szych - z wkompilowan±
 obs³ug± protoko³u PPP. Standardowe j±dro z dytrybucji zawiera wsparcie
 dla PPP skompilowane jako modu³. (IPv6)
+
+%description -l pt_BR
+Este é o servidor e a documentação para suporte PPP. Ele requer um
+kernel superior ao 2.0. Os kernels-padrão da Conectiva incluem suporte
+PPP como módulo.
 
 %description -l tr
 Bu paket PPP desteði için belgeler ve sunucu sürecini içerir. Çekirdek
@@ -87,10 +101,13 @@ PPP Over ATM plugin.
 %{!?_without_pppoe:%patch8 -p1}
 %{!?_without_pppoe:%patch9 -p1}
 %{!?_without_pppoatm:%patch10 -p1}
+%patch11 -p1
+%patch12 -p1
 
 %build
 %configure
 %{__make} OPT_FLAGS="%{rpmcflags}" \
+	CC=%{__cc} \
 	%{!?_without_cbcp:CBCP=1}
 
 %install
@@ -128,10 +145,12 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_sbindir}/chat
 %attr(755,root,root) %{_sbindir}/pppstats
 %attr(755,root,root) %{_sbindir}/pppd
+%if %{!?_without_pppoatm:1}%{?_without_pppoatm:0}%{!?_without_pppoatm:1}%{?_without_pppoatm:0}
 %dir %{_libdir}/pppd
 %dir %{_libdir}/pppd/%{version}
-%attr(755,root,root) %{_libdir}/pppd/%{version}/minconn.so
-%attr(755,root,root) %{_libdir}/pppd/%{version}/passprompt.so
+%endif
+%{!?_without_pppoatm:%attr(755,root,root) %{_libdir}/pppd/%{version}/minconn.so}
+%{!?_without_pppoatm:%attr(755,root,root) %{_libdir}/pppd/%{version}/passprompt.so}
 %{!?_without_pppoe:%attr(755,root,root) %{_libdir}/pppd/%{version}/pppoe.so}
 %{_mandir}/man8/*
 
