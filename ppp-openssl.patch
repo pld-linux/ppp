@@ -1,0 +1,26 @@
+--- ppp-2.4.3/pppd/sha1.h.orig	2004-10-25 01:27:49.000000000 +0200
++++ ppp-2.4.3/pppd/sha1.h	2005-01-08 23:29:27.503494240 +0100
+@@ -2,12 +2,11 @@
+ 
+ /* If OpenSSL is in use, then use that version of SHA-1 */
+ #ifdef OPENSSL
+-#include <t_sha.h>
++#include <openssl/sha.h>
++#define SHA1_CTX SHA_CTX
+ #define __SHA1_INCLUDE_
+ #endif
+ 
+-#ifndef __SHA1_INCLUDE_
+-
+ #ifndef SHA1_SIGNATURE_SIZE
+ #ifdef SHA_DIGESTSIZE
+ #define SHA1_SIGNATURE_SIZE SHA_DIGESTSIZE
+@@ -16,6 +14,8 @@
+ #endif
+ #endif
+ 
++#ifndef __SHA1_INCLUDE_
++
+ typedef struct {
+     u_int32_t state[5];
+     u_int32_t count[2];
