@@ -2,7 +2,7 @@
 # _with_pppoe - with PPPoE support (which requires kernel 2.4)
 # _with_pppoatm - with PPPoATM support (which requires kernel 2.4 and atm-devel)
 # _without_cbcp - without CBCP (MS CallBack Configuration Protocol)
-Summary:	ppp daemon package for Linu
+Summary:	ppp daemon package for Linux
 Summary(de):	ppp-Dämonpaket für Linux
 Summary(es):	Servidor ppp para Linux
 Summary(fr):	Paquetage du démon ppp pour Linux
