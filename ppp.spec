@@ -1,5 +1,6 @@
 #
 # _without_pppoe - without PPPoE support (which requires kernel 2.4)
+# _without_pppoatm - without PPPoATM support (which requires kernel 2.4)
 # _without_cbcp - without CBCP (MS CallBack Configuration Protocol)
 Summary:	ppp daemon package for linux 2.2.11 and greater
 Summary(de):	ppp-Dämonpaket für Linux 2.2.11 und höher 
@@ -8,7 +9,7 @@ Summary(tr):	PPP sunucu süreci
 Summary(pl):	Demon PPP dla Linux 2.2.11 i wy¿szych
 Name:		ppp
 Version:	2.4.1
-Release:	1
+Release:	2
 Epoch:		2
 License:	Distributable
 Group:		Networking/Daemons
@@ -30,8 +31,9 @@ Patch7:		%{name}-opt.patch
 Patch8:		http://www.shoshin.uwaterloo.ca/~mostrows/%{name}-2.4.1-pppoe.patch2
 Patch9:		%{name}-opt-%{name}oe.patch
 #http://www.sfgoth.com/~mitch/linux/atm/pppoatm/pppoatm-pppd-vs-2.4.0b2+240600.diff.gz
-#Patch10:		ppp-pppoatm.patch
+Patch10:	%{name}-pppoatm.patch
 BuildRequires:	pam-devel
+%{?!_without_pppoatm:BuildRequires:	atm-devel}
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
@@ -62,6 +64,16 @@ Bu paket PPP desteði için belgeler ve sunucu sürecini içerir. Çekirdek
 sürümünun 2.2.11'dan daha yüksek olmasýný gerektirir. Öntanýmlý Red
 Hat çekirdeði PPP desteðini bir modül olarak içerir. (IPv6)
 
+%package pppoatm
+Summary:	PPP Over ATM plugin
+Group:		Networking/Daemons
+Group(de):	Netzwerkwesen/Server
+Group(pl):	Sieciowe/Serwery
+Requires:	%{name} = %{version}
+
+%description pppoatm
+PPP Over ATM plugin.
+
 %prep
 %setup -q 
 %patch0 -p1
@@ -74,6 +86,7 @@ Hat çekirdeði PPP desteðini bir modül olarak içerir. (IPv6)
 %{?_without_pppoe:%patch7 -p1}
 %{!?_without_pppoe:%patch8 -p1}
 %{!?_without_pppoe:%patch9 -p1}
+%{!?_without_pppoatm:%patch10 -p1}
 %build
 %configure
 %{__make} OPT_FLAGS="%{rpmcflags}" \
@@ -116,9 +129,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_sbindir}/chat
 %attr(755,root,root) %{_sbindir}/pppstats
 %attr(755,root,root) %{_sbindir}/pppd
-%{!?_without_pppoe:%dir %{_libdir}/pppd}
-%{!?_without_pppoe:%dir %{_libdir}/pppd/%{version}}
-%{!?_without_pppoe:%attr(755,root,root) %{_libdir}/pppd/%{version}/*}
+%dir %{_libdir}/pppd
+%dir %{_libdir}/pppd/%{version}
+%attr(755,root,root) %{_libdir}/pppd/%{version}/minconn.so
+%attr(755,root,root) %{_libdir}/pppd/%{version}/passprompt.so
+%{!?_without_pppoe:%attr(755,root,root) %{_libdir}/pppd/%{version}/pppoe.so}
 %{_mandir}/man8/*
 
 %attr(600,root,root) %config %verify(not size mtime md5) %{_sysconfdir}/ppp/*-secrets
@@ -126,3 +141,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(640,root,root) %config %verify(not size mtime md5) /etc/pam.d/ppp
 
 %dir %{_sysconfdir}/ppp/peers
+
+%{!?_without_pppoatm:%files pppoatm}
+%{!?_without_pppoatm:%defattr(644,root,root,755)}
+%{!?_without_pppoatm:%attr(755,root,root) %{_libdir}/pppd/%{version}/pppoatm.so}
