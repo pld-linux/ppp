@@ -1,31 +1,31 @@
---- ppp-2.4.0/pppd/plugins/Makefile.linux~	Sun Jan 14 17:44:33 2001
-+++ ppp-2.4.0/pppd/plugins/Makefile.linux	Sun Jan 14 17:47:04 2001
-@@ -1,5 +1,5 @@
+diff -urN ppp-2.4.1.org/pppd/plugins/Makefile.linux ppp-2.4.1/pppd/plugins/Makefile.linux
+--- ppp-2.4.1.org/pppd/plugins/Makefile.linux	Sun Jun 10 23:07:47 2001
++++ ppp-2.4.1/pppd/plugins/Makefile.linux	Sun Jun 10 23:09:13 2001
+@@ -1,6 +1,6 @@
  CC	= gcc
--CFLAGS	= -g -O2 -I.. -I../../include -D_linux_=1 -fPIC
-+CFLAGS	+= -I.. -I../../include -D_linux_=1 -fPIC
- LDFLAGS	= -shared
+-CFLAGS	= -g -O2 -I.. -I../../include -fPIC
+-LDFLAGS	= -shared
++CFLAGS	+= -g -I.. -I../../include -fPIC
++LDFLAGS	+= -shared
+ INSTALL	= install
  
- all:	minconn.so passprompt.so
---- ppp-2.4.0/pppd/plugins/pppoe/Makefile.linux~	Sun Jan 14 17:44:33 2001
-+++ ppp-2.4.0/pppd/plugins/pppoe/Makefile.linux	Sun Jan 14 17:47:29 2001
-@@ -1,5 +1,5 @@
+ all:	minconn.so passprompt.so pppoe/pppoe.so
+@@ -22,4 +22,4 @@
+ 	$(INSTALL) $? $(LIBDIR)/$$version
+ 
+ clean:
+-	rm -rf *.o *.so
+\ No newline at end of file
++	rm -rf *.o *.so
+diff -urN ppp-2.4.1.org/pppd/plugins/pppoe/Makefile.linux ppp-2.4.1/pppd/plugins/pppoe/Makefile.linux
+--- ppp-2.4.1.org/pppd/plugins/pppoe/Makefile.linux	Sun Jun 10 23:07:47 2001
++++ ppp-2.4.1/pppd/plugins/pppoe/Makefile.linux	Sun Jun 10 23:08:06 2001
+@@ -1,6 +1,6 @@
  CC	= gcc
 -CFLAGS	= -g  -I.. -I../.. -I../../../include -D_linux_=1 -fPIC
-+CFLAGS	+= -I.. -I../.. -I../../../include -D_linux_=1 -fPIC
- LDFLAGS	= -shared
+-LDFLAGS	= -shared
++CFLAGS	+= -g  -I.. -I../.. -I../../../include -D_linux_=1 -fPIC
++LDFLAGS	+= -shared
  
  all: pppoe.so pppoed
-@@ -35,10 +35,10 @@
- clean: 
- 	rm -f *.o *.so *.a pppoefwd pppoed
  
--INSTALL= install -o root
-+INSTALL= install
- 
- install: $(PLUGINDIR) all
--	$(INSTALL) -s -c -m 4550 pppoe.so $(PLUGINDIR)
-+	$(INSTALL) -s -c pppoe.so $(PLUGINDIR)
- 
- 
- $(PLUGINDIR):

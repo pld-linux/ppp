@@ -1,6 +1,6 @@
-diff -Nru ppp-2.3.11/chat/Makefile.linux ppp-2.3.11.new/chat/Makefile.linux
---- ppp-2.3.11/chat/Makefile.linux	Sat Feb 19 19:06:30 2000
-+++ ppp-2.3.11.new/chat/Makefile.linux	Sat Feb 19 19:05:59 2000
+diff -urN ppp-2.4.1.org/chat/Makefile.linux ppp-2.4.1/chat/Makefile.linux
+--- ppp-2.4.1.org/chat/Makefile.linux	Sun Jun 10 22:52:36 2001
++++ ppp-2.4.1/chat/Makefile.linux	Sun Jun 10 22:52:53 2001
 @@ -6,7 +6,7 @@
  CDEF4=	-DFNDELAY=O_NDELAY		# Old name value
  CDEFS=	$(CDEF1) $(CDEF2) $(CDEF3) $(CDEF4)
@@ -10,9 +10,9 @@ diff -Nru ppp-2.3.11/chat/Makefile.linux ppp-2.3.11.new/chat/Makefile.linux
  
  INSTALL= install
  
-diff -Nru ppp-2.3.11/linux/Makefile.top ppp-2.3.11.new/linux/Makefile.top
---- ppp-2.3.11/linux/Makefile.top	Sat Feb 19 19:06:30 2000
-+++ ppp-2.3.11.new/linux/Makefile.top	Sat Feb 19 19:05:59 2000
+diff -urN ppp-2.4.1.org/linux/Makefile.top ppp-2.4.1/linux/Makefile.top
+--- ppp-2.4.1.org/linux/Makefile.top	Sun Jun 10 22:52:36 2001
++++ ppp-2.4.1/linux/Makefile.top	Sun Jun 10 22:52:53 2001
 @@ -2,7 +2,7 @@
  
  
@@ -22,9 +22,9 @@ diff -Nru ppp-2.3.11/linux/Makefile.top ppp-2.3.11.new/linux/Makefile.top
  ETCDIR = $(DESTDIR)/etc/ppp
  
  # uid 0 = root
-diff -Nru ppp-2.3.11/pppd/Makefile.linux ppp-2.3.11.new/pppd/Makefile.linux
---- ppp-2.3.11/pppd/Makefile.linux	Sat Feb 19 19:06:30 2000
-+++ ppp-2.3.11.new/pppd/Makefile.linux	Sat Feb 19 19:07:39 2000
+diff -urN ppp-2.4.1.org/pppd/Makefile.linux ppp-2.4.1/pppd/Makefile.linux
+--- ppp-2.4.1.org/pppd/Makefile.linux	Sun Jun 10 22:52:36 2001
++++ ppp-2.4.1/pppd/Makefile.linux	Sun Jun 10 22:54:02 2001
 @@ -4,8 +4,8 @@
  #
  
@@ -36,7 +36,7 @@ diff -Nru ppp-2.3.11/pppd/Makefile.linux ppp-2.3.11.new/pppd/Makefile.linux
  
  PPPDSRCS = main.c magic.c fsm.c lcp.c ipcp.c upap.c chap.c md5.c ccp.c \
  	   ipxcp.c auth.c options.c sys-linux.c md4.c chap_ms.c cbcp.c \
-@@ -26,7 +26,7 @@
+@@ -27,7 +27,7 @@
  
  # CC = gcc
  #
@@ -45,7 +45,16 @@ diff -Nru ppp-2.3.11/pppd/Makefile.linux ppp-2.3.11.new/pppd/Makefile.linux
  LIBS =
  
  ifneq ($(wildcard /usr/lib/libcrypt.*),)
-@@ -101,14 +101,12 @@
+@@ -50,7 +50,7 @@
+ 
+ HAS_SHADOW=y
+ #USE_PAM=y
+-#HAVE_INET6=y
++HAVE_INET6=y
+ 
+ PLUGIN=y
+ 
+@@ -112,14 +112,12 @@
  endif
  
  
@@ -54,18 +63,18 @@ diff -Nru ppp-2.3.11/pppd/Makefile.linux ppp-2.3.11.new/pppd/Makefile.linux
  
  install: pppd
  	mkdir -p $(BINDIR) $(MANDIR)
--	$(INSTALL) -s -c -m 4550 pppd $(BINDIR)/pppd
--	if ! chgrp pppusers $(BINDIR)/pppd 2>/dev/null; then \
--	  chmod o+rx $(BINDIR)/pppd; fi
+-	$(INSTALL) -s -c -m 555 pppd $(BINDIR)/pppd
+-	if chgrp pppusers $(BINDIR)/pppd 2>/dev/null; then \
+-	  chmod o-rx,u+s $(BINDIR)/pppd; fi
 -	$(INSTALL) -c -m 444 pppd.8 $(MANDIR)/man8
-+	$(INSTALL) -s -c pppd $(BINDIR)/pppd
-+	$(INSTALL) -c pppd.8 $(MANDIR)/man8
++	$(INSTALL) -c -m 755 pppd $(BINDIR)/pppd
++	$(INSTALL) -c -m 644 pppd.8 $(MANDIR)/man8
  
  pppd: $(PPPDOBJS)
  	$(CC) $(CFLAGS) $(LDFLAGS) -o pppd $(PPPDOBJS) $(LIBS)
-diff -Nru ppp-2.3.11/pppdump/Makefile.linux ppp-2.3.11.new/pppdump/Makefile.linux
---- ppp-2.3.11/pppdump/Makefile.linux	Sat Feb 19 19:06:30 2000
-+++ ppp-2.3.11.new/pppdump/Makefile.linux	Sat Feb 19 19:08:27 2000
+diff -urN ppp-2.4.1.org/pppdump/Makefile.linux ppp-2.4.1/pppdump/Makefile.linux
+--- ppp-2.4.1.org/pppdump/Makefile.linux	Sun Jun 10 22:52:37 2001
++++ ppp-2.4.1/pppdump/Makefile.linux	Sun Jun 10 22:52:53 2001
 @@ -1,4 +1,4 @@
 -CFLAGS= -O -I../include/net
 +CFLAGS= $(OPT_FLAGS) -I../include/net
@@ -81,9 +90,9 @@ diff -Nru ppp-2.3.11/pppdump/Makefile.linux ppp-2.3.11.new/pppdump/Makefile.linu
  
  clean:
  	rm -f pppdump $(OBJS) *~
-diff -Nru ppp-2.3.11/pppstats/Makefile.linux ppp-2.3.11.new/pppstats/Makefile.linux
---- ppp-2.3.11/pppstats/Makefile.linux	Sat Feb 19 19:06:30 2000
-+++ ppp-2.3.11.new/pppstats/Makefile.linux	Sat Feb 19 19:05:59 2000
+diff -urN ppp-2.4.1.org/pppstats/Makefile.linux ppp-2.4.1/pppstats/Makefile.linux
+--- ppp-2.4.1.org/pppstats/Makefile.linux	Sun Jun 10 22:52:37 2001
++++ ppp-2.4.1/pppstats/Makefile.linux	Sun Jun 10 22:52:53 2001
 @@ -6,12 +6,12 @@
  PPPSTATSRCS = pppstats.c
  PPPSTATOBJS = pppstats.o
@@ -99,16 +108,4 @@ diff -Nru ppp-2.3.11/pppstats/Makefile.linux ppp-2.3.11.new/pppstats/Makefile.li
 +INSTALL= install # -o root -g daemon
  
  CFLAGS = $(COPTS) $(COMPILE_FLAGS)
- 
-diff -urN ppp-2.3.11.org/pppd/Makefile.linux ppp-2.3.11/pppd/Makefile.linux
---- ppp-2.3.11.org/pppd/Makefile.linux	Tue Feb 22 21:30:19 2000
-+++ ppp-2.3.11/pppd/Makefile.linux	Tue Feb 22 21:42:05 2000
-@@ -44,7 +44,7 @@
- 
- HAS_SHADOW=y
- #USE_PAM=y
--#HAVE_INET6=y
-+HAVE_INET6=y
- 
- PLUGIN=y
  
