@@ -15,7 +15,6 @@ License:	Distributable
 Group:		Networking/Daemons
 Group(de):	Netzwerkwesen/Server
 Group(pl):	Sieciowe/Serwery
-URL:		http://www.samba.org/ppp/
 Source0:	ftp://ftp.linuxcare.com.au/pub/ppp/%{name}-%{version}.tar.gz
 Source1:	%{name}.pamd
 Source2:	%{name}.pon
@@ -32,6 +31,7 @@ Patch8:		http://www.shoshin.uwaterloo.ca/~mostrows/%{name}-2.4.1-pppoe.patch2
 Patch9:		%{name}-opt-%{name}oe.patch
 #http://www.sfgoth.com/~mitch/linux/atm/pppoatm/pppoatm-pppd-vs-2.4.0b2+240600.diff.gz
 Patch10:	%{name}-pppoatm.patch
+URL:		http://www.samba.org/ppp/
 BuildRequires:	pam-devel
 %{?!_without_pppoatm:BuildRequires:	atm-devel}
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
