@@ -13,7 +13,7 @@ Summary(tr):	PPP sunucu süreci
 Summary(zh_CN):	PPP ÅäÖÃºÍ¹ÜÀíÈí¼þ°ü.
 Name:		ppp
 Version:	2.4.2
-Release:	0.%{snap}.2
+Release:	0.%{snap}.3
 Epoch:		2
 License:	distributable
 Group:		Networking/Daemons
@@ -79,6 +79,18 @@ Bu paket PPP desteði için belgeler ve sunucu sürecini içerir. Çekirdek
 sürümünun 2.2.11'dan daha yüksek olmasýný gerektirir. Öntanýmlý Red
 Hat çekirdeði PPP desteðini bir modül olarak içerir. (IPv6)
 
+%package plugin-devel
+Summary:        Stuff needed to build plugins for pppd
+Summary(pl):    Rzeczy potrzebne do budowy wytczek dla pppd
+Group:          Development/Libraries
+Requires:       %{name} = %{version}
+
+%description plugin-devel
+Developement files needed to build plugins for pppd
+
+%description -l pl plugin-devel
+Pliki nagówkowe potrzebne do budowy wtyczek dla pppd
+
 %prep
 %setup -q -n %{name}-%{version}-%{snap}
 %patch0 -p1
@@ -102,7 +114,8 @@ find pppd/plugins/radius/radiusclient -exec touch "{}" ";"
 rm -rf $RPM_BUILD_ROOT
 install -d $RPM_BUILD_ROOT{%{_sbindir},%{_bindir},%{_mandir}/man{1,8}} \
 	$RPM_BUILD_ROOT{%{_sysconfdir}/{pam.d,ppp/peers},/var/log} \
-	$RPM_BUILD_ROOT/etc/logrotate.d
+	$RPM_BUILD_ROOT/etc/logrotate.d \
+	$RPM_BUILD_ROOT/%{_includedir}/pppd
 
 %{__make} install \
 	DESTDIR=$RPM_BUILD_ROOT
@@ -115,6 +128,9 @@ install etc.ppp/chap-secrets $RPM_BUILD_ROOT%{_sysconfdir}/ppp
 install debian/pap-secrets $RPM_BUILD_ROOT%{_sysconfdir}/ppp
 install debian/options $RPM_BUILD_ROOT%{_sysconfdir}/ppp
 install debian/options.ttyXX $RPM_BUILD_ROOT%{_sysconfdir}/ppp
+
+install pppd/patchlevel.h $RPM_BUILD_ROOT/%{_includedir}/pppd
+install pppd/pppd.h $RPM_BUILD_ROOT/%{_includedir}/pppd
 
 bzip2 -dc %{SOURCE4} | tar xf - -C $RPM_BUILD_ROOT%{_mandir}
 
@@ -160,3 +176,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(640,root,root) %ghost /var/log/ppp.log
 
 %dir %{_sysconfdir}/ppp/peers
+
+%files plugin-devel
+%defattr(644,root,root,755)
+%dir %{_includedir}/pppd
+%{_includedir}/pppd/pppd.h
+%{_includedir}/pppd/patchlevel.h
