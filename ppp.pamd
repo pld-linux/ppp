@@ -1,5 +1,0 @@
-#%PAM-1.0
-auth       required	/lib/security/pam_nologin.so
-auth       required	/lib/security/pam_unix.so
-account    required	/lib/security/pam_unix.so
-session    required	/lib/security/pam_unix.so
