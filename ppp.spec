@@ -5,7 +5,7 @@ Summary(tr):	PPP sunucu süreci
 Summary(pl):	Demon PPP dla Linux 2.2.11 i wy¿szych
 Name:		ppp
 Version:	2.3.11
-Release:	2
+Release:	3
 Copyright:	distributable
 Group:		Networking/Daemons
 Group(pl):	Sieciowe/Demony
@@ -22,29 +22,29 @@ Buildroot:	/tmp/%{name}-%{version}-root
 
 %description
 This is the daemon and documentation for PPP support.  It requires a kernel
-greater than 2.2.11 which is built with PPP support. The default kernels include 
-PPP support as a module.
+greater than 2.2.11 which is built with PPP support. The default kernels
+include PPP support as a module. This version supports IPv6, too.
 
 %description -l de
 Dies ist der Dämon und die Dokumentation für PPP-Support. Erfordert
 einen Kernel höher als 2.2.11, der mit PPP-Support gebaut ist. Die Standard-
-Red-Hat-Kernel schließen PPP-Support als Modul ein.
+Red-Hat-Kernel schließen PPP-Support als Modul ein. (IPv6)
 
 %description -l fr
 Ceci est le démon et la documentation pour le support PPP. Cela réclame
 un noyau supérieur au 2.2.11 et construit avec le support PPP. Le noyau par
-défaut de Red Hat contient le support PPP sous forme de module.
+défaut de Red Hat contient le support PPP sous forme de module. (IPv6)
 
 %description -l pl
 Pakiet zawiera demona i dokumentacjê umo¿liwiaj±c± korzystanie z protoko³u
 PPP. Wymaga jadra 2.2.11 - lub wy¿szych - z wkompilowan± obs³ug± protoko³u PPP. 
 Standardowe j±dro z dytrybucji zawiera wsparcie dla PPP skompilowane jako 
-modu³.
+modu³. (IPv6)
 
 %description -l tr
 Bu paket PPP desteði için belgeler ve sunucu sürecini içerir. Çekirdek
 sürümünun 2.2.11'dan daha yüksek olmasýný gerektirir. Öntanýmlý Red Hat
-çekirdeði PPP desteðini bir modül olarak içerir.
+çekirdeði PPP desteðini bir modül olarak içerir. (IPv6)
 
 %prep
 %setup -q 
