@@ -1,0 +1,2 @@
+- added missingok flag for %{_sysconfdir}/ppp/{*-secrets,options*} files,
+- added using %{__*} macros.
