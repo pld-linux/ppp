@@ -1,6 +1,6 @@
 #
 # _without_pppoe - without PPPoE support (which requires kernel 2.4)
-# _without_pppoatm - without PPPoATM support (which requires kernel 2.4)
+# _without_pppoatm - without PPPoATM support (which requires kernel 2.4 and atm-devel)
 # _without_cbcp - without CBCP (MS CallBack Configuration Protocol)
 Summary:	ppp daemon package for Linu
 Summary(de):	ppp-Dämonpaket für Linux
@@ -81,6 +81,7 @@ Hat çekirdeði PPP desteðini bir modül olarak içerir. (IPv6)
 
 %package pppoatm
 Summary:	PPP Over ATM plugin
+Summary(pl):	Wtyczka PPP-po-ATM
 Group:		Networking/Daemons
 Group(de):	Netzwerkwesen/Server
 Group(pl):	Sieciowe/Serwery
@@ -88,6 +89,9 @@ Requires:	%{name} = %{version}
 
 %description pppoatm
 PPP Over ATM plugin.
+
+%description pppoatm -l pl
+Wtyczka PPP-po-ATM.
 
 %prep
 %setup -q
@@ -127,7 +131,8 @@ install etc.ppp/chap-secrets $RPM_BUILD_ROOT%{_sysconfdir}/ppp
 install debian/pap-secrets $RPM_BUILD_ROOT%{_sysconfdir}/ppp
 install debian/options $RPM_BUILD_ROOT%{_sysconfdir}/ppp
 install debian/options.ttyXX $RPM_BUILD_ROOT%{_sysconfdir}/ppp
-bzip2 -dc %{SOURCE2} | tar xf - -C $RPM_BUILD_ROOT%{_mandir}
+
+bzip2 -dc %{SOURCE4} | tar xf - -C $RPM_BUILD_ROOT%{_mandir}
 
 rm -f scripts/README
 
