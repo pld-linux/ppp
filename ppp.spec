@@ -125,6 +125,8 @@ Wtyczka PPP-po-ATM.
 	CC=%{__cc} \
 	%{!?_without_cbcp:CBCP=1}
 
+%{?_with_pppoe:%{__make} OPT_FLAGS="%{rpmcflags}" CC=%{__cc} -C pppd/plugins/pppoe}
+
 %install
 rm -rf $RPM_BUILD_ROOT
 install -d $RPM_BUILD_ROOT{%{_sbindir},%{_bindir},%{_mandir}/man{1,8}} \
@@ -133,6 +135,8 @@ install -d $RPM_BUILD_ROOT{%{_sbindir},%{_bindir},%{_mandir}/man{1,8}} \
 
 %{__make} install \
 	DESTDIR=$RPM_BUILD_ROOT
+
+%{?_with_pppoe:install pppd/plugins/pppoe/pppoed $RPM_BUILD_ROOT%{_sbindir}}
 
 install %{SOURCE2} $RPM_BUILD_ROOT%{_bindir}/pon
 install %{SOURCE3} $RPM_BUILD_ROOT%{_bindir}/poff
@@ -164,6 +168,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_sbindir}/chat
 %attr(755,root,root) %{_sbindir}/pppstats
 %attr(755,root,root) %{_sbindir}/pppd
+%{?_with_pppoe:%attr(755,root,root) %{_sbindir}/pppoed}
 %if %{?_with_pppoatm:1}%{!?_with_pppoatm:0}%{?_with_pppoe:1}%{!?_with_pppoe:0}
 %dir %{_libdir}/pppd
 %dir %{_libdir}/pppd/%{version}
