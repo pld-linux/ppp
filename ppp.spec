@@ -1,7 +1,7 @@
 # _with_pppoatm - with PPPoATM support (which requires kernel 2.4 and atm-devel)
 # TODO:
 # - fix ppp over atm
-%define snap	20020809
+%define snap	20020901
 Summary:	ppp daemon package for Linux
 Summary(de):	ppp-D鋗onpaket f黵 Linux
 Summary(es):	Servidor ppp para Linux
@@ -13,7 +13,7 @@ Summary(tr):	PPP sunucu s黵eci
 Summary(zh_CN):	PPP 配置和管理软件包.
 Name:		ppp
 Version:	2.4.2
-Release:	0.%{snap}.2
+Release:	0.%{snap}.1
 Epoch:		2
 License:	distributable
 Group:		Networking/Daemons
