@@ -1,4 +1,7 @@
+#
+# Conditional build:
 # _with_pppoatm - with PPPoATM support (which requires kernel 2.4 and atm-devel)
+#
 # TODO:
 # - fix ppp over atm
 %define snap	20030613
@@ -35,8 +38,9 @@ Patch5:		%{name}-pidfile-owner.patch
 Patch6:		%{name}-rp-pppoe-update.patch
 Patch7:		%{name}-rp-pppoe-macaddr.patch
 URL:		http://www.samba.org/ppp/
-BuildRequires:	pam-devel
+BuildRequires:	automake
 %{?_with_pppoatm:BuildRequires:	linux-atm-devel}
+BuildRequires:	pam-devel
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
@@ -104,7 +108,15 @@ Pliki nag³ówkowe potrzebne do budowania wtyczek dla pppd.
 %patch7 -p1
 
 %build
-find pppd/plugins/radius/radiusclient -exec touch "{}" ";"
+cd pppd/plugins/radius/radiusclient
+# touch seems no longer needed?
+#find . -exec touch "{}" ";"
+cp -f /usr/share/automake/config.* .
+%configure2_13 \
+	--enable-shared \
+	--enable-static
+cd ../../../..
+# note: not autoconf configure
 %configure
 %{__make} \
 	OPT_FLAGS="%{rpmcflags}" \
@@ -114,8 +126,7 @@ find pppd/plugins/radius/radiusclient -exec touch "{}" ";"
 rm -rf $RPM_BUILD_ROOT
 install -d $RPM_BUILD_ROOT{%{_sbindir},%{_bindir},%{_mandir}/man{1,8}} \
 	$RPM_BUILD_ROOT{%{_sysconfdir}/{pam.d,ppp/peers},/var/log} \
-	$RPM_BUILD_ROOT/etc/logrotate.d \
-	$RPM_BUILD_ROOT/%{_includedir}/pppd
+	$RPM_BUILD_ROOT/etc/logrotate.d
 
 %{__make} install \
 	DESTDIR=$RPM_BUILD_ROOT
@@ -128,9 +139,6 @@ install etc.ppp/chap-secrets $RPM_BUILD_ROOT%{_sysconfdir}/ppp
 install debian/pap-secrets $RPM_BUILD_ROOT%{_sysconfdir}/ppp
 install debian/options $RPM_BUILD_ROOT%{_sysconfdir}/ppp
 install debian/options.ttyXX $RPM_BUILD_ROOT%{_sysconfdir}/ppp
-
-install pppd/patchlevel.h $RPM_BUILD_ROOT/%{_includedir}/pppd
-install pppd/pppd.h $RPM_BUILD_ROOT/%{_includedir}/pppd
 
 bzip2 -dc %{SOURCE4} | tar xf - -C $RPM_BUILD_ROOT%{_mandir}
 
