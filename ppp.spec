@@ -94,33 +94,33 @@ PPP Over ATM plugin.
 	%{!?_without_cbcp:CBCP=1}
 
 %install
-%{__rm} -rf $RPM_BUILD_ROOT
-%{__install} -d $RPM_BUILD_ROOT{%{_sbindir},%{_bindir},%{_mandir}/man{1,8}} \
+rm -rf $RPM_BUILD_ROOT
+install -d $RPM_BUILD_ROOT{%{_sbindir},%{_bindir},%{_mandir}/man{1,8}} \
 	$RPM_BUILD_ROOT%{_sysconfdir}/{pam.d,ppp/peers}
 
 %{__make} install \
 	DESTDIR=$RPM_BUILD_ROOT
 
-%{__install} %{SOURCE2} $RPM_BUILD_ROOT%{_bindir}/pon
-%{__install} %{SOURCE3} $RPM_BUILD_ROOT%{_bindir}/poff
-%{__install} debian/plog $RPM_BUILD_ROOT%{_bindir}
+install %{SOURCE2} $RPM_BUILD_ROOT%{_bindir}/pon
+install %{SOURCE3} $RPM_BUILD_ROOT%{_bindir}/poff
+install debian/plog $RPM_BUILD_ROOT%{_bindir}
 
-%{__install} etc.ppp/chap-secrets $RPM_BUILD_ROOT%{_sysconfdir}/ppp
-%{__install} debian/pap-secrets $RPM_BUILD_ROOT%{_sysconfdir}/ppp
-%{__install} debian/options $RPM_BUILD_ROOT%{_sysconfdir}/ppp
-%{__install} debian/options.ttyXX $RPM_BUILD_ROOT%{_sysconfdir}/ppp
+install etc.ppp/chap-secrets $RPM_BUILD_ROOT%{_sysconfdir}/ppp
+install debian/pap-secrets $RPM_BUILD_ROOT%{_sysconfdir}/ppp
+install debian/options $RPM_BUILD_ROOT%{_sysconfdir}/ppp
+install debian/options.ttyXX $RPM_BUILD_ROOT%{_sysconfdir}/ppp
 
-%{__rm} -f scripts/README
+rm -f scripts/README
 
-%{__install} %{SOURCE1} $RPM_BUILD_ROOT/etc/pam.d/ppp
+install %{SOURCE1} $RPM_BUILD_ROOT/etc/pam.d/ppp
 
-%{__strip} $RPM_BUILD_ROOT%{_sbindir}/*
+strip $RPM_BUILD_ROOT%{_sbindir}/*
 
-%{__gzip} -9nf README.linux debian/README.debian debian/win95.ppp \
+gzip -9nf README.linux debian/README.debian debian/win95.ppp \
 	README.MSCHAP80 FAQ debian/ppp-2.3.0.STATIC.README
 
 %clean
-%{__rm} -rf $RPM_BUILD_ROOT
+rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
