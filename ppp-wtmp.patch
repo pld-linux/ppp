@@ -96,3 +96,14 @@
   * sifvjcomp - config tcp header compression
   */
  
+--- ppp-2.4.0/pppd/Makefile.linux~	Wed Dec 27 03:27:04 2000
++++ ppp-2.4.0/pppd/Makefile.linux	Wed Dec 27 03:29:20 2000
+@@ -110,6 +110,8 @@
+ CFLAGS  += -DPPP_FILTER -I/usr/include/pcap
+ endif
+ 
++LIBS    += -lutil
++
+ ifdef HAVE_INET6
+      PPPDSRCS += ipv6cp.c eui64.c
+      HEADERS  += ipv6cp.h eui64.h
