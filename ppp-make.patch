@@ -1,0 +1,111 @@
+--- ppp-2.3.7/chat/Makefile.linux	Thu Nov 27 06:59:44 1997
++++ ppp-2.3.7.new/chat/Makefile.linux	Wed Apr 28 16:46:52 1999
+@@ -6,7 +6,8 @@
+ CDEF4=	-DFNDELAY=O_NDELAY		# Old name value
+ CDEFS=	$(CDEF1) $(CDEF2) $(CDEF3) $(CDEF4)
+ 
+-CFLAGS=	-O2 -pipe $(CDEFS)
++CC=	gcc
++CFLAGS=	-Wall $(RPM_OPT_FLAGS) $(CDEFS)
+ 
+ all:	chat
+ 
+--- ppp-2.3.7/linux/Makefile.top	Thu Apr  1 12:14:33 1999
++++ ppp-2.3.7.new/linux/Makefile.top	Wed Apr 28 16:46:52 1999
+@@ -1,12 +1,12 @@
+ # PPP top-level Makefile for Linux.
+ 
+ 
+-BINDIR = /usr/sbin
+-MANDIR = /usr/man
+-ETCDIR = /etc/ppp
++BINDIR = $(TOPDIR)/usr/sbin
++MANDIR = $(TOPDIR)/usr/man
++ETCDIR = $(TOPDIR)/etc/ppp
+ 
+ # uid 0 = root
+-INSTALL= install -o 0 -g daemon
++INSTALL= install # -o 0 -g daemon
+ 
+ all:
+ 	cd chat; $(MAKE) $(MFLAGS) all
+@@ -14,7 +14,10 @@
+ 	cd pppstats; $(MAKE) $(MFLAGS) all
+ 	cd pppdump; $(MAKE) $(MFLAGS) all
+ 
+-install: $(BINDIR) $(MANDIR)/man8 install-progs install-etcppp
++install: dirs install-progs install-etcppp
++
++dirs:
++	mkdir -p $(BINDIR) $(MANDIR)/man8 $(ETCDIR)
+ 
+ install-progs:
+ 	cd chat; $(MAKE) BINDIR=$(BINDIR) MANDIR=$(MANDIR) $(MFLAGS) install
+--- ppp-2.3.7/pppd/Makefile.linux	Wed Mar 31 08:06:56 1999
++++ ppp-2.3.7.new/pppd/Makefile.linux	Wed Apr 28 16:47:48 1999
+@@ -4,8 +4,8 @@
+ #
+ 
+ # Default installation locations
+-BINDIR = /usr/sbin
+-MANDIR = /usr/man
++BINDIR = $(TOPDIR)/usr/sbin
++MANDIR = $(TOPDIR)/usr/man
+ 
+ PPPDSRCS = main.c magic.c fsm.c lcp.c ipcp.c upap.c chap.c md5.c ccp.c \
+ 	   ipxcp.c auth.c options.c sys-linux.c md4.c chap_ms.c cbcp.c \
+@@ -24,11 +24,11 @@
+ include .depend
+ endif
+ 
+-# CC = gcc
++CC = gcc
+ #
+-COPTS = -O2 -pipe -Wall -g
++COPTS = $(RPM_OPT_FLAGS) -pipe -Wall -g
+ VER = 2.3.7
+-LIBS =
++LIBS = -lutil
+ 
+ ifneq ($(wildcard /usr/lib/libcrypt*),)
+ LIBS += -lcrypt
+@@ -44,7 +44,7 @@
+ 
+ 
+ HAS_SHADOW=y
+-#USE_PAM=y
++USE_PAM=y
+ 
+ INCLUDE_DIRS= -I../include
+ 
+@@ -87,10 +87,8 @@
+ 
+ install: pppd
+ 	mkdir -p $(BINDIR) $(MANDIR)
+-	install -s -c -m 4550 -o root pppd $(BINDIR)/pppd
+-	if ! chgrp pppusers $(BINDIR)/pppd 2>/dev/null; then \
+-	  chmod o+rx $(BINDIR)/pppd; fi
+-	install -c -m 444 -o root pppd.8 $(MANDIR)/man8
++	install pppd $(BINDIR)/pppd
++	install pppd.8 $(MANDIR)/man8
+ 
+ pppd: $(PPPDOBJS)
+ 	$(CC) $(CFLAGS) -o pppd $(PPPDOBJS) $(LIBS)
+--- ppp-2.3.7/pppstats/Makefile.linux	Wed Mar 25 03:21:19 1998
++++ ppp-2.3.7.new/pppstats/Makefile.linux	Wed Apr 28 16:49:18 1999
+@@ -6,12 +6,12 @@
+ PPPSTATSRCS = pppstats.c
+ PPPSTATOBJS = pppstats.o
+ 
+-#CC = gcc
+-COPTS = -O
++CC = gcc
++COPTS = $(RPM_OPT_FLAGS) -Wall
+ COMPILE_FLAGS = -D_linux_ -I../include
+ LIBS =
+ 
+-INSTALL= install -o root -g daemon
++INSTALL= install # -o root -g daemon
+ 
+ CFLAGS = $(COPTS) $(COMPILE_FLAGS)
+ 

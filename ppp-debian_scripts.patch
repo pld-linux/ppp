@@ -1,0 +1,841 @@
+--- ppp-2.3.5.orig/debian/README.debian	Thu Jan  1 01:00:00 1970
++++ ppp-2.3.5/debian/README.debian	Tue Feb  2 19:07:33 1999
+@@ -0,0 +1,145 @@
++PPP for Debian
++---------------
++
++Upgrading from Previous versions to 2.3.1 and beyond.
++--------------------------------
++
++The default setup in /etc/ppp/options is to turn authentication on.
++
++This may cause you not to be able to log into your ISP any more, if they do
++not support PAP or CHAP authentication.  All you need to do is set ``noauth''
++either on pppd's command line or in /etc/ppp/peers/provider, in order to switch
++it off for this connection.
++
++[Don't just turn it off again in the options file, since it is better to deny
++ access by default for security reasons.]
++
++Apparently some people have had problems with /etc/chatscripts not
++ending up owned by root.dip.  Just run
++
++  chown root.dip /etc/chatscripts
++
++PAM Support (needed for inbound PAP):
++------------------------------------
++
++pppd with PAM support for inbound PAP logins is available by installing
++ppp-pam, which contains a replacement /usr/sbin/pppd.
++
++Cheers, Phil.
++<phil@hands.com>
++
++---------
++
++This release provides scripts to conveniently control ppp from user space.
++Note that the scripts only work with the proper setup in /etc/ppp. Edit
++the configuration files and test the operation of your link in superuser
++mode first.
++
++Read the manpage for pon,poff,plog please.
++
++Available scripts:
++------------------
++
++pon		Bring link up. Executes pppd and will immediately
++		return the command prompt while still dialing.
++		use plog to figure out what pppd does.
++
++poff		Bring link down. Kills pppd
++
++plog 		shows the last lines of the pppd log.
++
++Outbound and Inbound Dialing Setup
++----------------------------------
++pppd attempts to handle both inbound and outbound through one set of
++configuration files. The /etc/ppp/options file has been set up for the most
++common setups. Please do not change it if at all possible. Specify
++parameters on the commandline if necessary. If you find a change that will
++be beneficial to all then please tell me about it.
++
++Outbound Setup (Simple one server setup!)
++--------------
++
++Edit the file /etc/chatscripts/provider and make sure it contains what
++you need to dialup into your server and eventually start up ppp on the
++remote machine.
++
++Edit the file /etc/ppp/peers/provider and put all options in it that you need
++to connect to your server. The most common options are already provided for
++you. If you need the common PAP-Password authentication then add
++user <username> to it. Otherwise you might also change the system name to be
++like your username. The systemname is used for authentication if you do not
++provide the "user" directive. See also pppd manpage.
++
++Note: If you are NOT using pap or chap authentication, you need to put
++      `noauth' in /etc/ppp/peers/provider to allow a connection to be made.
++
++Edit the file /etc/ppp/pap-secrets and put your password into the designated
++location.
++
++You should then be able to start the ppp connection with pon.
++
++If you want to have ppp on bootup then rename the file
++/etc/ppp/no_ppp_on_boot to /etc/ppp/ppp_on_boot.
++
++Inbound Setup (assuming mgetty 0.99 installed)
++----------------------------------------------
++Edit the /etc/ppp/options file and uncomment the nameserver lines. Provide
++the IP addresses that you want the users to use for their name services.
++
++Copy the file /etc/ppp/options.XX so that you have one options file
++for each serial port you run mgetty on. Give each serial port an IP address
++in those files. That way that port is locked into using that IP number.
++Think what consequences that assignment might have for outbound use...
++
++That should be enough for dialup from a Win95 or NT Server. The
++username/password on those system is used for a pap-authentication.
++The /etc/ppp/pap-secrets is already set up for such a situation. Mgetty is
++preconfigured to call pppd with parameters so that the pap-verification will
++be done through the /etc/passwd file.
++
++All your users should now be able to establish ppp connections by just
++specifying phone#, username,password from Win95 etc.
++
++Inbound dialup using dialup Scripts:
++A ppp session can be established from the regular Linux prompt by executing
++/usr/sbin/pppd. The user is limited to use the assigned IP adddress in
++/etc/ppp/options.ttyname and will not be able to override it.
++
++Permissions:
++------------
++Access to PPPD is controlled via the membership in the "dip" group.
++
++Demand Dialup links:
++--------------------
++You need to have the kernel patched in order to support demand dialup with
++the patches for ppp 2.3!!!!
++
++Add the following options to /etc/ppp/peers/provider:
++
++demand idle 600 holdoff 20
++
++to set up demand dialing. 600 seconds (=10 Minutes) idle time disconnects.
++20 seconds between attempts to connect. This setup implies the "persist"
++option. You might also want to enable ppp on boot up so you wont have to
++worry about the ppp connection at all.
++
++Syslog Facility Level:
++----------------------
++
++The default level of LOG_DAEMON has been overridden (as described in the
++pppd(8) man page), to be LOG_LOCAL2.  The intent being thst local2 be sent
++to /var/log/ppp.log for use by plog.
++
++Not implemented:
++----------------
++- Password expiration. Was implemented with a direct call to a non-exported
++  function in libshadow. Why are they doing such things?
++
++Kernel Update
++-------------
++As of version 2.3.1 the kernel stuff is broken. See the file
++
++kernel.fix2.0.30-2 in this directory.
++
++Christoph Lameter, <clameter@debian.org> 22 July 1997
++
+--- ppp-2.3.5.orig/debian/ip-down	Thu Jan  1 01:00:00 1970
++++ ppp-2.3.5/debian/ip-down	Tue Feb  2 19:07:33 1999
+@@ -0,0 +1,43 @@
++#!/bin/sh
++#
++# $Id$
++#
++# This script is run by the pppd _after_ the link is brought down.
++# It uses run-parts to run scripts in /etc/ppp/ip-down.d, so to delete
++# routes, unset IP addresses etc. you should create script(s) there.
++#
++# Be aware that other packages may include /etc/ppp/ip-down.d scripts (named
++# after that package), so choose local script names with that in mind.
++#
++# This script is called with the following arguments:
++#    Arg  Name                          Example
++#    $1   Interface name                ppp0
++#    $2   The tty                       ttyS1
++#    $3   The link speed                38400
++#    $4   Local IP number               12.34.56.78
++#    $5   Peer  IP number               12.34.56.99
++#    $6   Optional ``ipparam'' value    foo
++
++# The  environment is cleared before executing this script
++# so the path must be reset
++PATH=/usr/local/sbin:/usr/sbin:/sbin:/usr/local/bin:/usr/bin:/bin
++export PATH
++# These variables are for the use of the scripts run by run-parts
++PPP_IFACE="$1"
++PPP_TTY="$2"
++PPP_SPEED="$3"
++PPP_LOCAL="$4"
++PPP_REMOTE="$5"
++PPP_IPPARAM="$6"
++export PPP_IFACE PPP_TTY PPP_SPEED PPP_LOCAL PPP_REMOTE PPP_IPPARAM
++
++# as an additional convienince, $PPP_TTYNAME is set to the tty name,
++# stripped of /dev/ (if present) for easier matching.
++PPP_TTYNAME=`/usr/bin/basename "$2"`
++export PPP_TTYNAME 
++
++# Main Script starts here
++
++run-parts /etc/ppp/ip-down.d
++
++# last line
+--- ppp-2.3.5.orig/debian/ip-up	Thu Jan  1 01:00:00 1970
++++ ppp-2.3.5/debian/ip-up	Tue Feb  2 19:07:33 1999
+@@ -0,0 +1,44 @@
++#!/bin/sh
++#
++# $Id$
++#
++# This script is run by the pppd after the link is established.
++# It uses run-parts to run scripts in /etc/ppp/ip-up.d, so to add routes,
++# set IP address, run the mailq etc. you should create script(s) there.
++#
++# Be aware that other packages may include /etc/ppp/ip-up.d scripts (named
++# after that package), so choose local script names with that in mind.
++#
++# This script is called with the following arguments:
++#    Arg  Name                          Example
++#    $1   Interface name                ppp0
++#    $2   The tty                       ttyS1
++#    $3   The link speed                38400
++#    $4   Local IP number               12.34.56.78
++#    $5   Peer  IP number               12.34.56.99
++#    $6   Optional ``ipparam'' value    foo
++
++# The  environment is cleared before executing this script
++# so the path must be reset
++PATH=/usr/local/sbin:/usr/sbin:/sbin:/usr/local/bin:/usr/bin:/bin
++export PATH
++# These variables are for the use of the scripts run by run-parts
++PPP_IFACE="$1"
++PPP_TTY="$2"
++PPP_SPEED="$3"
++PPP_LOCAL="$4"
++PPP_REMOTE="$5"
++PPP_IPPARAM="$6"
++export PPP_IFACE PPP_TTY PPP_SPEED PPP_LOCAL PPP_REMOTE PPP_IPPARAM
++
++
++# as an additional convenience, $PPP_TTYNAME is set to the tty name,
++# stripped of /dev/ (if present) for easier matching.
++PPP_TTYNAME=`/usr/bin/basename "$2"`
++export PPP_TTYNAME 
++
++# Main Script starts here
++
++run-parts /etc/ppp/ip-up.d
++
++# last line
+--- ppp-2.3.5.orig/debian/options	Thu Jan  1 01:00:00 1970
++++ ppp-2.3.5/debian/options	Tue Feb  2 19:07:33 1999
+@@ -0,0 +1,278 @@
++# /etc/ppp/options
++# 
++# $Id$
++# 
++# Originally created by Jim Knoble <jmknoble@mercury.interpath.net>
++# Modified for Debian by alvar Bray <alvar@meiko.co.uk>
++# Modified for PPP Server setup by Christoph Lameter <clameter@debian.org>
++#
++# Use the command  egrep -v '#|^ *$' /etc/ppp/options to quickly see what 
++# options are active in this file.
++
++# Specify which DNS Servers the incoming Win95 or WinNT Connection should use
++# Two Servers can be remotely configured
++# ms-dns 192.168.1.1
++# ms-dns 192.168.1.2
++
++# Specify which WINS Servers the incoming connection Win95 or WinNT should use
++# ms-wins 192.168.1.50
++# ms-wins 192.168.1.51
++
++# Run the executable or shell command specified after pppd has
++# terminated the link.  This script could, for example, issue commands
++# to the modem to cause it to hang up if hardware modem control signals
++# were not available.
++#disconnect "chat -- \d+++\d\c OK ath0 OK"
++
++# async character map -- 32-bit hex; each bit is a character
++# that needs to be escaped for pppd to receive it.  0x00000001
++# represents '\x01', and 0x80000000 represents '\x1f'.
++asyncmap 0
++
++# Require the peer to authenticate itself before allowing network
++# packets to be sent or received.
++# Please do not disable this setting. It is expected to be standard in
++# future releases of pppd. Use the call option (see manpage) to disable
++# authentication for specific peers.
++auth
++
++# Use hardware flow control (i.e. RTS/CTS) to control the flow of data
++# on the serial port.
++crtscts
++
++# Use software flow control (i.e. XON/XOFF) to control the flow of data
++# on the serial port.
++#xonxoff
++
++# Specifies that certain characters should be escaped on transmission
++# (regardless of whether the peer requests them to be escaped with its
++# async control character map).  The characters to be escaped are
++# specified as a list of hex numbers separated by commas.  Note that
++# almost any character can be specified for the escape option, unlike
++# the asyncmap option which only allows control characters to be
++# specified.  The characters which may not be escaped are those with hex
++# values 0x20 - 0x3f or 0x5e.
++#escape 11,13,ff
++
++# Don't use the modem control lines.
++#local
++
++# Specifies that pppd should use a UUCP-style lock on the serial device
++# to ensure exclusive access to the device.
++lock
++
++# Use the modem control lines.  On Ultrix, this option implies hardware
++# flow control, as for the crtscts option.  (This option is not fully
++# implemented.)
++modem
++
++# Set the MRU [Maximum Receive Unit] value to <n> for negotiation.  pppd
++# will ask the peer to send packets of no more than <n> bytes. The
++# minimum MRU value is 128.  The default MRU value is 1500.  A value of
++# 296 is recommended for slow links (40 bytes for TCP/IP header + 256
++# bytes of data).
++#mru 542
++
++# Set the interface netmask to <n>, a 32 bit netmask in "decimal dot"
++# notation (e.g. 255.255.255.0).
++#netmask 255.255.255.0
++
++# Disables the default behaviour when no local IP address is specified,
++# which is to determine (if possible) the local IP address from the
++# hostname. With this option, the peer will have to supply the local IP
++# address during IPCP negotiation (unless it specified explicitly on the
++# command line or in an options file).
++#noipdefault
++
++# Enables the "passive" option in the LCP.  With this option, pppd will
++# attempt to initiate a connection; if no reply is received from the
++# peer, pppd will then just wait passively for a valid LCP packet from
++# the peer (instead of exiting, as it does without this option).
++#passive
++
++# With this option, pppd will not transmit LCP packets to initiate a
++# connection until a valid LCP packet is received from the peer (as for
++# the "passive" option with old versions of pppd).
++#silent
++
++# Don't request or allow negotiation of any options for LCP and IPCP
++# (use default values).
++#-all
++
++# Disable Address/Control compression negotiation (use default, i.e.
++# address/control field disabled).
++#-ac
++
++# Disable asyncmap negotiation (use the default asyncmap, i.e. escape
++# all control characters).
++#-am
++
++# Don't fork to become a background process (otherwise pppd will do so
++# if a serial device is specified).
++#-detach
++
++# Disable IP address negotiation (with this option, the remote IP
++# address must be specified with an option on the command line or in an
++# options file).
++#-ip
++
++# Disable magic number negotiation.  With this option, pppd cannot
++# detect a looped-back line.
++#-mn
++
++# Disable MRU [Maximum Receive Unit] negotiation (use default, i.e.
++# 1500).
++#-mru
++
++# Disable protocol field compression negotiation (use default, i.e.
++# protocol field compression disabled).
++#-pc
++
++# Require the peer to authenticate itself using PAP.
++#+pap
++
++# Don't agree to authenticate using PAP.
++#-pap
++
++# Require the peer to authenticate itself using CHAP [Cryptographic
++# Handshake Authentication Protocol] authentication.
++#+chap
++
++# Don't agree to authenticate using CHAP.
++#-chap
++
++# Disable negotiation of Van Jacobson style IP header compression (use
++# default, i.e. no compression).
++#-vj
++
++# Increase debugging level (same as -d).  If this option is given, pppd
++# will log the contents of all control packets sent or received in a
++# readable form.  The packets are logged through syslog with facility
++# daemon and level debug. This information can be directed to a file by
++# setting up /etc/syslog.conf appropriately (see syslog.conf(5)).  (If
++# pppd is compiled with extra debugging enabled, it will log messages
++# using facility local2 instead of daemon).
++#debug
++
++# Append the domain name <d> to the local host name for authentication
++# purposes.  For example, if gethostname() returns the name porsche,
++# but the fully qualified domain name is porsche.Quotron.COM, you would
++# use the domain option to set the domain name to Quotron.COM.
++#domain <d>
++
++# Enable debugging code in the kernel-level PPP driver.  The argument n
++# is a number which is the sum of the following values: 1 to enable
++# general debug messages, 2 to request that the contents of received
++# packets be printed, and 4 to request that the contents of transmitted
++# packets be printed.
++#kdebug n
++
++# Set the MTU [Maximum Transmit Unit] value to <n>. Unless the peer
++# requests a smaller value via MRU negotiation, pppd will request that
++# the kernel networking code send data packets of no more than n bytes
++# through the PPP network interface.
++#mtu <n>
++
++# Enforce the use of the hostname as the name of the local system for
++# authentication purposes (overrides the name option).
++#usehostname
++
++# Set the assumed name of the remote system for authentication purposes
++# to <n>.
++#remotename <n>
++
++# Add an entry to this system's ARP [Address Resolution Protocol]
++# table with the IP address of the peer and the Ethernet address of this
++# system.
++proxyarp
++
++# Use the system password database for authenticating the peer using
++# PAP. Note: mgetty already provides this option. If this is specified
++# then dialin from users using a script under Linux to fire up ppp wont work.
++# login
++
++# If this option is given, pppd will send an LCP echo-request frame to
++# the peer every n seconds. Under Linux, the echo-request is sent when
++# no packets have been received from the peer for n seconds. Normally
++# the peer should respond to the echo-request by sending an echo-reply.
++# This option can be used with the lcp-echo-failure option to detect
++# that the peer is no longer connected.
++lcp-echo-interval 30
++
++# If this option is given, pppd will presume the peer to be dead if n
++# LCP echo-requests are sent without receiving a valid LCP echo-reply.
++# If this happens, pppd will terminate the connection.  Use of this
++# option requires a non-zero value for the lcp-echo-interval parameter.
++# This option can be used to enable pppd to terminate after the physical
++# connection has been broken (e.g., the modem has hung up) in
++# situations where no hardware modem control lines are available.
++lcp-echo-failure 4
++
++# Set the LCP restart interval (retransmission timeout) to <n> seconds
++# (default 3).
++#lcp-restart <n>
++
++# Set the maximum number of LCP terminate-request transmissions to <n>
++# (default 3).
++#lcp-max-terminate <n>
++
++# Set the maximum number of LCP configure-request transmissions to <n>
++# (default 10).
++#lcp-max-configure <n>
++
++# Set the maximum number of LCP configure-NAKs returned before starting
++# to send configure-Rejects instead to <n> (default 10).
++#lcp-max-failure <n>
++
++# Set the IPCP restart interval (retransmission timeout) to <n>
++# seconds (default 3).
++#ipcp-restart <n>
++
++# Set the maximum number of IPCP terminate-request transmissions to <n>
++# (default 3).
++#ipcp-max-terminate <n>
++
++# Set the maximum number of IPCP configure-request transmissions to <n>
++# (default 10).
++#ipcp-max-configure <n>
++
++# Set the maximum number of IPCP configure-NAKs returned before starting
++# to send configure-Rejects instead to <n> (default 10).
++#ipcp-max-failure <n>
++
++# Set the PAP restart interval (retransmission timeout) to <n> seconds
++# (default 3).
++#pap-restart <n>
++
++# Set the maximum number of PAP authenticate-request transmissions to
++# <n> (default 10).
++#pap-max-authreq <n>
++
++# Set the CHAP restart interval (retransmission timeout for
++# challenges) to <n> seconds (default 3).
++#chap-restart <n>
++
++# Set the maximum number of CHAP challenge transmissions to <n>
++# (default 10).
++#chap-max-challenge
++
++# If this option is given, pppd will rechallenge the peer every <n>
++# seconds.
++#chap-interval <n>
++
++# With this option, pppd will accept the peer's idea of our local IP
++# address, even if the local IP address was specified in an option.
++#ipcp-accept-local
++
++# With this option, pppd will accept the peer's idea of its (remote) IP
++# address, even if the remote IP address was specified in an option.
++#ipcp-accept-remote
++
++# Disable the IPXCP and IPX protocols.
++# To let pppd pass IPX packets comment this out --- you'll probably also
++# want to install ipxripd, and have the Internal IPX Network option enabled
++# in your kernel.  /usr/doc/HOWTO/IPX-HOWTO.gz contains more info.
++noipx
++
++# ---<End of File>---
++
+--- ppp-2.3.5.orig/debian/options.ttyXX	Thu Jan  1 01:00:00 1970
++++ ppp-2.3.5/debian/options.ttyXX	Tue Feb  2 19:07:33 1999
+@@ -0,0 +1,19 @@
++# If you need to set up multiple serial lines then copy
++# this file to
++# options.<ttyname>	for each tty with a modem on it.
++#
++# The options.tty file will assign an IP address to each PPP connection
++# as it comes up. They must all be distinct!
++#
++# Example:
++# options.ttyS1		for com2 under DOS.
++#
++# Edit the following line so that the first IP address
++# mentioned is the is the IP address of your host while the second
++# is the ip address of the serial port
++#
++# I usually use the convention hostname + dash + last 2 character of
++# the ttyname to refer to serial ports.
++# For example servername-s1 for ttyS1 on server "servername"
++
++hostname:hostname-s1
+--- ppp-2.3.5.orig/debian/pap-secrets	Thu Jan  1 01:00:00 1970
++++ ppp-2.3.5/debian/pap-secrets	Tue Feb  2 19:07:33 1999
+@@ -0,0 +1,37 @@
++# This is a pap-secrets file to be used with the AUTO_PPP function of mgetty
++# mgetty-0.99 is preconfigured to startup pppd with the login option which
++# will cause pppd to consult /etc/passwd after a user has passed this file
++# Dont be disturbed therfore by the fact that this file defines logins with
++# any password for users. /etc/passwd will catch passwd mismatches.
++#
++# This file should block ALL users that should not be able to do AUTO_PPP!
++# AUTO_PPP bypasses the usual login program so its necessary to list all
++# system userids with regular passwords here!
++#
++# ATTENTION: The definitions here can allow users to login without a
++# password if you dont use the login option of pppd!
++# The /etc/ppp/options file installed has the login option enabled
++
++# INBOUND connections
++
++# Every regular user can use PPP and has to use passwords from /etc/passwd
++*	hostname	""	*
++
++# UserIDs that cannot use PPP at all. Check your /etc/passwd and add any
++# other accounts that should not be able to use pppd!
++guest	hostname	"*"	-
++master	hostname	"*"	-
++root	hostname	"*"	-
++support	hostname	"*"	-
++stats	hostname	"*"	-
++
++# OUTBOUND connections
++
++# Here you should add your userid password to connect to your providers via
++# pap. The * means that the password is to be used for ANY host you connect
++# to. Thus you do not have to worry about the foreign machine name. Just
++# replace password with your password.
++# If you have different providers with different passwords then you better
++# remove the following line.
++
++hostname	*	password
+--- ppp-2.3.5.orig/debian/plog	Thu Jan  1 01:00:00 1970
++++ ppp-2.3.5/debian/plog	Tue Feb  2 19:07:33 1999
+@@ -0,0 +1,2 @@
++#!/bin/sh
++tail $* /var/log/ppp.log
+--- ppp-2.3.5.orig/debian/plog.1	Thu Jan  1 01:00:00 1970
++++ ppp-2.3.5/debian/plog.1	Tue Feb  2 19:07:33 1999
+@@ -0,0 +1 @@
++.so pon.1
+--- ppp-2.3.5.orig/debian/poff	Thu Jan  1 01:00:00 1970
++++ ppp-2.3.5/debian/poff	Tue Feb  2 19:07:33 1999
+@@ -0,0 +1,53 @@
++#!/bin/sh
++
++# $Id$
++# Written by Phil Hands <phil@hands.com>, distributed under the GNU GPL
++
++SIG=TERM DONE=stopped;
++
++getopts rdch FLAG
++case $FLAG in
++ "r") SIG=HUP  DONE=signalled; shift  ;;
++ "d") SIG=USR1 DONE=signalled; shift ;;
++ "c") SIG=USR2 DONE=signalled; shift ;;
++ "h") cat <<!EOF!
++usage: $0 [options] [provider]
++
++options:
++  -r        cause pppd to drop the line and redial
++  -d        toggles the state of pppd's debug option
++  -c        cause pppd to renegotiate compression
++  -h        this help summary
++!EOF!
++    exit 1
++    ;;
++esac
++
++PROVIDER=$1
++
++
++# Lets see how many pppds are running....
++set -- `cat /var/run/ppp*.pid 2>/dev/null`
++
++case $# in
++  0) # pppd only creates a pid file once ppp is up, so let's try killing pppd
++     # on the assumption that we've not got that far yet.
++     kill -${SIG} `ps axw | egrep "pppd call [[:alnum:]]+" | grep -v grep | awk '{print $1}'`
++     exit 0
++     ;;
++  1) # If only one was running then it can be killed using the pid
++     kill -${SIG} $1
++     exit 0
++     ;;
++  *) # More than one! Aieehh.. We have to use ps to figure it out.
++     # If no arguments were specified, then assume the 'provider' default.
++     PID=`ps axw | egrep "pppd call ${PROVIDER:-provider}[[:space:]]*\$" | grep -v grep | awk '{print $1}'`
++     if [ $PID ]; then
++        kill -${SIG} ${PID}
++        exit 0
++     else
++        echo "I could not find a pppd process or provider '${PROVIDER:-provider}'. None ${DONE}"
++        exit 1
++     fi
++     ;;
++esac
+--- ppp-2.3.5.orig/debian/poff.1	Thu Jan  1 01:00:00 1970
++++ ppp-2.3.5/debian/poff.1	Tue Feb  2 19:07:33 1999
+@@ -0,0 +1 @@
++.so pon.1
+--- ppp-2.3.5.orig/debian/pon	Thu Jan  1 01:00:00 1970
++++ ppp-2.3.5/debian/pon	Tue Feb  2 19:07:33 1999
+@@ -0,0 +1,2 @@
++#!/bin/sh
++/usr/sbin/pppd call ${1:-provider}
+--- ppp-2.3.5.orig/debian/pon.1	Thu Jan  1 01:00:00 1970
++++ ppp-2.3.5/debian/pon.1	Tue Feb  2 19:07:33 1999
+@@ -0,0 +1,44 @@
++.Id $Id$
++.TH PLOG 1 "Oct 1996" local "Linux Programmer's Manual"
++.SH NAME
++pon, poff, plog \- startup, shutdown, or list the log of the PPP connection.
++.SH SYNOPSIS
++.B pon
++.br
++.B poff
++.br
++.B plog
++.SH DESCRIPTION
++.B pon
++and
++.B poff
++switch the ppp connection on and off. Progress and logged events related to
++the ppp connection can be viewed using
++.B plog
++.SH REQUIREMENTS FOR the p-commands to work
++.TP 8
++.B /etc/ppp/chatscripts/provider
++must contain the correct chatscript to connect to your provider. All users
++that are supposed to be able to use the p-commands should have read access
++to this file.
++.br
++.TP 8
++.B /etc/ppp/options
++contains the options for ppp to connect to your provider. This file also
++must be readable by all users who should be able to use the p-commands.
++.SH FILES
++.I /etc/ppp/chatscripts/provider
++.br
++.I /etc/ppp/peers/provider
++.br
++.I /etc/ppp/options
++.br
++.I /var/log/ppp.log
++.br
++.I /etc/ppp/pap-secrets
++.br
++.I /etc/ppp/chap-secrets
++.SH SEE ALSO
++pppd(8), chat(8), and the documentation in /usr/doc/ppp
++.SH AUTHOR
++The p-commands were written by Christoph Lameter <clameter@debian.org>
+--- ppp-2.3.5.orig/debian/ppp-2.3.0.STATIC.README	Thu Jan  1 01:00:00 1970
++++ ppp-2.3.5/debian/ppp-2.3.0.STATIC.README	Tue Feb  2 19:07:33 1999
+@@ -0,0 +1,54 @@
++
++ppp-2.3.0-static.diff
++
++	Patch to ppp-2.3.0 to support using static IP addresses with 
++        Mgetty and AutoPPP.  Does not affect normal dynamic assignments.
++        This patch is for 2.3.0 only and not very well tested, comments 
++        welcome. Apply with "patch -p1" in the top directory of the 
++        ppp-2.3.0 sources. After getting ppp-2.3.0 to compile cleanly on
++        your system, patch and re-compile.  (No need to re-compile kernel)
++        While the patches should work with any authentication method, we 
++        did not have success getting 2.3.0 to work with USE_PAM=1 option. 
++        (Out of the box). We use shadow passwords and "make HAS_SHADOW=1". 
++        Bottom line...you should get ppp-2.3.0 working BEFORE you apply 
++        the patches.        
++
++        After patching and re-compiling, update the pap-secrets file to 
++        contain the entries of those users you want to have static 
++        IP addresses. Typical entry might look like:
++
++        #client     server     secret     IP addresses
++         jdoe         *        realpswd   207.69.189.15 
++           *          *         ""            *
++         
++        Also, inform your static IP users to include their IP when
++        connecting. ex: pppd 207.69.189.15:
++        Or for Windows folks "check"  Specify an IP address.
++
++  Note: The second line is what most folks will use to authenticate
++        users who will be dynamically assigned their addresses by 
++        /dev/ttyXX. This along with the login option allows users to 
++        be PAP authenticated against the /etc/passwd or /etc/shadow.
++        If you enter each and every user into your pap-secrets file
++        and do not have the last line,(wildcards line) you MUST place
++        a "*" at the end of each users line.  Without it authentication
++        will fail.  For example:
++
++        #client     server     secret     IP addresses
++         jdoe         *        passwd     207.69.189.15 *
++
++        This "*" at the end allows the patches to work properly without
++        changing the normal process.  The IP address is normally assigned
++        via the /etc/ppp/options.ttyXX file. The patches do not interfere
++        with this process at all.  The only thing different is when the
++        user tells pppd he has his own address, pppd will allow him to use
++        it, if he and his address are authenticated via the pap-secrets file.
++        The only thing to remember, is tell your static IP users to set the 
++        "correct" IP or they will be assigned the normal dynamic address. 
++        (And of course that's not what we want) :>)  If you have any 
++        questions....
++
++While I tested this as many ways as our systems would allow, no warranty 
++is implied.  They work well for us.  
++
++Jeff Myers <jmyers@southcom.net>
+--- ppp-2.3.5.orig/debian/provider	Thu Jan  1 01:00:00 1970
++++ ppp-2.3.5/debian/provider	Tue Feb  2 19:59:00 1999
+@@ -0,0 +1,21 @@
++# These are the options to dial out to your service provider
++# Please customize them correctly. Only the "provider" file will
++# be handled by poff and pon.
++
++# You usually need this if there is no PAP authentication
++noauth
++
++# The chatscript (be sure to edit that file too)
++connect "/usr/sbin/chat -v -f /etc/ppp/chatscripts/provider"
++
++# Routing
++defaultroute
++
++# Default Modem (you better replace this with /dev/ttySx!)
++/dev/modem
++
++# Speed
++38400
++
++# Keep Modem up even if connection fails
++persist
+--- ppp-2.3.5.orig/debian/provider.chatscript	Thu Jan  1 01:00:00 1970
++++ ppp-2.3.5/debian/provider.chatscript	Tue Feb  2 19:07:33 1999
+@@ -0,0 +1,7 @@
++ABORT        BUSY
++ABORT        "NO CARRIER"
++ABORT        VOICE
++ABORT	     "NO DIALTONE"
++""           ATDT<edit phone number here>
++ogin         <put login name here>
++word         \q<put password here>
+--- ppp-2.3.5.orig/debian/win95.ppp	Thu Jan  1 01:00:00 1970
++++ ppp-2.3.5/debian/win95.ppp	Tue Feb  2 19:07:33 1999
+@@ -0,0 +1,42 @@
++Short Guide on How to run a Win95 Connection with PPPD to Debian Linux
++----------------------------------------------------------------------
++
++1. Do not mess around with the Win95 configuration.
++   Do not manually configure DNS, Scripts etc.
++   Do not switch on the terminal windows.
++   Accept all defaults or better leave it as
++   it was at installation.
++
++2. You need to have a getty program that supports
++   automatic PPP protocol detection such as mgetty-0.99
++ 
++   You also need to have a pppd that supports remote DNS configuration.
++   The ppp usually coming with Debian has these options since ppp-2.2.0f-4
++
++   Without the extended ppp you still have to configure the DNS Server
++   on the Win95 wanting to connect to your Debian Linux Box.
++
++3. Configure PPP on Debian
++     A) Change the dns lines in /etc/ppp/options and review the
++        complete file for things you need to do.
++
++     B) Make sure that your /etc/ppp/pap-secrets file is set
++        up correctly. It should allow your users in /etc/passwd
++	to establish ppp connections without a password. pppd will
++	check against /etc/passwd too!
++        The pap-secrets installed by this package is set up correctly
++        to handle user logins via pap.
++	If you are having trouble with authentication then remove
++	/etc/ppp/pap-secrets completely and it will usually work.
++
++4. Win95 PPP Dialup
++	Click on Dialup-Connection
++	A. Enter phone number of your linux server
++	B. Enter username when prompted
++	C. Enter password when prompted
++
++Win95 should connect to your Linux PPPD without problems and automatically
++configure all IP-Addresses, Netmasks and DNS Servers. You can immediately
++start Netscape, Internet Explorer or any other TCP/IP tools.
++
++Christoph Lameter, September 27, 1996 (clameter@debian.org)
