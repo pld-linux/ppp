@@ -1,7 +1,7 @@
 # _with_pppoatm - with PPPoATM support (which requires kernel 2.4 and atm-devel)
 # TODO:
 # - fix ppp over atm
-%define snap	20030608
+%define snap	20030613
 Summary:	ppp daemon package for Linux
 Summary(de):	ppp-Dämonpaket für Linux
 Summary(es):	Servidor ppp para Linux
@@ -17,8 +17,8 @@ Release:	0.%{snap}.1
 Epoch:		2
 License:	distributable
 Group:		Networking/Daemons
-Source0:	cvs://pserver.samba.org/ppp/%{name}-%{version}-%{snap}.tar.gz
-# Source0-md5:	d8a577cb40eb9a6ea6e5bdf9a7fd7e91
+Source0:	cvs://pserver.samba.org/ppp/%{name}-%{version}-%{snap}.tar.bz2
+# Source0-md5:	cd1aeae556f6c2d61cb99d219eb32eac
 Source1:	%{name}.pamd
 Source2:	%{name}.pon
 Source3:	%{name}.poff
