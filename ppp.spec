@@ -13,7 +13,7 @@ Summary(tr):	PPP sunucu s黵eci
 Summary(zh_CN):	PPP 配置和管理软件包.
 Name:		ppp
 Version:	2.4.2
-Release:	0.1
+Release:	0.2
 Epoch:		3
 License:	distributable
 Group:		Networking/Daemons
@@ -39,6 +39,7 @@ Patch9:		%{name}-pcap.patch
 URL:		http://www.samba.org/ppp/
 BuildRequires:	autoconf
 BuildRequires:	automake
+BuildRequires:	libpcap-devel >= 2:0.8.1
 BuildRequires:	libtool
 %{?with_pppoatm:BuildRequires:	linux-atm-devel}
 BuildRequires:	pam-devel
