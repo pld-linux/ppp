@@ -17,7 +17,6 @@ Patch2:		ppp-debian_scripts.patch
 Patch3:		ppp-static.patch
 Patch4:		ppp-log.patch
 Patch5:		ppp-2.3.9-patch1
-Requires:	/dev/ppp
 Buildroot:	/tmp/%{name}-%{version}-root
 
 %description
@@ -59,7 +58,7 @@ cd ..
 
 %build
 %configure
-make RPM_OPT_FLAGS="$RPM_OPT_FLAGS -DINET6"
+make RPM_OPT_FLAGS="$RPM_OPT_FLAGS"
 
 %install
 rm -rf $RPM_BUILD_ROOT
