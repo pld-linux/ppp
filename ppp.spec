@@ -22,7 +22,7 @@ Source0:	cvs://pserver.samba.org/ppp/%{name}-%{version}-%{snap}.tar.gz
 Source1:	%{name}.pamd
 Source2:	%{name}.pon
 Source3:	%{name}.poff
-Source4:	%{name}-non-english-man-pages.tar.bz2
+Source4:	http://www.mif.pg.gda.pl/homepages/ankry/man-PLD/%{name}-non-english-man-pages.tar.bz2
 # Source4-md5:	3801b59005bef8f52856300fe3167a64
 Source5:	%{name}.logrotate
 Patch0:		%{name}-make.patch
