@@ -4,24 +4,25 @@ Summary(fr):	Paquetage du démon ppp pour Linux 1.3.xx et supérieur
 Summary(tr):	PPP sunucu süreci
 Summary(pl):	Demon PPP dla Linux 1.3.x i wy¿szych
 Name:		ppp
-Version:	2.3.5
-Release:	3d 
+Version:	2.3.7
+Release:	1 
 Copyright:	distributable
 Group:		Networking/Daemons
 Group(pl):	Sieciowe/Demony
-Source:		ftp://cs.anu.edu.au/pub/software/ppp/%{name}-%{version}.tar.gz
-Source1:	%{name}-%{version}-pamd.conf
-Patch0:		%{name}-%{version}-glibc.diff
-Patch1:		%{name}.patch
-Patch2:		chap_ms.patch
-Patch3:		%{name}-expect.patch
-Patch4:		%{name}-%{version}.debian.patch
-Buildroot:	/tmp/%{name}-%{version}-%{release}-root
+Source0:	ftp://cs.anu.edu.au/pub/software/ppp/%{name}-%{version}.tar.gz
+Source1:	pppd-2.3.7-pamd.conf
+Patch0:		ppp-make.patch
+Patch1:		ppp-auth.patch
+Patch2:		ppp-expect.patch
+Patch3:		ppp-debian_scripts.patch
+Patch4:		ppp-static.patch
+Patch5:		ppp-log.patch
+Buildroot:	/tmp/%{name}-%{version}-root
 
 %description
 This is the daemon and documentation for PPP support.  It requires a kernel
-greater than 2.0 which is built with PPP support. The default Red Hat
-kernels include PPP support as a module.
+greater than 2.0 which is built with PPP support. The default kernels include 
+PPP support as a module.
 
 %description -l de
 Dies ist der Dämon und die Dokumentation für PPP-Support. Erfordert
@@ -47,60 +48,81 @@ modu³.
 %prep
 %setup -q 
 %patch0 -p1 
-%patch1 -p1 
+%patch1 -p1 -b .auth
 %patch2 -p1 
 %patch3 -p1 
 %patch4 -p1
+%patch5 -p1
 
 %build
 ./configure
-make COPTS="$RPM_OPT_FLAGS -pipe -w" 
+make RPM_OPT_FLAGS="$RPM_OPT_FLAGS" 
 
 %install
 rm -rf $RPM_BUILD_ROOT
 
-install -d $RPM_BUILD_ROOT/usr/{{,s}bin,man/man{8,1},include/net}
-install -d $RPM_BUILD_ROOT/etc/{ppp/{chatscripts,peers},pam.d}
+install -d $RPM_BUILD_ROOT/usr/{sbin,bin,man/man{1,8}} \
+	$RPM_BUILD_ROOT/etc/{ppp/{chatscripts,peers},pam.d}
 
-install etc.ppp/chap-secrets $RPM_BUILD_ROOT/etc/ppp
-install include/net/{pppio.h,slcompress.h,vjcompress.h} $RPM_BUILD_ROOT/usr/include/net
-make install prefix=$RPM_BUILD_ROOT/usr
-install debian/{plog,poff,pon} $RPM_BUILD_ROOT/usr/bin/
-install debian/*.1 $RPM_BUILD_ROOT/usr/man/man1/
-install debian/pap-secrets $RPM_BUILD_ROOT/etc/ppp
-install debian/options     $RPM_BUILD_ROOT/etc/ppp
-install debian/provider    $RPM_BUILD_ROOT/etc/ppp/peers
+make install TOPDIR=$RPM_BUILD_ROOT
+
+install etc.ppp/chap-secrets 	   $RPM_BUILD_ROOT/etc/ppp
+install debian/{plog,poff,pon}	   $RPM_BUILD_ROOT/usr/bin
+install debian/*.1		   $RPM_BUILD_ROOT/usr/man/man1
+install debian/pap-secrets	   $RPM_BUILD_ROOT/etc/ppp
+install debian/options		   $RPM_BUILD_ROOT/etc/ppp
+install debian/options.ttyXX	   $RPM_BUILD_ROOT/etc/ppp
+install debian/provider		   $RPM_BUILD_ROOT/etc/ppp/peers
 install debian/provider.chatscript $RPM_BUILD_ROOT/etc/ppp/chatscripts/provider
 
 rm -f scripts/README
 
 install %{SOURCE1} $RPM_BUILD_ROOT/etc/pam.d/ppp
 
-bzip2 -9 $RPM_BUILD_ROOT/usr/man/man8/*
-bzip2 -9 README.linux scripts/* debian/README.debian 
-bzip2 -9 debian/win95.ppp README.MSCHAP80 FAQ
-bzip2 -9 debian/ppp-2.3.0.STATIC.README debian/ppp-2.3.0.STATIC.README
+strip $RPM_BUILD_ROOT/usr/sbin/*
+
+gzip -9nf $RPM_BUILD_ROOT/usr/man/man[18]/* \
+	README.linux debian/README.debian debian/win95.ppp \
+	README.MSCHAP80 FAQ debian/ppp-2.3.0.STATIC.README
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
-%doc README.linux.bz2 scripts/* debian/README.debian.bz2 
-%doc debian/win95.ppp.bz2 README.MSCHAP80.bz2 FAQ.bz2
-%doc debian/ppp-2.3.0.STATIC.README.bz2
+%doc {README.linux,debian/README.debian}.gz scripts
+%doc {debian/win95.ppp,README.MSCHAP80,FAQ,debian/ppp-2.3.0.STATIC.README}.gz
 
 %attr(755,root,root) /usr/bin/*
 %attr(755,root,root) /usr/sbin/chat
 %attr(755,root,root) /usr/sbin/pppstats
-%attr(755,root,root) /usr/sbin/pppd
-%attr(644,root, man) /usr/man/man[18]/*
-%attr(644,root,root) /usr/include/net/*
+%attr(0755,root,root) /usr/sbin/pppd
+/usr/man/man[18]/*
 
-%attr(600,root,root) %config %verify(not size mtime md5) /etc/ppp/*
-%attr(640,root,root) %config %verify(not size mtime md5) /etc/pam.d/*
+%attr(711,root,root) %dir /etc/ppp/peers
+%attr(711,root,root) %dir /etc/ppp/chatscripts
+
+%attr(600,root,root) %config %verify(not size mtime md5) /etc/ppp/*-secrets
+%attr(644,root,root) %config %verify(not size mtime md5) /etc/ppp/options*
+%attr(640,root,root) %config %verify(not size mtime md5) /etc/pam.d/ppp
+%attr(640,root,root) %config %verify(not size mtime md5) /etc/ppp/peers/provider
+%attr(640,root,root) %config %verify(not size mtime md5) /etc/ppp/chatscripts/provider
 
 %changelog
+* Wed Apr 28 1999 Piotr Czerwiñski <pius@pld.org.pl>
+  [2.3.7-1]
+- updated to 2.3.7,
+- removed ppp-2.3.5-glibc.diff,
+- added ppp-auth.patch,
+- split ppp-2.3.5.debian.patch into separate patches,
+- updated all patches for new version,
+- simplifications in %install,
+- changes in %files,
+- fixed passing RPM_OPT_FLAGS during compilation,
+- added stripping binaries,
+- major changes,
+- recompiled on rpm 3.
+
 * Tue Feb 02 1999 Arkadiusz Mi¶kiewicz <misiek@misiek.eu.org>
   [2.3.5-3d]
 - added debian patch
