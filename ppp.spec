@@ -11,7 +11,7 @@ Summary(pt_BR):	Servidor ppp para Linux
 Summary(tr):	PPP sunucu süreci
 Name:		ppp
 Version:	2.4.1
-Release:	6
+Release:	7
 Epoch:		2
 License:	distributable
 Group:		Networking/Daemons
@@ -169,7 +169,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %attr(600,root,root) %config(missingok,noreplace) %verify(not md5 size mtime) %{_sysconfdir}/ppp/*-secrets
 %attr(644,root,root) %config(missingok) %verify(not md5 size mtime) %{_sysconfdir}/ppp/options*
-%attr(640,root,root) %config %verify(not md5 size mtime) /etc/pam.d/ppp
+%attr(640,root,root) %config(noreplace) %verify(not md5 size mtime) /etc/pam.d/ppp
 %attr(640,root,root) %ghost /var/log/ppp.log
 
 %dir %{_sysconfdir}/ppp/peers
