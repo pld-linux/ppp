@@ -1,6 +1,5 @@
 # _with_pppoatm - with PPPoATM support (which requires kernel 2.4 and atm-devel)
 # TODO:
-# - use some external radiusclient if exists?
 # - fix ppp over atm
 %define snap	20020809
 Summary:	ppp daemon package for Linux
@@ -14,7 +13,7 @@ Summary(tr):	PPP sunucu s黵eci
 Summary(zh_CN):	PPP 配置和管理软件包.
 Name:		ppp
 Version:	2.4.2
-Release:	0.%{snap}.0
+Release:	0.%{snap}.1
 Epoch:		2
 License:	distributable
 Group:		Networking/Daemons
@@ -34,6 +33,7 @@ Patch5:		%{name}-pidfile-owner.patch
 Patch6:		%{name}-typos.patch
 URL:		http://www.samba.org/ppp/
 BuildRequires:	pam-devel
+BuildRequires:	radiusclient-devel
 %{?_with_pppoatm:BuildRequires:	linux-atm-devel}
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
@@ -136,7 +136,6 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_bindir}/*
 %attr(755,root,root) %{_sbindir}/chat
 %attr(755,root,root) %{_sbindir}/ppp*
-%attr(755,root,root) %{_sbindir}/rad*
 %dir %{_libdir}/pppd
 %dir %{_libdir}/pppd/*.*
 %attr(755,root,root) %{_libdir}/pppd/*.*/minconn.so
@@ -144,7 +143,6 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_libdir}/pppd/*.*/rp-pppoe.so
 %attr(755,root,root) %{_libdir}/pppd/*.*/rad*.so
 %{?_with_pppoatm:%attr(755,root,root) %{_libdir}/pppd/*.*/pppoatm.so}
-%attr(755,root,root) %{_libdir}/*.so.*
 
 %{_mandir}/man8/*
 %lang(fr) %{_mandir}/fr/man8/*
@@ -152,8 +150,6 @@ rm -rf $RPM_BUILD_ROOT
 %lang(ko) %{_mandir}/ko/man8/*
 %lang(pl) %{_mandir}/pl/man8/*
 
-%dir %{_sysconfdir}/radiusclient
-%attr(640,root,root) %config(missingok,noreplace) %verify(not md5 size mtime) %{_sysconfdir}/radiusclient/*
 %attr(600,root,root) %config(missingok,noreplace) %verify(not md5 size mtime) %{_sysconfdir}/ppp/*-secrets
 %attr(644,root,root) %config(missingok,noreplace) %verify(not md5 size mtime) %{_sysconfdir}/ppp/options*
 %attr(640,root,root) %config(noreplace) %verify(not md5 size mtime) /etc/pam.d/ppp
