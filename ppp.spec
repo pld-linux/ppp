@@ -11,7 +11,7 @@ Summary(pt_BR):	Servidor ppp para Linux
 Summary(tr):	PPP sunucu süreci
 Name:		ppp
 Version:	2.4.1
-Release:	8
+Release:	9
 Epoch:		2
 License:	distributable
 Group:		Networking/Daemons
@@ -35,6 +35,7 @@ Patch9:		%{name}-opt-%{name}oe.patch
 Patch10:	%{name}-%{name}oatm.patch
 Patch11:	%{name}-reap.patch
 Patch12:	%{name}-warnings.patch
+Patch13:	%{name}-zlib-sec.patch
 URL:		http://www.samba.org/ppp/
 BuildRequires:	pam-devel
 %{?_with_pppoatm:BuildRequires:	linux-atm-devel}
@@ -105,6 +106,7 @@ Wtyczka PPP-po-ATM.
 %{?_with_pppoatm:%patch10 -p1}
 %patch11 -p1
 %patch12 -p1
+%patch13 -p1
 
 %build
 %configure
