@@ -23,7 +23,7 @@ diff -urN ppp-2.4.1/pppd/plugins/Makefile.linux ppp-2.4.1.ppoatm/pppd/plugins/Ma
 diff -urN ppp-2.4.1/pppd/plugins/pppoatm.c ppp-2.4.1.ppoatm/pppd/plugins/pppoatm.c
 --- ppp-2.4.1/pppd/plugins/pppoatm.c	Thu Jan  1 01:00:00 1970
 +++ ppp-2.4.1.ppoatm/pppd/plugins/pppoatm.c	Fri Jun 15 18:50:39 2001
-@@ -0,0 +1,226 @@
+@@ -0,0 +1,231 @@
 +/* pppoatm.c - pppd plugin to implement PPPoATM protocol.
 + *
 + * Copyright 2000 Mitchell Blank Jr.
@@ -46,6 +46,7 @@ diff -urN ppp-2.4.1/pppd/plugins/pppoatm.c ppp-2.4.1.ppoatm/pppd/plugins/pppoatm
 +#include "lcp.h"
 +
 +#define _PATH_ATMOPT         _ROOT_PATH "/etc/ppp/options."
++char pppd_version[] = VERSION;
 +
 +static struct sockaddr_atmpvc pvcaddr;
 +static char *qosstr = NULL;
@@ -54,6 +55,7 @@ diff -urN ppp-2.4.1/pppd/plugins/pppoatm.c ppp-2.4.1.ppoatm/pppd/plugins/pppoatm
 +static bool vc_encaps = 0;
 +static int device_got_set = 0;
 +static int pppoatm_max_mtu, pppoatm_max_mru;
++static int connsocket = -1;
 +
 +static int setdevname_pppoatm(const char *cp);
 +
@@ -104,6 +106,7 @@ diff -urN ppp-2.4.1/pppd/plugins/pppoatm.c ppp-2.4.1.ppoatm/pppd/plugins/pppoatm
 +		return -1;*/
 +	memcpy(&pvcaddr, &addr, sizeof pvcaddr);
 +	strlcpy(devnam, cp, sizeof devnam);
++	strlcpy(ppp_devnam, devnam, sizeof(ppp_devnam));
 +	devstat.st_mode = S_IFSOCK;
 +	info("PPPoATM setdevname_pppoatm - SUCCESS");
 +	the_channel = &pppoatm_channel;
@@ -133,7 +136,7 @@ diff -urN ppp-2.4.1/pppd/plugins/pppoatm.c ppp-2.4.1.ppoatm/pppd/plugins/pppoatm
 +	struct atm_qos qos;
 +	struct atm_backend_ppp be;
 +
-+	fd = socket(AF_ATMPVC, SOCK_DGRAM, 0);
++	connsocket = fd = socket(AF_ATMPVC, SOCK_DGRAM, 0);
 +	if (fd < 0)
 +		fatal("failed to create socket: %m");
 +	memset(&qos, 0, sizeof qos);
@@ -174,6 +177,8 @@ diff -urN ppp-2.4.1/pppd/plugins/pppoatm.c ppp-2.4.1.ppoatm/pppd/plugins/pppoatm
 +	* 2.4 doesn't support this yet *
 +	(void) ioctl(fd, ATM_SETBACKEND, &be);
 +*/
++       close(connsocket);
++       connsocket = -1;
 +}
 +
 +static void send_config_pppoatm(int mtu, u_int32_t asyncmap,
