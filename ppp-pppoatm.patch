@@ -23,7 +23,7 @@ diff -urN ppp-2.4.1/pppd/plugins/Makefile.linux ppp-2.4.1.ppoatm/pppd/plugins/Ma
 diff -urN ppp-2.4.1/pppd/plugins/pppoatm.c ppp-2.4.1.ppoatm/pppd/plugins/pppoatm.c
 --- ppp-2.4.1/pppd/plugins/pppoatm.c	Thu Jan  1 01:00:00 1970
 +++ ppp-2.4.1.ppoatm/pppd/plugins/pppoatm.c	Fri Jun 15 18:50:39 2001
-@@ -0,0 +1,223 @@
+@@ -0,0 +1,226 @@
 +/* pppoatm.c - pppd plugin to implement PPPoATM protocol.
 + *
 + * Copyright 2000 Mitchell Blank Jr.
@@ -75,6 +75,8 @@ diff -urN ppp-2.4.1/pppd/plugins/pppoatm.c ppp-2.4.1.ppoatm/pppd/plugins/pppoatm
 +	{ NULL }
 +};
 +
++struct channel pppoatm_channel;
++
 +/* returns:
 + *  -1 if there's a problem with setting the device
 + *   0 if we can't parse "cp" as a valid name of a device
@@ -92,7 +94,7 @@ diff -urN ppp-2.4.1/pppd/plugins/pppoatm.c ppp-2.4.1.ppoatm/pppd/plugins/pppoatm
 +	struct sockaddr_atmpvc addr;
 +	extern struct stat devstat;
 +	if (device_got_set)
-+		return 0;
++		return 1;
 +	info("PPPoATM setdevname_pppoatm");
 +	memset(&addr, 0, sizeof addr);
 +	if (text2atm(cp, (struct sockaddr *) &addr, sizeof(addr),
@@ -104,6 +106,7 @@ diff -urN ppp-2.4.1/pppd/plugins/pppoatm.c ppp-2.4.1.ppoatm/pppd/plugins/pppoatm
 +	strlcpy(devnam, cp, sizeof devnam);
 +	devstat.st_mode = S_IFSOCK;
 +	info("PPPoATM setdevname_pppoatm - SUCCESS");
++	the_channel = &pppoatm_channel;
 +	device_got_set = 1;
 +	return 1;
 +}
@@ -223,7 +226,7 @@ diff -urN ppp-2.4.1/pppd/plugins/pppoatm.c ppp-2.4.1.ppoatm/pppd/plugins/pppoatm
 +	{
 +		char **a;
 +		for (a = bad_options; *a != NULL; a++)
-+			remove_option(*a);
++			/* remove_option(*a) */;
 +	}
 +	modem = 0;
 +	lcp_wantoptions[0].neg_accompression = 0;
