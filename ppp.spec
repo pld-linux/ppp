@@ -17,6 +17,7 @@ Patch2:		ppp-expect.patch
 Patch3:		ppp-debian_scripts.patch
 Patch4:		ppp-static.patch
 Patch5:		ppp-log.patch
+Patch6:		ppp-2.3.8-patch1
 Buildroot:	/tmp/%{name}-%{version}-root
 
 %description
@@ -53,6 +54,7 @@ modu³.
 %patch3 -p1 
 %patch4 -p1
 %patch5 -p1
+%patch6 -p1
 
 %build
 %configure
