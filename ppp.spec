@@ -18,6 +18,7 @@ Epoch:		2
 License:	distributable
 Group:		Networking/Daemons
 Source0:	ftp://ftp.samba.org/pub/ppp/%{name}-%{version}.tar.gz
+# Source0-md5:	fbc256801d5fcd8015039b149ae95eb0
 Source1:	%{name}.pamd
 Source2:	%{name}.pon
 Source3:	%{name}.poff
