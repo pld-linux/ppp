@@ -118,7 +118,7 @@ Wtyczka PPP-po-ATM.
 %install
 rm -rf $RPM_BUILD_ROOT
 install -d $RPM_BUILD_ROOT{%{_sbindir},%{_bindir},%{_mandir}/man{1,8}} \
-	$RPM_BUILD_ROOT%{_sysconfdir}/{pam.d,ppp/peers,/var/log}
+	$RPM_BUILD_ROOT{%{_sysconfdir}/{pam.d,ppp/peers},/var/log}
 
 %{__make} install \
 	DESTDIR=$RPM_BUILD_ROOT
