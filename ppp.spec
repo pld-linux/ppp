@@ -118,7 +118,7 @@ Wtyczka PPP-po-ATM.
 %install
 rm -rf $RPM_BUILD_ROOT
 install -d $RPM_BUILD_ROOT{%{_sbindir},%{_bindir},%{_mandir}/man{1,8}} \
-	$RPM_BUILD_ROOT%{_sysconfdir}/{pam.d,ppp/peers}
+	$RPM_BUILD_ROOT%{_sysconfdir}/{pam.d,ppp/peers,/var/log}
 
 %{__make} install \
 	DESTDIR=$RPM_BUILD_ROOT
@@ -134,7 +134,7 @@ install debian/options.ttyXX $RPM_BUILD_ROOT%{_sysconfdir}/ppp
 
 bzip2 -dc %{SOURCE4} | tar xf - -C $RPM_BUILD_ROOT%{_mandir}
 
-touch /var/log/ppp.log
+touch $RPM_BUILD_ROOT/var/log/ppp.log
 
 rm -f scripts/README
 
