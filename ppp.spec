@@ -33,7 +33,6 @@ Patch5:		%{name}-pidfile-owner.patch
 Patch6:		%{name}-typos.patch
 URL:		http://www.samba.org/ppp/
 BuildRequires:	pam-devel
-BuildRequires:	radiusclient-devel
 %{?_with_pppoatm:BuildRequires:	linux-atm-devel}
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
