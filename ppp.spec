@@ -10,7 +10,7 @@ Summary(pl):	Demon PPP dla Linuksa
 Summary(pt_BR):	Servidor ppp para Linux
 Summary(ru):	äÅÍÏÎ ppp
 Summary(tr):	PPP sunucu süreci
-Summary(zh_CN):	PPP ÅäÖÃºÍ¹ÜÀíÈí¼ş°ü.
+Summary(zh_CN):	PPP ÅäÖÃºÍ¹ÜÀíÈí¼ş°ü
 Name:		ppp
 Version:	2.4.1
 Release:	13
