@@ -89,7 +89,7 @@ Requires:       %{name} = %{version}
 Developement files needed to build plugins for pppd
 
 %description -l pl plugin-devel
-Pliki nagówkowe potrzebne do budowy wtyczek dla pppd
+Pliki nag³ówkowe potrzebne do budowy wtyczek dla pppd
 
 %prep
 %setup -q -n %{name}-%{version}-%{snap}
