@@ -67,8 +67,8 @@ module. (IPv6)
 %description -l pl
 Pakiet zawiera demona i dokumentacjê umo¿liwiaj±c± korzystanie z
 protoko³u PPP. Wymaga j±dra 2.2.11 - lub pó¼niejszego - z wkompilowan±
-obs³ug± protoko³u PPP. Standardowe j±dro z dytrybucji zawiera wsparcie
-dla PPP skompilowane jako modu³. (IPv6)
+obs³ug± protoko³u PPP. Standardowe j±dro z dystrybucji zawiera
+wsparcie dla PPP skompilowane jako modu³. (IPv6)
 
 %description -l pt_BR
 Este é o servidor e a documentação para suporte PPP. Ele requer um
