@@ -1,6 +1,6 @@
-diff -urN ppp-2.4.1/pppd/plugins/Makefile.linux ppp-2.4.1.pppoatm/pppd/plugins/Makefile.linux
---- ppp-2.4.1/pppd/plugins/Makefile.linux	Fri Jun 15 02:03:00 2001
-+++ ppp-2.4.1.pppoatm/pppd/plugins/Makefile.linux	Fri Jun 15 02:02:34 2001
+diff -urN ppp-2.4.1/pppd/plugins/Makefile.linux ppp-2.4.1.ppoatm/pppd/plugins/Makefile.linux
+--- ppp-2.4.1/pppd/plugins/Makefile.linux	Fri Jun 15 18:55:48 2001
++++ ppp-2.4.1.ppoatm/pppd/plugins/Makefile.linux	Fri Jun 15 18:34:27 2001
 @@ -3,7 +3,7 @@
  LDFLAGS	+= -shared
  INSTALL	= install
@@ -10,12 +10,12 @@ diff -urN ppp-2.4.1/pppd/plugins/Makefile.linux ppp-2.4.1.pppoatm/pppd/plugins/M
  
  pppoe/pppoe.so:
  	$(MAKE) -C pppoe $(MFLAGS) pppoe.so
-@@ -14,9 +14,12 @@
+@@ -14,12 +14,15 @@
  passprompt.so: passprompt.c
  	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) passprompt.c
  
 +pppoatm.so: pppoatm.c
-+	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) -latm
++	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) -D_linux_=1 -latm pppoatm.c
 +
  LIBDIR	= /usr/lib/pppd
  
@@ -24,10 +24,15 @@ diff -urN ppp-2.4.1/pppd/plugins/Makefile.linux ppp-2.4.1.pppoatm/pppd/plugins/M
  	version=`awk -F '"' '/VERSION/ { print $$2; }' ../patchlevel.h`; \
  	$(INSTALL) -d $(DESTDIR)$(LIBDIR)/$$version; \
  	$(INSTALL) $? $(DESTDIR)$(LIBDIR)/$$version
-diff -urN ppp-2.4.1/pppd/plugins/pppoatm.c ppp-2.4.1.pppoatm/pppd/plugins/pppoatm.c
+ 
+ clean:
+-	rm -rf *.o *.so
+\ No newline at end of file
++	rm -rf *.o *.so
+diff -urN ppp-2.4.1/pppd/plugins/pppoatm.c ppp-2.4.1.ppoatm/pppd/plugins/pppoatm.c
 --- ppp-2.4.1/pppd/plugins/pppoatm.c	Thu Jan  1 01:00:00 1970
-+++ ppp-2.4.1.pppoatm/pppd/plugins/pppoatm.c	Fri Jun 15 01:56:02 2001
-@@ -0,0 +1,224 @@
++++ ppp-2.4.1.ppoatm/pppd/plugins/pppoatm.c	Fri Jun 15 18:50:39 2001
+@@ -0,0 +1,223 @@
 +/* pppoatm.c - pppd plugin to implement PPPoATM protocol.
 + *
 + * Copyright 2000 Mitchell Blank Jr.
@@ -38,16 +43,18 @@ diff -urN ppp-2.4.1/pppd/plugins/pppoatm.c ppp-2.4.1.pppoatm/pppd/plugins/pppoat
 + *  as published by the Free Software Foundation; either version
 + *  2 of the License, or (at your option) any later version.
 + */
-+#include "pppd.h"
-+#include "pathnames.h"
-+#include "fsm.h" /* Needed for lcp.h to include cleanly */
-+#include "lcp.h"
 +#include <atm.h>
 +#include <linux/atmdev.h>
 +#include <linux/atmppp.h>
 +#include <sys/stat.h>
 +#include <net/if.h>
 +#include <sys/ioctl.h>
++#include "pppd.h"
++#include "pathnames.h"
++#include "fsm.h" /* Needed for lcp.h to include cleanly */
++#include "lcp.h"
++
++#define _PATH_ATMOPT         _ROOT_PATH "/etc/ppp/options."
 +
 +static struct sockaddr_atmpvc pvcaddr;
 +static char *qosstr = NULL;
@@ -57,7 +64,13 @@ diff -urN ppp-2.4.1/pppd/plugins/pppoatm.c ppp-2.4.1.pppoatm/pppd/plugins/pppoat
 +static int device_got_set = 0;
 +static int pppoatm_max_mtu, pppoatm_max_mru;
 +
++static int setdevname_pppoatm(const char *cp);
++
 +static option_t my_options[] = {
++	{ "device name", o_wild, (void *) &setdevname_pppoatm,
++	  "Serial port device name",
++	  OPT_DEVNAM | OPT_PRIVFIX | OPT_NOARG  | OPT_A2STRVAL | OPT_STATIC,
++	  devnam},
 +#if 0
 +	{ "accept", o_bool, &pppoatm_accept,
 +	  "set PPPoATM socket to accept incoming connections", 1 },
@@ -94,8 +107,8 @@ diff -urN ppp-2.4.1/pppd/plugins/pppoatm.c ppp-2.4.1.pppoatm/pppd/plugins/pppoat
 +	if (text2atm(cp, (struct sockaddr *) &addr, sizeof(addr),
 +	    T2A_PVC | T2A_NAME) < 0)
 +		return 0;
-+	if (!dev_set_ok())
-+		return -1;
++/*	if (!dev_set_ok())
++		return -1;*/
 +	memcpy(&pvcaddr, &addr, sizeof pvcaddr);
 +	strlcpy(devnam, cp, sizeof devnam);
 +	devstat.st_mode = S_IFSOCK;
@@ -104,14 +117,12 @@ diff -urN ppp-2.4.1/pppd/plugins/pppoatm.c ppp-2.4.1.pppoatm/pppd/plugins/pppoat
 +	return 1;
 +}
 +
-+static int setspeed_pppoatm(const char *cp)
-+{
-+	return 0;
-+}
-+
 +static void options_for_pppoatm(void)
 +{
-+	if(!options_for_dev(_PATH_ATMOPT, devnam))
++	char buf[256];
++
++	snprintf(buf, 256, _PATH_ATMOPT "%s",devnam);
++	if(!options_from_file(buf, 0, 0, 1))
 +		exit(EXIT_OPTION_ERROR);
 +}
 +
@@ -122,14 +133,7 @@ diff -urN ppp-2.4.1/pppd/plugins/pppoatm.c ppp-2.4.1.pppoatm/pppd/plugins/pppoat
 +	fatal("No vpi.vci specified");
 +}
 +
-+static int device_init_pppoatm(void)
-+{
-+	if (!device_got_set)
-+		no_device_given_pppoatm();
-+	return 0;
-+}
-+
-+static int connect_device_ppoatm(void)
++static int connect_device_pppoatm(void)
 +{
 +	int fd;
 +	struct atm_qos qos;
@@ -169,7 +173,7 @@ diff -urN ppp-2.4.1/pppd/plugins/pppoatm.c ppp-2.4.1.pppoatm/pppd/plugins/pppoat
 +	return fd;
 +}
 +
-+static void disconnect_device_ppoatm(void)
++static void disconnect_device_pppoatm(void)
 +{
 +/*
 +	atm_backend_t be = ATM_BACKEND_RAW;
@@ -178,7 +182,7 @@ diff -urN ppp-2.4.1/pppd/plugins/pppoatm.c ppp-2.4.1.pppoatm/pppd/plugins/pppoat
 +*/
 +}
 +
-+static void send_config_pppoatm(int unit, int mtu, u_int32_t asyncmap,
++static void send_config_pppoatm(int mtu, u_int32_t asyncmap,
 +	int pcomp, int accomp)
 +{
 +	int sock;
@@ -195,16 +199,11 @@ diff -urN ppp-2.4.1/pppd/plugins/pppoatm.c ppp-2.4.1.pppoatm/pppd/plugins/pppoat
 +	(void) close (sock);
 +}
 +
-+static void recv_config_pppoatm(int unit, int mru, u_int32_t asyncmap,
++static void recv_config_pppoatm(int mru, u_int32_t asyncmap,
 +	int pcomp, int accomp)
 +{
 +	if (mru > pppoatm_max_mru)
 +		error("Couldn't increase MRU to %d", mru);
-+}
-+
-+static void set_xaccm_pppoatm(int unit, ext_accm accm)
-+{
-+	/* NOTHING */
 +}
 +
 +void plugin_init(void)
@@ -222,7 +221,7 @@ diff -urN ppp-2.4.1/pppd/plugins/pppoatm.c ppp-2.4.1.pppoatm/pppd/plugins/pppoat
 +		"modem", "local", "sync",
 +		NULL };
 +#if _linux_
-+	if (!new_style_driver)
++	if ((!ppp_available() && !new_style_driver))
 +		fatal("Kernel doesn't support ppp_generic - "
 +		    "needed for PPPoATM");
 +#else
@@ -230,16 +229,6 @@ diff -urN ppp-2.4.1/pppd/plugins/pppoatm.c ppp-2.4.1.pppoatm/pppd/plugins/pppoat
 +#endif
 +	info("PPPoATM plugin_init");
 +	add_options(my_options);
-+	add_devname_class(setdevname_pppoatm);
-+	setspeed_hook = setspeed_pppoatm;
-+	device_check_hook = options_for_pppoatm;
-+	device_check_options_hook = NULL;
-+	device_init_hook = device_init_pppoatm;
-+	connect_device_hook = connect_device_ppoatm;
-+	disconnect_device_hook = disconnect_device_ppoatm;
-+	send_config_hook = send_config_pppoatm;
-+	recv_config_hook = recv_config_pppoatm;
-+	set_xaccm_hook = set_xaccm_pppoatm;
 +	{
 +		char **a;
 +		for (a = bad_options; *a != NULL; a++)
@@ -252,3 +241,18 @@ diff -urN ppp-2.4.1/pppd/plugins/pppoatm.c ppp-2.4.1.pppoatm/pppd/plugins/pppoat
 +	lcp_allowoptions[0].neg_asyncmap = 0;
 +	lcp_wantoptions[0].neg_pcompression = 0;
 +}
++
++struct channel pppoatm_channel = {
++    options: my_options,
++    process_extra_options: options_for_pppoatm,
++    check_options: NULL,
++    connect: &connect_device_pppoatm,
++    disconnect: &disconnect_device_pppoatm,
++    establish_ppp: &generic_establish_ppp,
++    disestablish_ppp: &generic_disestablish_ppp,
++    send_config: &send_config_pppoatm,
++    recv_config: &recv_config_pppoatm,
++    close: NULL,
++    cleanup: NULL
++};
++
