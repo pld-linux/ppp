@@ -61,7 +61,7 @@ Hat çekirdeði PPP desteðini bir modül olarak içerir. (IPv6)
 
 %build
 %configure
-%{__make} OPT_FLAGS="$RPM_OPT_FLAGS" %{!?without_cbcp:CBCP=1}
+%{__make} OPT_FLAGS="$RPM_OPT_FLAGS" %{!?no_cbcp:CBCP=1}
 
 %install
 rm -rf $RPM_BUILD_ROOT
