@@ -11,7 +11,7 @@ Name:		ppp
 Version:	2.4.1
 Release:	2
 Epoch:		2
-License:	Distributable
+License:	distributable
 Group:		Networking/Daemons
 Group(de):	Netzwerkwesen/Server
 Group(pl):	Sieciowe/Serwery
