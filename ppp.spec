@@ -18,10 +18,12 @@ Epoch:		2
 License:	distributable
 Group:		Networking/Daemons
 Source0:	cvs://pserver.samba.org/ppp/%{name}-%{version}-%{snap}.tar.gz
+# Source0-md5:	d8a577cb40eb9a6ea6e5bdf9a7fd7e91
 Source1:	%{name}.pamd
 Source2:	%{name}.pon
 Source3:	%{name}.poff
 Source4:	%{name}-non-english-man-pages.tar.bz2
+# Source4-md5:	3801b59005bef8f52856300fe3167a64
 Source5:	%{name}.logrotate
 Patch0:		%{name}-make.patch
 Patch1:		%{name}-expect.patch
