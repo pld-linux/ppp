@@ -1,41 +1,33 @@
-diff -urN ppp-2.4.0.orig/pppd/plugins/Makefile.linux ppp-2.4.0/pppd/plugins/Makefile.linux
---- ppp-2.4.0.orig/pppd/plugins/Makefile.linux	Sat Jan 13 23:10:05 2001
-+++ ppp-2.4.0/pppd/plugins/Makefile.linux	Sat Jan 13 23:22:39 2001
-@@ -2,11 +2,11 @@
- CFLAGS	= -g -O2 -I.. -I../../include -D_linux_=1 -fPIC
- LDFLAGS	= -shared
+diff -urN ppp-2.4.1/pppd/plugins/Makefile.linux ppp-2.4.1.pppoatm/pppd/plugins/Makefile.linux
+--- ppp-2.4.1/pppd/plugins/Makefile.linux	Fri Jun 15 02:03:00 2001
++++ ppp-2.4.1.pppoatm/pppd/plugins/Makefile.linux	Fri Jun 15 02:02:34 2001
+@@ -3,7 +3,7 @@
+ LDFLAGS	+= -shared
+ INSTALL	= install
  
--all:	minconn.so passprompt.so
-+all:	minconn.so passprompt.so pppoatm.so
- 	cd pppoe; $(MAKE) $(MFLAGS) all
+-all:	minconn.so passprompt.so pppoe/pppoe.so
++all:	minconn.so passprompt.so pppoe/pppoe.so pppoatm.so
  
- PLUGINDIR = $(LIBDIR)/plugins
--PLUGINSRCS= minconn.c passprompt.c 
-+PLUGINSRCS= minconn.c passprompt.c pppoatm.c
- 
- #
- # include dependancies if present and backup if as a header file
-@@ -18,6 +18,9 @@
- %.so: %.c
- 	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $^
+ pppoe/pppoe.so:
+ 	$(MAKE) -C pppoe $(MFLAGS) pppoe.so
+@@ -14,9 +14,12 @@
+ passprompt.so: passprompt.c
+ 	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) passprompt.c
  
 +pppoatm.so: pppoatm.c
-+	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $^ -latm
++	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) -latm
 +
- clean: 
- 	rm -f *.o *.so *.a 
+ LIBDIR	= /usr/lib/pppd
  
-@@ -27,4 +30,4 @@
- 	cd pppoe; $(MAKE) $(MFLAGS) install
- 
- depend:
--	$(CPP) -M $(CFLAGS) $(PLUGINSRCS) >.depend
-\ No newline at end of file
-+	$(CPP) -M $(CFLAGS) $(PLUGINSRCS) >.depend
-diff -urN ppp-2.4.0.orig/pppd/plugins/pppoatm.c ppp-2.4.0/pppd/plugins/pppoatm.c
---- ppp-2.4.0.orig/pppd/plugins/pppoatm.c	Thu Jan  1 01:00:00 1970
-+++ ppp-2.4.0/pppd/plugins/pppoatm.c	Sat Jan 13 23:20:31 2001
-@@ -0,0 +1,230 @@
+-install: minconn.so passprompt.so pppoe/pppoe.so
++install: minconn.so passprompt.so pppoe/pppoe.so pppoatm.so
+ 	version=`awk -F '"' '/VERSION/ { print $$2; }' ../patchlevel.h`; \
+ 	$(INSTALL) -d $(DESTDIR)$(LIBDIR)/$$version; \
+ 	$(INSTALL) $? $(DESTDIR)$(LIBDIR)/$$version
+diff -urN ppp-2.4.1/pppd/plugins/pppoatm.c ppp-2.4.1.pppoatm/pppd/plugins/pppoatm.c
+--- ppp-2.4.1/pppd/plugins/pppoatm.c	Thu Jan  1 01:00:00 1970
++++ ppp-2.4.1.pppoatm/pppd/plugins/pppoatm.c	Fri Jun 15 01:56:02 2001
+@@ -0,0 +1,224 @@
 +/* pppoatm.c - pppd plugin to implement PPPoATM protocol.
 + *
 + * Copyright 2000 Mitchell Blank Jr.
@@ -117,9 +109,10 @@ diff -urN ppp-2.4.0.orig/pppd/plugins/pppoatm.c ppp-2.4.0/pppd/plugins/pppoatm.c
 +	return 0;
 +}
 +
-+static int options_for_pppoatm(void)
++static void options_for_pppoatm(void)
 +{
-+	return options_from_devfile(_PATH_ATMOPT, devnam);
++	if(!options_for_dev(_PATH_ATMOPT, devnam))
++		exit(EXIT_OPTION_ERROR);
 +}
 +
 +#define pppoatm_overhead() (llc_encaps ? 6 : 2)
@@ -129,13 +122,19 @@ diff -urN ppp-2.4.0.orig/pppd/plugins/pppoatm.c ppp-2.4.0/pppd/plugins/pppoatm.c
 +	fatal("No vpi.vci specified");
 +}
 +
-+static int open_device_pppoatm(void)
++static int device_init_pppoatm(void)
++{
++	if (!device_got_set)
++		no_device_given_pppoatm();
++	return 0;
++}
++
++static int connect_device_ppoatm(void)
 +{
 +	int fd;
 +	struct atm_qos qos;
++	struct atm_backend_ppp be;
 +
-+	if (!device_got_set)
-+		no_device_given_pppoatm();
 +	fd = socket(AF_ATMPVC, SOCK_DGRAM, 0);
 +	if (fd < 0)
 +		fatal("failed to create socket: %m");
@@ -156,22 +155,7 @@ diff -urN ppp-2.4.0.orig/pppd/plugins/pppoatm.c ppp-2.4.0/pppd/plugins/pppoatm.c
 +		fatal("connect(%s): %m", devnam);
 +	pppoatm_max_mtu = lcp_allowoptions[0].mru;
 +	pppoatm_max_mru = lcp_wantoptions[0].mru;
-+	return fd;
-+}
 +
-+static void post_open_setup_pppoatm(int fd)
-+{
-+	/* NOTHING */
-+}
-+
-+static void pre_close_restore_pppoatm(int fd)
-+{
-+	/* NOTHING */
-+}
-+
-+static void set_line_discipline_pppoatm(int fd)
-+{
-+	struct atm_backend_ppp be;
 +	be.backend_num = ATM_BACKEND_PPP;
 +	if (!llc_encaps)
 +		be.encaps = PPPOATM_ENCAPS_VC;
@@ -181,13 +165,17 @@ diff -urN ppp-2.4.0.orig/pppd/plugins/pppoatm.c ppp-2.4.0/pppd/plugins/pppoatm.c
 +		be.encaps = PPPOATM_ENCAPS_AUTODETECT;
 +	if (ioctl(fd, ATM_SETBACKEND, &be) < 0)
 +		fatal("ioctl(ATM_SETBACKEND): %m");
++
++	return fd;
 +}
 +
-+static void reset_line_discipline_pppoatm(int fd)
++static void disconnect_device_ppoatm(void)
 +{
++/*
 +	atm_backend_t be = ATM_BACKEND_RAW;
-+	/* 2.4 doesn't support this yet */
++	* 2.4 doesn't support this yet *
 +	(void) ioctl(fd, ATM_SETBACKEND, &be);
++*/
 +}
 +
 +static void send_config_pppoatm(int unit, int mtu, u_int32_t asyncmap,
@@ -244,13 +232,11 @@ diff -urN ppp-2.4.0.orig/pppd/plugins/pppoatm.c ppp-2.4.0/pppd/plugins/pppoatm.c
 +	add_options(my_options);
 +	add_devname_class(setdevname_pppoatm);
 +	setspeed_hook = setspeed_pppoatm;
-+	options_for_device_hook = options_for_pppoatm;
-+	open_device_hook = open_device_pppoatm;
-+	post_open_setup_hook = post_open_setup_pppoatm;
-+	pre_close_restore_hook = pre_close_restore_pppoatm;
-+	no_device_given_hook = no_device_given_pppoatm;
-+	set_line_discipline_hook = set_line_discipline_pppoatm;
-+	reset_line_discipline_hook = reset_line_discipline_pppoatm;
++	device_check_hook = options_for_pppoatm;
++	device_check_options_hook = NULL;
++	device_init_hook = device_init_pppoatm;
++	connect_device_hook = connect_device_ppoatm;
++	disconnect_device_hook = disconnect_device_ppoatm;
 +	send_config_hook = send_config_pppoatm;
 +	recv_config_hook = recv_config_pppoatm;
 +	set_xaccm_hook = set_xaccm_pppoatm;
