@@ -2,30 +2,8 @@
 +++ ppp-2.4.0/pppd/plugins/Makefile.linux	Sun Jan 14 17:47:04 2001
 @@ -1,5 +1,5 @@
  CC	= gcc
--CFLAGS	= -g -O2 -I.. -I../../include -D_linux_=1 -fPIC
-+CFLAGS	+= -I.. -I../../include -D_linux_=1 -fPIC
+-CFLAGS	= -g -O2 -I.. -I../../include
++CFLAGS	+= -I.. -I../../include
  LDFLAGS	= -shared
  
  all:	minconn.so passprompt.so
---- ppp-2.4.0/pppd/plugins/pppoe/Makefile.linux~	Sun Jan 14 17:44:33 2001
-+++ ppp-2.4.0/pppd/plugins/pppoe/Makefile.linux	Sun Jan 14 17:47:29 2001
-@@ -1,5 +1,5 @@
- CC	= gcc
--CFLAGS	= -g  -I.. -I../.. -I../../../include -D_linux_=1 -fPIC
-+CFLAGS	+= -I.. -I../.. -I../../../include -D_linux_=1 -fPIC
- LDFLAGS	= -shared
- 
- all: pppoe.so pppoed
-@@ -35,10 +35,10 @@
- clean: 
- 	rm -f *.o *.so *.a pppoefwd pppoed
- 
--INSTALL= install -o root
-+INSTALL= install
- 
- install: $(PLUGINDIR) all
--	$(INSTALL) -s -c -m 4550 pppoe.so $(PLUGINDIR)
-+	$(INSTALL) -s -c pppoe.so $(PLUGINDIR)
- 
- 
- $(PLUGINDIR):

@@ -1,3 +1,5 @@
+#
+# bcond_off_pppoe - without PPPoE support (which requires kernel 2.4)
 Summary:	ppp daemon package for linux 2.2.11 and greater
 Summary(de):	ppp-Dämonpaket für Linux 2.2.11 und höher 
 Summary(fr):	Paquetage du démon ppp pour Linux 2.2.11 et supérieur
@@ -23,8 +25,9 @@ Patch4:		%{name}-CBCP.patch
 Patch5:		%{name}-speed.patch
 Patch6:		%{name}-pam_session.patch
 Patch7:		%{name}-wtmp.patch
-Patch8:		http://www.math.uwaterloo.ca/~mostrows/ppp-2.4.0-pppoe.patch2
-Patch9:		%{name}-opt.patch
+Patch8:		%{name}-opt.patch
+Patch9:		http://www.math.uwaterloo.ca/~mostrows/ppp-2.4.0-pppoe.patch2
+Patch10:	%{name}-opt-pppoe.patch
 # Patch 10 was built out of the following:
 #http://www.math.uwaterloo.ca/~mostrows/pppd.patch.240600
 #http://www.sfgoth.com/~mitch/linux/atm/pppoatm/pppoatm-pppd-vs-2.4.0b2+240600.diff.gz
@@ -70,9 +73,9 @@ Hat çekirdeði PPP desteðini bir modül olarak içerir. (IPv6)
 %patch5 -p1
 %patch6 -p1
 %patch7 -p1
-%patch8 -p1
-%patch9 -p1
-
+%{?bcond_off_pppoe:%patch8 -p1}
+%{!?bcond_off_pppoe:%patch9 -p1}
+%{!?bcond_off_pppoe:%patch10 -p1}
 %build
 %configure
 %{__make} OPT_FLAGS="%{?debug:-O0 -g}%{!?debug:$RPM_OPT_FLAGS}" \
@@ -115,9 +118,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_sbindir}/chat
 %attr(755,root,root) %{_sbindir}/pppstats
 %attr(755,root,root) %{_sbindir}/pppd
-%dir %{_libdir}/pppd
-%dir %{_libdir}/pppd/plugins
-%attr(755,root,root) %{_libdir}/pppd/plugins/*
+%{!?bcond_off_pppoe:%dir %{_libdir}/pppd}
+%{!?bcond_off_pppoe:%dir %{_libdir}/pppd/plugins}
+%{!?bcond_off_pppoe:%attr(755,root,root) %{_libdir}/pppd/plugins/*}
 %{_mandir}/man8/*
 
 %attr(600,root,root) %config %verify(not size mtime md5) %{_sysconfdir}/ppp/*-secrets
