@@ -5,7 +5,7 @@ Summary(tr):	PPP sunucu süreci
 Summary(pl):	Demon PPP dla Linux 2.2.11 i wy¿szych
 Name:		ppp
 Version:	2.3.11
-Release:	4
+Release:	5
 Copyright:	distributable
 Group:		Networking/Daemons
 Group(pl):	Sieciowe/Demony
@@ -63,7 +63,7 @@ make OPT_FLAGS="$RPM_OPT_FLAGS"
 rm -rf $RPM_BUILD_ROOT
 
 install -d $RPM_BUILD_ROOT{%{_sbindir},%{_bindir},%{_mandir}/man{1,8}} \
-	$RPM_BUILD_ROOT/etc/{pam.d,ppp}
+	$RPM_BUILD_ROOT/etc/{pam.d,ppp/peers}
 
 make install \
 	DESTDIR=$RPM_BUILD_ROOT
@@ -102,3 +102,5 @@ rm -rf $RPM_BUILD_ROOT
 %attr(600,root,root) %config %verify(not size mtime md5) /etc/ppp/*-secrets
 %attr(644,root,root) %config %verify(not size mtime md5) /etc/ppp/options*
 %attr(640,root,root) %config %verify(not size mtime md5) /etc/pam.d/ppp
+
+%dir /etc/ppp/peers
