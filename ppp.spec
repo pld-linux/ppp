@@ -18,6 +18,7 @@ Patch2:		ppp-expect.patch
 Patch3:		ppp-debian_scripts.patch
 Patch4:		ppp-static.patch
 #Patch5:	ppp-2.3.9-patch1
+BuildRequires:	pam-devel
 Buildroot:	/tmp/%{name}-%{version}-root
 
 %description
