@@ -39,6 +39,7 @@ URL:		http://www.samba.org/ppp/
 BuildRequires:	automake
 %{?_with_pppoatm:BuildRequires:	linux-atm-devel}
 BuildRequires:	pam-devel
+Requires:	pam >= 0.77.3
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
