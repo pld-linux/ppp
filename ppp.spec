@@ -11,7 +11,7 @@ Summary(pt_BR):	Servidor ppp para Linux
 Summary(tr):	PPP sunucu süreci
 Name:		ppp
 Version:	2.4.1
-Release:	5
+Release:	6
 Epoch:		2
 License:	distributable
 Group:		Networking/Daemons
@@ -65,7 +65,7 @@ module. (IPv6)
 
 %description -l pl
 Pakiet zawiera demona i dokumentacjê umo¿liwiaj±c± korzystanie z
-protoko³u PPP. Wymaga j±dra 2.2.11 - lub wy¿szych - z wkompilowan±
+protoko³u PPP. Wymaga j±dra 2.2.11 - lub pó¼niejszego - z wkompilowan±
 obs³ug± protoko³u PPP. Standardowe j±dro z dytrybucji zawiera wsparcie
 dla PPP skompilowane jako modu³. (IPv6)
 
@@ -134,6 +134,8 @@ install debian/options.ttyXX $RPM_BUILD_ROOT%{_sysconfdir}/ppp
 
 bzip2 -dc %{SOURCE4} | tar xf - -C $RPM_BUILD_ROOT%{_mandir}
 
+touch /var/log/ppp.log
+
 rm -f scripts/README
 
 install %{SOURCE1} $RPM_BUILD_ROOT/etc/pam.d/ppp
@@ -168,6 +170,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(600,root,root) %config(missingok,noreplace) %verify(not md5 size mtime) %{_sysconfdir}/ppp/*-secrets
 %attr(644,root,root) %config(missingok) %verify(not md5 size mtime) %{_sysconfdir}/ppp/options*
 %attr(640,root,root) %config %verify(not md5 size mtime) /etc/pam.d/ppp
+%attr(640,root,root) %ghost /var/log/ppp.log
 
 %dir %{_sysconfdir}/ppp/peers
 
