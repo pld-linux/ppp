@@ -75,7 +75,7 @@ Hat çekirdeði PPP desteðini bir modül olarak içerir. (IPv6)
 
 %build
 %configure
-%{__make} OPT_FLAGS="%{?debug:-O -g}%{!?debug:$RPM_OPT_FLAGS}" \
+%{__make} OPT_FLAGS="%{?debug:-O0 -g}%{!?debug:$RPM_OPT_FLAGS}" \
 	%{!?no_cbcp:CBCP=1}
 
 %install
