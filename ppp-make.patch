@@ -1,6 +1,6 @@
-diff -Nur ppp-2.3.10.orig/chat/Makefile.linux ppp-2.3.10/chat/Makefile.linux
---- ppp-2.3.10.orig/chat/Makefile.linux	Fri Aug 13 03:54:32 1999
-+++ ppp-2.3.10/chat/Makefile.linux	Wed Oct 13 09:54:20 1999
+diff -ruN ppp-2.3.11.orig/chat/Makefile.linux ppp-2.3.11/chat/Makefile.linux
+--- ppp-2.3.11.orig/chat/Makefile.linux	Fri Aug 13 03:54:32 1999
++++ ppp-2.3.11/chat/Makefile.linux	Fri Feb 18 10:36:20 2000
 @@ -6,7 +6,7 @@
  CDEF4=	-DFNDELAY=O_NDELAY		# Old name value
  CDEFS=	$(CDEF1) $(CDEF2) $(CDEF3) $(CDEF4)
@@ -10,74 +10,32 @@ diff -Nur ppp-2.3.10.orig/chat/Makefile.linux ppp-2.3.10/chat/Makefile.linux
  
  INSTALL= install
  
-diff -Nur ppp-2.3.10.orig/linux/Makefile.top ppp-2.3.10/linux/Makefile.top
---- ppp-2.3.10.orig/linux/Makefile.top	Thu Apr  1 12:14:33 1999
-+++ ppp-2.3.10/linux/Makefile.top	Wed Oct 13 09:54:20 1999
-@@ -1,12 +1,12 @@
- # PPP top-level Makefile for Linux.
+diff -ruN ppp-2.3.11.orig/linux/Makefile.top ppp-2.3.11/linux/Makefile.top
+--- ppp-2.3.11.orig/linux/Makefile.top	Mon Nov 29 07:11:15 1999
++++ ppp-2.3.11/linux/Makefile.top	Fri Feb 18 10:36:20 2000
+@@ -2,7 +2,7 @@
  
  
--BINDIR = /usr/sbin
--MANDIR = /usr/man
--ETCDIR = /etc/ppp
-+BINDIR = $(TOPDIR)/usr/sbin
-+MANDIR = $(TOPDIR)/usr/man
-+ETCDIR = $(TOPDIR)/etc/ppp
+ BINDIR = $(DESTDIR)/usr/sbin
+-MANDIR = $(DESTDIR)/usr/man
++MANDIR = $(DESTDIR)/usr/share/man
+ ETCDIR = $(DESTDIR)/etc/ppp
  
  # uid 0 = root
--INSTALL= install -o 0 -g daemon
-+INSTALL= install # -o 0 -g daemon
- 
- all:
- 	cd chat; $(MAKE) $(MFLAGS) all
-@@ -14,7 +14,10 @@
- 	cd pppstats; $(MAKE) $(MFLAGS) all
- 	cd pppdump; $(MAKE) $(MFLAGS) all
- 
--install: $(BINDIR) $(MANDIR)/man8 install-progs install-etcppp
-+install: dirs install-progs install-etcppp
-+
-+dirs:
-+	mkdir -p $(BINDIR) $(MANDIR)/man8 $(ETCDIR)
- 
- install-progs:
- 	cd chat; $(MAKE) BINDIR=$(BINDIR) MANDIR=$(MANDIR) $(MFLAGS) install
-diff -Nur ppp-2.3.10.orig/pppd/Makefile.linux ppp-2.3.10/pppd/Makefile.linux
---- ppp-2.3.10.orig/pppd/Makefile.linux	Sat Sep 11 14:08:56 1999
-+++ ppp-2.3.10/pppd/Makefile.linux	Wed Oct 13 09:55:20 1999
+diff -ruN ppp-2.3.11.orig/pppd/Makefile.linux ppp-2.3.11/pppd/Makefile.linux
+--- ppp-2.3.11.orig/pppd/Makefile.linux	Thu Dec 23 02:23:07 1999
++++ ppp-2.3.11/pppd/Makefile.linux	Fri Feb 18 10:37:46 2000
 @@ -4,8 +4,8 @@
  #
  
  # Default installation locations
 -BINDIR = /usr/sbin
 -MANDIR = /usr/man
-+BINDIR = $(TOPDIR)/usr/sbin
-+MANDIR = $(TOPDIR)/usr/man
++BINDIR = $(DESTDIR)/usr/sbin
++MANDIR = $(DESTDIR)/usr/share/man
  
  PPPDSRCS = main.c magic.c fsm.c lcp.c ipcp.c upap.c chap.c md5.c ccp.c \
  	   ipxcp.c auth.c options.c sys-linux.c md4.c chap_ms.c cbcp.c \
-@@ -26,8 +26,8 @@
- 
- # CC = gcc
- #
--COPTS = -O2 -pipe -Wall -g
--LIBS =
-+COPTS = $(RPM_OPT_FLAGS) -pipe -Wall -g
-+LIBS = -lutil
- 
- ifneq ($(wildcard /usr/lib/libcrypt*),)
- LIBS += -lcrypt
-@@ -43,8 +43,8 @@
- 
- 
- HAS_SHADOW=y
--#USE_PAM=y
--#HAVE_INET6=y
-+USE_PAM=y
-+HAVE_INET6=y
- 
- PLUGIN=y
- 
 @@ -101,14 +101,12 @@
  endif
  
@@ -91,14 +49,14 @@ diff -Nur ppp-2.3.10.orig/pppd/Makefile.linux ppp-2.3.10/pppd/Makefile.linux
 -	if ! chgrp pppusers $(BINDIR)/pppd 2>/dev/null; then \
 -	  chmod o+rx $(BINDIR)/pppd; fi
 -	$(INSTALL) -c -m 444 pppd.8 $(MANDIR)/man8
-+	$(INSTALL) -s pppd $(BINDIR)/pppd
-+	$(INSTALL) pppd.8 $(MANDIR)/man8
++	$(INSTALL) -s -c pppd $(BINDIR)/pppd
++	$(INSTALL) -c pppd.8 $(MANDIR)/man8
  
  pppd: $(PPPDOBJS)
  	$(CC) $(CFLAGS) $(LDFLAGS) -o pppd $(PPPDOBJS) $(LIBS)
-diff -Nur ppp-2.3.10.orig/pppdump/Makefile.linux ppp-2.3.10/pppdump/Makefile.linux
---- ppp-2.3.10.orig/pppdump/Makefile.linux	Mon Jul 26 13:09:29 1999
-+++ ppp-2.3.10/pppdump/Makefile.linux	Wed Oct 13 09:54:20 1999
+diff -ruN ppp-2.3.11.orig/pppdump/Makefile.linux ppp-2.3.11/pppdump/Makefile.linux
+--- ppp-2.3.11.orig/pppdump/Makefile.linux	Mon Jul 26 13:09:29 1999
++++ ppp-2.3.11/pppdump/Makefile.linux	Fri Feb 18 10:36:20 2000
 @@ -6,7 +6,7 @@
  all:	pppdump
  
@@ -108,9 +66,9 @@ diff -Nur ppp-2.3.10.orig/pppdump/Makefile.linux ppp-2.3.10/pppdump/Makefile.lin
  
  clean:
  	rm -f pppdump $(OBJS) *~
-diff -Nur ppp-2.3.10.orig/pppstats/Makefile.linux ppp-2.3.10/pppstats/Makefile.linux
---- ppp-2.3.10.orig/pppstats/Makefile.linux	Wed Mar 25 03:21:19 1998
-+++ ppp-2.3.10/pppstats/Makefile.linux	Wed Oct 13 09:54:20 1999
+diff -ruN ppp-2.3.11.orig/pppstats/Makefile.linux ppp-2.3.11/pppstats/Makefile.linux
+--- ppp-2.3.11.orig/pppstats/Makefile.linux	Wed Mar 25 03:21:19 1998
++++ ppp-2.3.11/pppstats/Makefile.linux	Fri Feb 18 10:36:20 2000
 @@ -6,12 +6,12 @@
  PPPSTATSRCS = pppstats.c
  PPPSTATOBJS = pppstats.o
