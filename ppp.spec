@@ -1,8 +1,8 @@
 #
 # Conditional build:
-%bcond_without	pppoatm	# without PPPoATM plugin (which requires kernel 2.4 and atm-devel)
+%bcond_with	pppoatm	# with PPPoATM plugin (which requires kernel 2.4 and atm-devel)
 #
-%define snap	20030613
+%define	snap	20030613
 Summary:	ppp daemon package for Linux
 Summary(de):	ppp-D鋗onpaket f黵 Linux
 Summary(es):	Servidor ppp para Linux
@@ -14,7 +14,7 @@ Summary(tr):	PPP sunucu s黵eci
 Summary(zh_CN):	PPP 配置和管理软件包.
 Name:		ppp
 Version:	2.4.2
-Release:	1
+Release:	2
 Epoch:		2
 License:	distributable
 Group:		Networking/Daemons
@@ -182,7 +182,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/pppd/plugins
 %attr(755,root,root) %{_libdir}/pppd/*.*/minconn.so
 %attr(755,root,root) %{_libdir}/pppd/*.*/pass*.so
-%attr(755,root,root) %{_libdir}/pppd/*.*/rp-pppoe.so
+#%attr(755,root,root) %{_libdir}/pppd/*.*/rp-pppoe.so
 %attr(755,root,root) %{_libdir}/pppd/*.*/rad*.so
 
 %{_mandir}/man8/*
