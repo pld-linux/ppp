@@ -5,9 +5,10 @@ Summary(tr):	PPP sunucu süreci
 Summary(pl):	Demon PPP dla Linux 2.2.11 i wy¿szych
 Name:		ppp
 Version:	2.4.0b2
-Release:	2
-Copyright:	distributable
+Release:	3
+License:	Distributable
 Group:		Networking/Daemons
+Group(de):	Netzwerkwesen/Server
 Group(pl):	Sieciowe/Serwery
 Source0:	ftp://cs.anu.edu.au/pub/software/ppp/%{name}-%{version}.tar.gz
 Source1:	%{name}.pamd
@@ -61,11 +62,11 @@ Hat çekirdeði PPP desteðini bir modül olarak içerir. (IPv6)
 
 %build
 %configure
-%{__make} OPT_FLAGS="$RPM_OPT_FLAGS" %{!?no_cbcp:CBCP=1}
+%{__make} OPT_FLAGS="%{!?debug:$RPM_OPT_FLAGS}%{?debug:-O -g}" \
+	%{!?no_cbcp:CBCP=1}
 
 %install
 rm -rf $RPM_BUILD_ROOT
-
 install -d $RPM_BUILD_ROOT{%{_sbindir},%{_bindir},%{_mandir}/man{1,8}} \
 	$RPM_BUILD_ROOT%{_sysconfdir}/{pam.d,ppp/peers}
 
@@ -83,12 +84,11 @@ install debian/options.ttyXX $RPM_BUILD_ROOT%{_sysconfdir}/ppp
 
 rm -f scripts/README
 
-install %{SOURCE1}			$RPM_BUILD_ROOT/etc/pam.d/ppp
+install %{SOURCE1} $RPM_BUILD_ROOT/etc/pam.d/ppp
 
 strip $RPM_BUILD_ROOT%{_sbindir}/*
 
-gzip -9nf $RPM_BUILD_ROOT%{_mandir}/man8/* \
-	README.linux debian/README.debian debian/win95.ppp \
+gzip -9nf README.linux debian/README.debian debian/win95.ppp \
 	README.MSCHAP80 FAQ debian/ppp-2.3.0.STATIC.README
 
 %clean
