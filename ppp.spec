@@ -114,8 +114,6 @@ rm -f scripts/README
 
 install %{SOURCE1} $RPM_BUILD_ROOT/etc/pam.d/ppp
 
-strip $RPM_BUILD_ROOT%{_sbindir}/*
-
 gzip -9nf README.linux debian/README.debian debian/win95.ppp \
 	README.MSCHAP80 FAQ debian/ppp-2.3.0.STATIC.README
 
