@@ -8,7 +8,9 @@ Summary(es):	Servidor ppp para Linux
 Summary(fr):	Paquetage du démon ppp pour Linux
 Summary(pl):	Demon PPP dla Linuksa
 Summary(pt_BR):	Servidor ppp para Linux
+Summary(ru):	äÅÍÏÎ ppp
 Summary(tr):	PPP sunucu süreci
+Summary(zh_CN):	PPP ÅäÖÃºÍ¹ÜÀíÈí¼ş°ü.
 Name:		ppp
 Version:	2.4.1
 Release:	13
@@ -76,6 +78,9 @@ wsparcie dla PPP skompilowane jako modu³. (IPv6)
 Este é o servidor e a documentação para suporte PPP. Ele requer um
 kernel superior ao 2.0. Os kernels-padrão da Conectiva incluem suporte
 PPP como módulo.
+
+%description -l ru
+äÅÍÏÎ, ËÏÎÆÉÇÕÒÁÃÉÏÎÎÙÅ ÆÁÊÌÙ É ÄÏËÕÍÅÎÔÁÃÉÑ ÄÌÑ ĞÏÄÄÅÒÖËÉ PPP.
 
 %description -l tr
 Bu paket PPP desteği için belgeler ve sunucu sürecini içerir. Çekirdek
