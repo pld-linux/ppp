@@ -35,16 +35,16 @@ Ceci est le démon et la documentation pour le support PPP. Cela réclame
 un noyau supérieur au 2.2.11 et construit avec le support PPP. Le noyau par
 défaut de Red Hat contient le support PPP sous forme de module.
 
-%description -l tr
-Bu paket PPP desteði için belgeler ve sunucu sürecini içerir. Çekirdek
-sürümünun 2.2.11'dan daha yüksek olmasýný gerektirir. Öntanýmlý Red Hat
-çekirdeði PPP desteðini bir modül olarak içerir.
-
 %description -l pl
 Pakiet zawiera demona i dokumentacjê umo¿liwiaj±c± korzystanie z protoko³u
 PPP. Wymaga jadra 2.2.11 - lub wy¿szych - z wkompilowan± obs³ug± protoko³u PPP. 
 Standardowe j±dro z dytrybucji zawiera wsparcie dla PPP skompilowane jako 
 modu³.
+
+%description -l tr
+Bu paket PPP desteði için belgeler ve sunucu sürecini içerir. Çekirdek
+sürümünun 2.2.11'dan daha yüksek olmasýný gerektirir. Öntanýmlý Red Hat
+çekirdeði PPP desteðini bir modül olarak içerir.
 
 %prep
 %setup -q 
@@ -64,13 +64,8 @@ make RPM_OPT_FLAGS="$RPM_OPT_FLAGS -DINET6"
 %install
 rm -rf $RPM_BUILD_ROOT
 
-install -d $RPM_BUILD_ROOT%{_sbindir}
-install -d $RPM_BUILD_ROOT%{_bindir}
-install -d $RPM_BUILD_ROOT%{_mandir}/man1
-install -d $RPM_BUILD_ROOT%{_mandir}/man8
-install -d $RPM_BUILD_ROOT/etc/pam.d
-install -d $RPM_BUILD_ROOT/etc/ppp/peers
-install -d $RPM_BUILD_ROOT/etc/ppp/chatscripts
+install -d $RPM_BUILD_ROOT{%{_sbindir},%{_bindir},%{_mandir}/man{1,8}} \
+	$RPM_BUILD_ROOT/etc/{pam.d,ppp/{peers,chatscripts}}
 
 make install \
 	TOPDIR=$RPM_BUILD_ROOT \
