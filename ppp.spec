@@ -154,7 +154,7 @@ rm -rf $RPM_BUILD_ROOT
 %{!?_without_pppoe:%attr(755,root,root) %{_libdir}/pppd/%{version}/pppoe.so}
 %{_mandir}/man8/*
 
-%attr(600,root,root) %config(missingok) %verify(not md5 size mtime) %{_sysconfdir}/ppp/*-secrets
+%attr(600,root,root) %config(missingok,noreplace) %verify(not md5 size mtime) %{_sysconfdir}/ppp/*-secrets
 %attr(644,root,root) %config(missingok) %verify(not md5 size mtime) %{_sysconfdir}/ppp/options*
 %attr(640,root,root) %config %verify(not md5 size mtime) /etc/pam.d/ppp
 
