@@ -100,3 +100,15 @@ diff -Nru ppp-2.3.11/pppstats/Makefile.linux ppp-2.3.11.new/pppstats/Makefile.li
  
  CFLAGS = $(COPTS) $(COMPILE_FLAGS)
  
+diff -urN ppp-2.3.11.org/pppd/Makefile.linux ppp-2.3.11/pppd/Makefile.linux
+--- ppp-2.3.11.org/pppd/Makefile.linux	Tue Feb 22 21:30:19 2000
++++ ppp-2.3.11/pppd/Makefile.linux	Tue Feb 22 21:42:05 2000
+@@ -44,7 +44,7 @@
+ 
+ HAS_SHADOW=y
+ #USE_PAM=y
+-#HAVE_INET6=y
++HAVE_INET6=y
+ 
+ PLUGIN=y
+ 
