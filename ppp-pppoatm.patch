@@ -202,7 +202,7 @@ diff -urN ppp-2.4.1/pppd/plugins/pppoatm.c ppp-2.4.1.ppoatm/pppd/plugins/pppoatm
 +
 +void plugin_init(void)
 +{
-+#if _linux_
++#ifdef __linux__
 +	extern int new_style_driver;	/* From sys-linux.c */
 +#endif
 +	static char *bad_options[] = {
@@ -214,7 +214,7 @@ diff -urN ppp-2.4.1/pppd/plugins/pppoatm.c ppp-2.4.1.ppoatm/pppd/plugins/pppoatm
 +		"xonxoff",
 +		"modem", "local", "sync",
 +		NULL };
-+#if _linux_
++#ifdef __linux__
 +	if ((!ppp_available() && !new_style_driver))
 +		fatal("Kernel doesn't support ppp_generic - "
 +		    "needed for PPPoATM");
