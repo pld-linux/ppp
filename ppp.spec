@@ -8,7 +8,7 @@ Version:	2.4.0b2
 Release:	1
 Copyright:	distributable
 Group:		Networking/Daemons
-Group(pl):	Sieciowe/Demony
+Group(pl):	Sieciowe/Serwery
 Source0:	ftp://cs.anu.edu.au/pub/software/ppp/%{name}-%{version}.tar.gz
 Source1:	ppp.pamd
 Source2:	ppp.pon
