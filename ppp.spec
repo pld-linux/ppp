@@ -1,5 +1,6 @@
 #
 # _without_pppoe - without PPPoE support (which requires kernel 2.4)
+# _without_cbcp - without CBCP (MS CallBack Configuration Protocol)
 Summary:	ppp daemon package for linux 2.2.11 and greater
 Summary(de):	ppp-Dämonpaket für Linux 2.2.11 und höher 
 Summary(fr):	Paquetage du démon ppp pour Linux 2.2.11 et supérieur
@@ -76,7 +77,7 @@ Hat çekirdeði PPP desteðini bir modül olarak içerir. (IPv6)
 %build
 %configure
 %{__make} OPT_FLAGS="%{rpmcflags}" \
-	%{!?no_cbcp:CBCP=1}
+	%{!?_without_cbcp:CBCP=1}
 
 %install
 rm -rf $RPM_BUILD_ROOT
