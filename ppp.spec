@@ -5,7 +5,7 @@ Summary(tr):	PPP sunucu süreci
 Summary(pl):	Demon PPP dla Linux 2.2.11 i wy¿szych
 Name:		ppp
 Version:	2.4.0
-Release:	4
+Release:	5
 Epoch:		1
 License:	Distributable
 Group:		Networking/Daemons
@@ -23,6 +23,12 @@ Patch4:		%{name}-CBCP.patch
 Patch5:		%{name}-speed.patch
 Patch6:		%{name}-pam_session.patch
 Patch7:		%{name}-wtmp.patch
+Patch8:		http://www.math.uwaterloo.ca/~mostrows/ppp-2.4.0-pppoe.patch2
+Patch9:		%{name}-opt.patch
+# Patch 10 was built out of the following:
+#http://www.math.uwaterloo.ca/~mostrows/pppd.patch.240600
+#http://www.sfgoth.com/~mitch/linux/atm/pppoatm/pppoatm-pppd-vs-2.4.0b2+240600.diff.gz
+#Patch10:		ppp-pppoatm.patch
 BuildRequires:	pam-devel
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
@@ -64,6 +70,8 @@ Hat çekirdeði PPP desteðini bir modül olarak içerir. (IPv6)
 %patch5 -p1
 %patch6 -p1
 %patch7 -p1
+%patch8 -p1
+%patch9 -p1
 
 %build
 %configure
@@ -107,6 +115,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_sbindir}/chat
 %attr(755,root,root) %{_sbindir}/pppstats
 %attr(755,root,root) %{_sbindir}/pppd
+%dir %{_libdir}/pppd
+%dir %{_libdir}/pppd/plugins
+%attr(755,root,root) %{_libdir}/pppd/plugins/*
 %{_mandir}/man8/*
 
 %attr(600,root,root) %config %verify(not size mtime md5) %{_sysconfdir}/ppp/*-secrets
