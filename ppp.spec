@@ -3,7 +3,7 @@
 # _without_pppoatm - without PPPoATM support (which requires kernel 2.4)
 # _without_cbcp - without CBCP (MS CallBack Configuration Protocol)
 Summary:	ppp daemon package for Linux 2.2.11 and greater
-Summary(de):	ppp-Dämonpaket für Linux 2.2.11 und höher 
+Summary(de):	ppp-Dämonpaket für Linux 2.2.11 und höher
 Summary(fr):	Paquetage du démon ppp pour Linux 2.2.11 et supérieur
 Summary(pl):	Demon PPP dla Linuksa 2.2.11 i wy¿szych
 Summary(tr):	PPP sunucu süreci
@@ -75,10 +75,10 @@ Requires:	%{name} = %{version}
 PPP Over ATM plugin.
 
 %prep
-%setup -q 
+%setup -q
 %patch0 -p1
-%patch1 -p1 
-%patch2 -p1 
+%patch1 -p1
+%patch2 -p1
 %patch3 -p1
 %patch4 -p1
 %patch5 -p1
