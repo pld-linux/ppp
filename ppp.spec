@@ -67,7 +67,7 @@ install -d $RPM_BUILD_ROOT/usr/{sbin,bin,man/man{1,8}} \
 make install TOPDIR=$RPM_BUILD_ROOT
 
 install etc.ppp/chap-secrets 	   $RPM_BUILD_ROOT/etc/ppp
-install debian/{plog,poff,pon}	   $RPM_BUILD_ROOT/usr/bin
+install debian/{plog,poff,pon}	   $RPM_BUILD_ROOT%{_bindir}
 install debian/*.1		   $RPM_BUILD_ROOT%{_mandir}/man1
 install debian/pap-secrets	   $RPM_BUILD_ROOT/etc/ppp
 install debian/options		   $RPM_BUILD_ROOT/etc/ppp
@@ -93,7 +93,7 @@ rm -rf $RPM_BUILD_ROOT
 %doc {README.linux,debian/README.debian}.gz scripts
 %doc {debian/win95.ppp,README.MSCHAP80,FAQ,debian/ppp-2.3.0.STATIC.README}.gz
 
-%attr(755,root,root) /usr/bin/*
+%attr(755,root,root) %{_bindir}/*
 %attr(755,root,root) /usr/sbin/chat
 %attr(755,root,root) /usr/sbin/pppstats
 %attr(0755,root,root) /usr/sbin/pppd
