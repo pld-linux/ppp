@@ -39,7 +39,7 @@ Patch11:	%{name}-reap.patch
 Patch12:	%{name}-warnings.patch
 URL:		http://www.samba.org/ppp/
 BuildRequires:	pam-devel
-%{?_with_pppoatm:BuildRequires:	atm-devel}
+%{?_with_pppoatm:BuildRequires:	linux-atm-devel}
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
