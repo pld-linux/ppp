@@ -1,6 +1,6 @@
-diff -urN ppp-2.4.0b4.org/configure ppp-2.4.0b4/configure
---- ppp-2.4.0b4.org/configure	Sun Feb 11 11:05:09 2001
-+++ ppp-2.4.0b4/configure	Sun Feb 11 11:06:03 2001
+diff -r -N -u ppp-2.4.0.orig/configure ppp-2.4.0/configure
+--- ppp-2.4.0.orig/configure	Mon Apr 24 03:41:40 2000
++++ ppp-2.4.0/configure	Sun Aug  6 11:39:28 2000
 @@ -131,7 +131,7 @@
        makext=$orig_makext 
      fi
@@ -10,12 +10,12 @@ diff -urN ppp-2.4.0b4.org/configure ppp-2.4.0b4/configure
      rm -f $dir/Makefile
      if [ -f $dir/Makefile.$makext ]; then
        ln -s Makefile.$makext $dir/Makefile
-diff -urN ppp-2.4.0b4.org/linux/Makefile.top ppp-2.4.0b4/linux/Makefile.top
---- ppp-2.4.0b4.org/linux/Makefile.top	Sun Feb 11 11:05:07 2001
-+++ ppp-2.4.0b4/linux/Makefile.top	Sun Feb 11 11:06:03 2001
+diff -r -N -u ppp-2.4.0.orig/linux/Makefile.top ppp-2.4.0/linux/Makefile.top
+--- ppp-2.4.0.orig/linux/Makefile.top	Mon Apr 17 06:39:26 2000
++++ ppp-2.4.0/linux/Makefile.top	Sun Aug  6 11:39:28 2000
 @@ -4,6 +4,7 @@
  BINDIR = $(DESTDIR)/usr/sbin
- MANDIR = $(DESTDIR)/usr/share/man
+ MANDIR = $(DESTDIR)/usr/man
  ETCDIR = $(DESTDIR)/etc/ppp
 +LIBDIR = $(DESTDIR)/usr/lib/pppd
  
@@ -56,9 +56,9 @@ diff -urN ppp-2.4.0b4.org/linux/Makefile.top ppp-2.4.0b4/linux/Makefile.top
  
  dist-clean:	clean
  	rm -f Makefile `find . -name Makefile -print`
-diff -urN ppp-2.4.0b4.org/pppd/demand.c ppp-2.4.0b4/pppd/demand.c
---- ppp-2.4.0b4.org/pppd/demand.c	Sun Feb 11 11:05:08 2001
-+++ ppp-2.4.0b4/pppd/demand.c	Sun Feb 11 11:06:04 2001
+diff -r -N -u ppp-2.4.0.orig/pppd/demand.c ppp-2.4.0/pppd/demand.c
+--- ppp-2.4.0.orig/pppd/demand.c	Sat Apr 15 04:56:30 2000
++++ ppp-2.4.0/pppd/demand.c	Sun Aug  6 11:39:28 2000
 @@ -85,8 +85,8 @@
      flush_flag = 0;
      fcs = PPP_INITFCS;
@@ -70,9 +70,9 @@ diff -urN ppp-2.4.0b4.org/pppd/demand.c ppp-2.4.0b4/pppd/demand.c
  
  #ifdef PPP_FILTER
      set_filters(&pass_filter, &active_filter);
-diff -urN ppp-2.4.0b4.org/pppd/lcp.c ppp-2.4.0b4/pppd/lcp.c
---- ppp-2.4.0b4.org/pppd/lcp.c	Sun Feb 11 11:05:08 2001
-+++ ppp-2.4.0b4/pppd/lcp.c	Sun Feb 11 11:06:04 2001
+diff -r -N -u ppp-2.4.0.orig/pppd/lcp.c ppp-2.4.0/pppd/lcp.c
+--- ppp-2.4.0.orig/pppd/lcp.c	Sat Apr 29 08:32:09 2000
++++ ppp-2.4.0/pppd/lcp.c	Sun Aug  6 11:30:56 2000
 @@ -130,6 +130,28 @@
      {NULL}
  };
@@ -153,9 +153,9 @@ diff -urN ppp-2.4.0b4.org/pppd/lcp.c ppp-2.4.0b4/pppd/lcp.c
      peer_mru[f->unit] = PPP_MRU;
  }
  
-diff -urN ppp-2.4.0b4.org/pppd/main.c ppp-2.4.0b4/pppd/main.c
---- ppp-2.4.0b4.org/pppd/main.c	Sun Feb 11 11:05:08 2001
-+++ ppp-2.4.0b4/pppd/main.c	Sun Feb 11 11:06:04 2001
+diff -r -N -u ppp-2.4.0.orig/pppd/main.c ppp-2.4.0/pppd/main.c
+--- ppp-2.4.0.orig/pppd/main.c	Thu Jul  6 07:17:02 2000
++++ ppp-2.4.0/pppd/main.c	Thu Oct 12 16:56:07 2000
 @@ -99,6 +99,14 @@
  int (*holdoff_hook) __P((void)) = NULL;
  int (*new_phase_hook) __P((int)) = NULL;
@@ -292,9 +292,9 @@ diff -urN ppp-2.4.0b4.org/pppd/main.c ppp-2.4.0b4/pppd/main.c
  
          /* Don't pass handles to the PPP device, even by accident. */
  	new_fd = open (_PATH_DEVNULL, O_RDWR);
-diff -urN ppp-2.4.0b4.org/pppd/options.c ppp-2.4.0b4/pppd/options.c
---- ppp-2.4.0b4.org/pppd/options.c	Sun Feb 11 11:05:08 2001
-+++ ppp-2.4.0b4/pppd/options.c	Sun Feb 11 11:06:04 2001
+diff -r -N -u ppp-2.4.0.orig/pppd/options.c ppp-2.4.0/pppd/options.c
+--- ppp-2.4.0.orig/pppd/options.c	Mon Jul 31 21:38:30 2000
++++ ppp-2.4.0/pppd/options.c	Sun Aug  6 11:42:56 2000
 @@ -118,9 +118,8 @@
  /*
   * Prototypes
@@ -416,7 +416,7 @@ diff -urN ppp-2.4.0b4.org/pppd/options.c ppp-2.4.0b4/pppd/options.c
   * usage - print out a message telling how to use the program.
   */
  static void
-@@ -1289,84 +1308,28 @@
+@@ -1279,84 +1298,28 @@
  }
  
  
@@ -513,7 +513,7 @@ diff -urN ppp-2.4.0b4.org/pppd/options.c ppp-2.4.0b4/pppd/options.c
  /*
   * setipaddr - Set the IP address
   */
-@@ -1432,6 +1395,27 @@
+@@ -1422,6 +1385,27 @@
  	seen_remote = 1;
      }
  
@@ -541,9 +541,9 @@ diff -urN ppp-2.4.0b4.org/pppd/options.c ppp-2.4.0b4/pppd/options.c
      return 1;
  }
  
-diff -urN ppp-2.4.0b4.org/pppd/pathnames.h ppp-2.4.0b4/pppd/pathnames.h
---- ppp-2.4.0b4.org/pppd/pathnames.h	Sun Feb 11 11:05:08 2001
-+++ ppp-2.4.0b4/pppd/pathnames.h	Sun Feb 11 11:06:04 2001
+diff -r -N -u ppp-2.4.0.orig/pppd/pathnames.h ppp-2.4.0/pppd/pathnames.h
+--- ppp-2.4.0.orig/pppd/pathnames.h	Tue Apr  4 03:06:52 2000
++++ ppp-2.4.0/pppd/pathnames.h	Sun Aug  6 11:39:28 2000
 @@ -18,6 +18,10 @@
  #define _ROOT_PATH
  #endif
@@ -575,9 +575,9 @@ diff -urN ppp-2.4.0b4.org/pppd/pathnames.h ppp-2.4.0b4/pppd/pathnames.h
  
  #ifdef __STDC__
  #define _PATH_PPPDB	_ROOT_PATH _PATH_VARRUN "pppd.tdb"
-diff -urN ppp-2.4.0b4.org/pppd/plugins/Makefile.linux ppp-2.4.0b4/pppd/plugins/Makefile.linux
---- ppp-2.4.0b4.org/pppd/plugins/Makefile.linux	Sun Feb 11 11:05:07 2001
-+++ ppp-2.4.0b4/pppd/plugins/Makefile.linux	Sun Feb 11 11:06:04 2001
+diff -r -N -u ppp-2.4.0.orig/pppd/plugins/Makefile.linux ppp-2.4.0/pppd/plugins/Makefile.linux
+--- ppp-2.4.0.orig/pppd/plugins/Makefile.linux	Sun Nov 14 23:08:24 1999
++++ ppp-2.4.0/pppd/plugins/Makefile.linux	Sun Aug  6 11:39:28 2000
 @@ -1,11 +1,30 @@
  CC	= gcc
 -CFLAGS	= -g -O2 -I.. -I../../include
@@ -615,9 +615,9 @@ diff -urN ppp-2.4.0b4.org/pppd/plugins/Makefile.linux ppp-2.4.0b4/pppd/plugins/M
 +depend:
 +	$(CPP) -M $(CFLAGS) $(PLUGINSRCS) >.depend
 \ No newline at end of file
-diff -urN ppp-2.4.0b4.org/pppd/plugins/Makefile.sol2 ppp-2.4.0b4/pppd/plugins/Makefile.sol2
---- ppp-2.4.0b4.org/pppd/plugins/Makefile.sol2	Sun Feb 11 11:05:07 2001
-+++ ppp-2.4.0b4/pppd/plugins/Makefile.sol2	Sun Feb 11 11:06:04 2001
+diff -r -N -u ppp-2.4.0.orig/pppd/plugins/Makefile.sol2 ppp-2.4.0/pppd/plugins/Makefile.sol2
+--- ppp-2.4.0.orig/pppd/plugins/Makefile.sol2	Tue Nov 16 22:49:27 1999
++++ ppp-2.4.0/pppd/plugins/Makefile.sol2	Sun Aug  6 11:39:28 2000
 @@ -6,7 +6,7 @@
  
  include ../../svr4/Makedefs
@@ -627,9 +627,9 @@ diff -urN ppp-2.4.0b4.org/pppd/plugins/Makefile.sol2 ppp-2.4.0b4/pppd/plugins/Ma
  LDFLAGS	= -G 
  
  all:	minconn.so
-diff -urN ppp-2.4.0b4.org/pppd/plugins/pppoe/Makefile.linux ppp-2.4.0b4/pppd/plugins/pppoe/Makefile.linux
---- ppp-2.4.0b4.org/pppd/plugins/pppoe/Makefile.linux	Thu Jan  1 01:00:00 1970
-+++ ppp-2.4.0b4/pppd/plugins/pppoe/Makefile.linux	Sun Feb 11 11:06:04 2001
+diff -r -N -u ppp-2.4.0.orig/pppd/plugins/pppoe/Makefile.linux ppp-2.4.0/pppd/plugins/pppoe/Makefile.linux
+--- ppp-2.4.0.orig/pppd/plugins/pppoe/Makefile.linux	Wed Dec 31 19:00:00 1969
++++ ppp-2.4.0/pppd/plugins/pppoe/Makefile.linux	Sun Aug  6 11:39:28 2000
 @@ -0,0 +1,48 @@
 +CC	= gcc
 +CFLAGS	= -g  -I.. -I../.. -I../../../include -D_linux_=1 -fPIC
@@ -679,9 +679,9 @@ diff -urN ppp-2.4.0b4.org/pppd/plugins/pppoe/Makefile.linux ppp-2.4.0b4/pppd/plu
 +
 +depend:
 +	$(CPP) -M $(CFLAGS) $(PLUGINSRCS) >.depend
-diff -urN ppp-2.4.0b4.org/pppd/plugins/pppoe/libpppoe.c ppp-2.4.0b4/pppd/plugins/pppoe/libpppoe.c
---- ppp-2.4.0b4.org/pppd/plugins/pppoe/libpppoe.c	Thu Jan  1 01:00:00 1970
-+++ ppp-2.4.0b4/pppd/plugins/pppoe/libpppoe.c	Sun Feb 11 11:06:04 2001
+diff -r -N -u ppp-2.4.0.orig/pppd/plugins/pppoe/libpppoe.c ppp-2.4.0/pppd/plugins/pppoe/libpppoe.c
+--- ppp-2.4.0.orig/pppd/plugins/pppoe/libpppoe.c	Wed Dec 31 19:00:00 1969
++++ ppp-2.4.0/pppd/plugins/pppoe/libpppoe.c	Sun Aug  6 11:39:28 2000
 @@ -0,0 +1,631 @@
 +/* PPPoE support library "libpppoe"
 + *
@@ -1314,9 +1314,9 @@ diff -urN ppp-2.4.0b4.org/pppd/plugins/pppoe/libpppoe.c ppp-2.4.0b4/pppd/plugins
 +    }
 +    return pt;
 +}
-diff -urN ppp-2.4.0b4.org/pppd/plugins/pppoe/pppd_utils.c ppp-2.4.0b4/pppd/plugins/pppoe/pppd_utils.c
---- ppp-2.4.0b4.org/pppd/plugins/pppoe/pppd_utils.c	Thu Jan  1 01:00:00 1970
-+++ ppp-2.4.0b4/pppd/plugins/pppoe/pppd_utils.c	Sun Feb 11 11:06:04 2001
+diff -r -N -u ppp-2.4.0.orig/pppd/plugins/pppoe/pppd_utils.c ppp-2.4.0/pppd/plugins/pppoe/pppd_utils.c
+--- ppp-2.4.0.orig/pppd/plugins/pppoe/pppd_utils.c	Wed Dec 31 19:00:00 1969
++++ ppp-2.4.0/pppd/plugins/pppoe/pppd_utils.c	Sun Aug  6 11:39:28 2000
 @@ -0,0 +1,162 @@
 +/* PPPoE support library "libpppoe"
 + *
@@ -1480,9 +1480,9 @@ diff -urN ppp-2.4.0b4.org/pppd/plugins/pppoe/pppd_utils.c ppp-2.4.0b4/pppd/plugi
 +    return 1;
 +}
 +
-diff -urN ppp-2.4.0b4.org/pppd/plugins/pppoe/pppoe.c ppp-2.4.0b4/pppd/plugins/pppoe/pppoe.c
---- ppp-2.4.0b4.org/pppd/plugins/pppoe/pppoe.c	Thu Jan  1 01:00:00 1970
-+++ ppp-2.4.0b4/pppd/plugins/pppoe/pppoe.c	Sun Feb 11 11:06:04 2001
+diff -r -N -u ppp-2.4.0.orig/pppd/plugins/pppoe/pppoe.c ppp-2.4.0/pppd/plugins/pppoe/pppoe.c
+--- ppp-2.4.0.orig/pppd/plugins/pppoe/pppoe.c	Wed Dec 31 19:00:00 1969
++++ ppp-2.4.0/pppd/plugins/pppoe/pppoe.c	Thu Oct 12 16:56:23 2000
 @@ -0,0 +1,385 @@
 +/* pppoe.c - pppd plugin to implement PPPoE protocol.
 + *
@@ -1869,9 +1869,9 @@ diff -urN ppp-2.4.0b4.org/pppd/plugins/pppoe/pppoe.c ppp-2.4.0b4/pppd/plugins/pp
 +}
 +
 +
-diff -urN ppp-2.4.0b4.org/pppd/plugins/pppoe/pppoe.h ppp-2.4.0b4/pppd/plugins/pppoe/pppoe.h
---- ppp-2.4.0b4.org/pppd/plugins/pppoe/pppoe.h	Thu Jan  1 01:00:00 1970
-+++ ppp-2.4.0b4/pppd/plugins/pppoe/pppoe.h	Sun Feb 11 11:06:04 2001
+diff -r -N -u ppp-2.4.0.orig/pppd/plugins/pppoe/pppoe.h ppp-2.4.0/pppd/plugins/pppoe/pppoe.h
+--- ppp-2.4.0.orig/pppd/plugins/pppoe/pppoe.h	Wed Dec 31 19:00:00 1969
++++ ppp-2.4.0/pppd/plugins/pppoe/pppoe.h	Sun Aug  6 11:39:28 2000
 @@ -0,0 +1,273 @@
 +/* PPPoE support library "libpppoe"
 + *
@@ -2146,9 +2146,10 @@ diff -urN ppp-2.4.0b4.org/pppd/plugins/pppoe/pppoe.h ppp-2.4.0b4/pppd/plugins/pp
 +
 +
 +#endif
-diff -urN ppp-2.4.0b4.org/pppd/plugins/pppoe/pppoe_client.c ppp-2.4.0b4/pppd/plugins/pppoe/pppoe_client.c
---- ppp-2.4.0b4.org/pppd/plugins/pppoe/pppoe_client.c	Thu Jan  1 01:00:00 1970
-+++ ppp-2.4.0b4/pppd/plugins/pppoe/pppoe_client.c	Sun Feb 11 11:06:04 2001
+Binary files ppp-2.4.0.orig/pppd/plugins/pppoe/pppoe.so and ppp-2.4.0/pppd/plugins/pppoe/pppoe.so differ
+diff -r -N -u ppp-2.4.0.orig/pppd/plugins/pppoe/pppoe_client.c ppp-2.4.0/pppd/plugins/pppoe/pppoe_client.c
+--- ppp-2.4.0.orig/pppd/plugins/pppoe/pppoe_client.c	Wed Dec 31 19:00:00 1969
++++ ppp-2.4.0/pppd/plugins/pppoe/pppoe_client.c	Sun Aug  6 11:39:28 2000
 @@ -0,0 +1,232 @@
 +/* PPPoE support library "libpppoe"
 + *
@@ -2382,9 +2383,9 @@ diff -urN ppp-2.4.0b4.org/pppd/plugins/pppoe/pppoe_client.c ppp-2.4.0b4/pppd/plu
 +    return ses->fd;
 +}
 +
-diff -urN ppp-2.4.0b4.org/pppd/plugins/pppoe/pppoe_relay.c ppp-2.4.0b4/pppd/plugins/pppoe/pppoe_relay.c
---- ppp-2.4.0b4.org/pppd/plugins/pppoe/pppoe_relay.c	Thu Jan  1 01:00:00 1970
-+++ ppp-2.4.0b4/pppd/plugins/pppoe/pppoe_relay.c	Sun Feb 11 11:06:04 2001
+diff -r -N -u ppp-2.4.0.orig/pppd/plugins/pppoe/pppoe_relay.c ppp-2.4.0/pppd/plugins/pppoe/pppoe_relay.c
+--- ppp-2.4.0.orig/pppd/plugins/pppoe/pppoe_relay.c	Wed Dec 31 19:00:00 1969
++++ ppp-2.4.0/pppd/plugins/pppoe/pppoe_relay.c	Sun Aug  6 11:39:28 2000
 @@ -0,0 +1,260 @@
 +/* PPPoE support library "libpppoe"
 + *
@@ -2646,9 +2647,9 @@ diff -urN ppp-2.4.0b4.org/pppd/plugins/pppoe/pppoe_relay.c ppp-2.4.0b4/pppd/plug
 +    ses->rcv_pads  = relay_rcv_pads;
 +    ses->rcv_padt  = relay_rcv_padt;
 +}
-diff -urN ppp-2.4.0b4.org/pppd/plugins/pppoe/pppoe_server.c ppp-2.4.0b4/pppd/plugins/pppoe/pppoe_server.c
---- ppp-2.4.0b4.org/pppd/plugins/pppoe/pppoe_server.c	Thu Jan  1 01:00:00 1970
-+++ ppp-2.4.0b4/pppd/plugins/pppoe/pppoe_server.c	Sun Feb 11 11:06:04 2001
+diff -r -N -u ppp-2.4.0.orig/pppd/plugins/pppoe/pppoe_server.c ppp-2.4.0/pppd/plugins/pppoe/pppoe_server.c
+--- ppp-2.4.0.orig/pppd/plugins/pppoe/pppoe_server.c	Wed Dec 31 19:00:00 1969
++++ ppp-2.4.0/pppd/plugins/pppoe/pppoe_server.c	Sun Aug  6 11:39:28 2000
 @@ -0,0 +1,143 @@
 +/* PPPoE support library "libpppoe"
 + *
@@ -2793,9 +2794,10 @@ diff -urN ppp-2.4.0b4.org/pppd/plugins/pppoe/pppoe_server.c ppp-2.4.0b4/pppd/plu
 +}
 +
 +
-diff -urN ppp-2.4.0b4.org/pppd/plugins/pppoe/pppoed.c ppp-2.4.0b4/pppd/plugins/pppoe/pppoed.c
---- ppp-2.4.0b4.org/pppd/plugins/pppoe/pppoed.c	Thu Jan  1 01:00:00 1970
-+++ ppp-2.4.0b4/pppd/plugins/pppoe/pppoed.c	Sun Feb 11 11:06:04 2001
+Binary files ppp-2.4.0.orig/pppd/plugins/pppoe/pppoed and ppp-2.4.0/pppd/plugins/pppoe/pppoed differ
+diff -r -N -u ppp-2.4.0.orig/pppd/plugins/pppoe/pppoed.c ppp-2.4.0/pppd/plugins/pppoe/pppoed.c
+--- ppp-2.4.0.orig/pppd/plugins/pppoe/pppoed.c	Wed Dec 31 19:00:00 1969
++++ ppp-2.4.0/pppd/plugins/pppoe/pppoed.c	Sun Aug  6 11:39:28 2000
 @@ -0,0 +1,283 @@
 +/* PPPoE support library "libpppoe"
 + *
@@ -3080,9 +3082,10 @@ diff -urN ppp-2.4.0b4.org/pppd/plugins/pppoe/pppoed.c ppp-2.4.0b4/pppd/plugins/p
 +    exit(0);
 +    
 +}
-diff -urN ppp-2.4.0b4.org/pppd/plugins/pppoe/pppoefwd.c ppp-2.4.0b4/pppd/plugins/pppoe/pppoefwd.c
---- ppp-2.4.0b4.org/pppd/plugins/pppoe/pppoefwd.c	Thu Jan  1 01:00:00 1970
-+++ ppp-2.4.0b4/pppd/plugins/pppoe/pppoefwd.c	Sun Feb 11 11:06:04 2001
+Binary files ppp-2.4.0.orig/pppd/plugins/pppoe/pppoefwd and ppp-2.4.0/pppd/plugins/pppoe/pppoefwd differ
+diff -r -N -u ppp-2.4.0.orig/pppd/plugins/pppoe/pppoefwd.c ppp-2.4.0/pppd/plugins/pppoe/pppoefwd.c
+--- ppp-2.4.0.orig/pppd/plugins/pppoe/pppoefwd.c	Wed Dec 31 19:00:00 1969
++++ ppp-2.4.0/pppd/plugins/pppoe/pppoefwd.c	Sun Aug  6 11:39:28 2000
 @@ -0,0 +1,61 @@
 +#include "pppoe.h"
 +
@@ -3145,9 +3148,9 @@ diff -urN ppp-2.4.0b4.org/pppd/plugins/pppoe/pppoefwd.c ppp-2.4.0b4/pppd/plugins
 +
 +
 +}
-diff -urN ppp-2.4.0b4.org/pppd/plugins/pppoe/pppoehash.c ppp-2.4.0b4/pppd/plugins/pppoe/pppoehash.c
---- ppp-2.4.0b4.org/pppd/plugins/pppoe/pppoehash.c	Thu Jan  1 01:00:00 1970
-+++ ppp-2.4.0b4/pppd/plugins/pppoe/pppoehash.c	Sun Feb 11 11:06:04 2001
+diff -r -N -u ppp-2.4.0.orig/pppd/plugins/pppoe/pppoehash.c ppp-2.4.0/pppd/plugins/pppoe/pppoehash.c
+--- ppp-2.4.0.orig/pppd/plugins/pppoe/pppoehash.c	Wed Dec 31 19:00:00 1969
++++ ppp-2.4.0/pppd/plugins/pppoe/pppoehash.c	Sun Aug  6 11:39:28 2000
 @@ -0,0 +1,91 @@
 +/* PPPoE support library "libpppoe"
 + *
@@ -3240,9 +3243,9 @@ diff -urN ppp-2.4.0b4.org/pppd/plugins/pppoe/pppoehash.c ppp-2.4.0b4/pppd/plugin
 +    return ret;
 +}
 +
-diff -urN ppp-2.4.0b4.org/pppd/plugins/pppoe/utils.c ppp-2.4.0b4/pppd/plugins/pppoe/utils.c
---- ppp-2.4.0b4.org/pppd/plugins/pppoe/utils.c	Thu Jan  1 01:00:00 1970
-+++ ppp-2.4.0b4/pppd/plugins/pppoe/utils.c	Sun Feb 11 11:06:04 2001
+diff -r -N -u ppp-2.4.0.orig/pppd/plugins/pppoe/utils.c ppp-2.4.0/pppd/plugins/pppoe/utils.c
+--- ppp-2.4.0.orig/pppd/plugins/pppoe/utils.c	Wed Dec 31 19:00:00 1969
++++ ppp-2.4.0/pppd/plugins/pppoe/utils.c	Sun Aug  6 11:39:28 2000
 @@ -0,0 +1,667 @@
 +
 +/*
@@ -3911,9 +3914,9 @@ diff -urN ppp-2.4.0b4.org/pppd/plugins/pppoe/utils.c ppp-2.4.0b4/pppd/plugins/pp
 +  syslog (LOG_INFO, "Exit.");
 +  exit (status);
 +}
-diff -urN ppp-2.4.0b4.org/pppd/pppd.h ppp-2.4.0b4/pppd/pppd.h
---- ppp-2.4.0b4.org/pppd/pppd.h	Sun Feb 11 11:05:08 2001
-+++ ppp-2.4.0b4/pppd/pppd.h	Sun Feb 11 11:06:04 2001
+diff -r -N -u ppp-2.4.0.orig/pppd/pppd.h ppp-2.4.0/pppd/pppd.h
+--- ppp-2.4.0.orig/pppd/pppd.h	Thu Jul  6 07:17:03 2000
++++ ppp-2.4.0/pppd/pppd.h	Mon Aug  7 08:49:03 2000
 @@ -175,6 +175,7 @@
  extern char	*progname;	/* Name of this program */
  extern int	redirect_stderr;/* Connector's stderr should go to file */
@@ -3962,7 +3965,7 @@ diff -urN ppp-2.4.0b4.org/pppd/pppd.h ppp-2.4.0b4/pppd/pppd.h
  int  ccp_test __P((int, u_char *, int, int));
  				/* Test support for compression scheme */
  void ccp_flags_set __P((int, int, int));
-@@ -511,7 +511,7 @@
+@@ -513,7 +513,7 @@
  			    int privileged));
  				/* Parse options from an options file */
  int  options_from_user __P((void)); /* Parse options from user's .ppprc */
@@ -3971,7 +3974,7 @@ diff -urN ppp-2.4.0b4.org/pppd/pppd.h ppp-2.4.0b4/pppd/pppd.h
  int  options_from_list __P((struct wordlist *, int privileged));
  				/* Parse options from a wordlist */
  int  getword __P((FILE *f, char *word, int *newlinep, char *filename));
-@@ -522,6 +522,8 @@
+@@ -524,6 +524,8 @@
  				/* Simplified number_option for decimal ints */
  void add_options __P((option_t *)); /* Add extra options */
  int parse_dotted_ip __P((char *, u_int32_t *));
@@ -3980,7 +3983,7 @@ diff -urN ppp-2.4.0b4.org/pppd/pppd.h ppp-2.4.0b4/pppd/pppd.h
  
  /*
   * This structure is used to store information about certain
-@@ -556,6 +558,25 @@
+@@ -558,6 +560,25 @@
  extern void (*ip_up_hook) __P((void));
  extern void (*ip_down_hook) __P((void));
  extern void (*ip_choose_hook) __P((u_int32_t *));
@@ -4006,10 +4009,10 @@ diff -urN ppp-2.4.0b4.org/pppd/pppd.h ppp-2.4.0b4/pppd/pppd.h
  
  /*
   * Inline versions of get/put char/short/long.
-diff -urN ppp-2.4.0b4.org/pppd/sys-linux.c ppp-2.4.0b4/pppd/sys-linux.c
---- ppp-2.4.0b4.org/pppd/sys-linux.c	Sun Feb 11 11:05:08 2001
-+++ ppp-2.4.0b4/pppd/sys-linux.c	Sun Feb 11 11:07:24 2001
-@@ -137,7 +137,7 @@
+diff -r -N -u ppp-2.4.0.orig/pppd/sys-linux.c ppp-2.4.0/pppd/sys-linux.c
+--- ppp-2.4.0.orig/pppd/sys-linux.c	Wed Jul 26 00:17:12 2000
++++ ppp-2.4.0/pppd/sys-linux.c	Sun Aug  6 11:56:40 2000
+@@ -142,7 +142,7 @@
  static int restore_term        = 0;	/* 1 => we've munged the terminal */
  static struct termios inittermios;	/* Initial TTY termios */
  
@@ -4018,7 +4021,7 @@ diff -urN ppp-2.4.0b4.org/pppd/sys-linux.c ppp-2.4.0b4/pppd/sys-linux.c
  
  static char loop_name[20];
  static unsigned char inbuf[512]; /* buffer for chars read from loopback */
-@@ -181,6 +181,14 @@
+@@ -186,6 +186,14 @@
  
  extern u_char	inpacket_buf[];	/* borrowed from main.c */
  
@@ -4033,7 +4036,7 @@ diff -urN ppp-2.4.0b4.org/pppd/sys-linux.c ppp-2.4.0b4/pppd/sys-linux.c
  /*
   * SET_SA_FAMILY - set the sa_family field of a struct sockaddr,
   * if it exists.
-@@ -352,51 +360,65 @@
+@@ -357,51 +365,65 @@
      return (1);
  }
  
@@ -4122,7 +4125,7 @@ diff -urN ppp-2.4.0b4.org/pppd/sys-linux.c ppp-2.4.0b4/pppd/sys-linux.c
  	    error("Couldn't get channel number: %m");
  	    goto err;
  	}
-@@ -440,8 +462,8 @@
+@@ -445,8 +467,8 @@
  	/*
  	 * Old-style driver: find out which interface we were given.
  	 */
@@ -4130,10 +4133,10 @@ diff -urN ppp-2.4.0b4.org/pppd/sys-linux.c ppp-2.4.0b4/pppd/sys-linux.c
 -	if (ioctl(tty_fd, PPPIOCGUNIT, &x) < 0) {	
 +	set_ppp_fd (dev_fd);
 +	if (ioctl(dev_fd, PPPIOCGUNIT, &x) < 0) {	
- 	    if ( ! ok_error (errno))
- 		fatal("ioctl(PPPIOCGUNIT): %m(%d)", errno);
- 	}
-@@ -453,9 +475,9 @@
+ 	    if (ok_error (errno))
+ 		goto err;
+ 	    fatal("ioctl(PPPIOCGUNIT): %m(%d)", errno);
+@@ -459,9 +481,9 @@
  	/*
  	 * Fetch the initial file flags and reset blocking mode on the file.
  	 */
@@ -4145,7 +4148,7 @@ diff -urN ppp-2.4.0b4.org/pppd/sys-linux.c ppp-2.4.0b4/pppd/sys-linux.c
  	    if ( ! ok_error (errno))
  		warn("Couldn't set device to non-blocking mode: %m");
  	}
-@@ -468,9 +490,10 @@
+@@ -474,9 +496,10 @@
       */
      if (!looped)
  	set_kdebugflag (kdebugflag);
@@ -4159,7 +4162,7 @@ diff -urN ppp-2.4.0b4.org/pppd/sys-linux.c ppp-2.4.0b4/pppd/sys-linux.c
  
      SYSDEBUG ((LOG_NOTICE, "Using version %d.%d.%d of PPP driver",
  	    driver_version, driver_modification, driver_patch));
-@@ -480,28 +503,49 @@
+@@ -486,28 +509,49 @@
   err_close:
      close(fd);
   err:
@@ -4218,9 +4221,9 @@ diff -urN ppp-2.4.0b4.org/pppd/sys-linux.c ppp-2.4.0b4/pppd/sys-linux.c
  	if (ioctl(tty_fd, TIOCSETD, &tty_disc) < 0) {
  	    if ( ! ok_error (errno))
  		error("ioctl(TIOCSETD, N_TTY): %m");
-diff -urN ppp-2.4.0b4.org/pppd/sys-sunos4.c ppp-2.4.0b4/pppd/sys-sunos4.c
---- ppp-2.4.0b4.org/pppd/sys-sunos4.c	Sun Feb 11 11:05:08 2001
-+++ ppp-2.4.0b4/pppd/sys-sunos4.c	Sun Feb 11 11:06:05 2001
+diff -r -N -u ppp-2.4.0.orig/pppd/sys-sunos4.c ppp-2.4.0/pppd/sys-sunos4.c
+--- ppp-2.4.0.orig/pppd/sys-sunos4.c	Wed Dec 22 20:38:19 1999
++++ ppp-2.4.0/pppd/sys-sunos4.c	Sun Aug  6 11:39:28 2000
 @@ -238,6 +238,15 @@
      return stat("/dev/ppp", &buf) >= 0;
  }
@@ -4237,9 +4240,9 @@ diff -urN ppp-2.4.0b4.org/pppd/sys-sunos4.c ppp-2.4.0b4/pppd/sys-sunos4.c
  /*
   * establish_ppp - Turn the serial port into a ppp interface.
   */
-diff -urN ppp-2.4.0b4.org/pppd/sys-svr4.c ppp-2.4.0b4/pppd/sys-svr4.c
---- ppp-2.4.0b4.org/pppd/sys-svr4.c	Sun Feb 11 11:05:08 2001
-+++ ppp-2.4.0b4/pppd/sys-svr4.c	Sun Feb 11 11:06:05 2001
+diff -r -N -u ppp-2.4.0.orig/pppd/sys-svr4.c ppp-2.4.0/pppd/sys-svr4.c
+--- ppp-2.4.0.orig/pppd/sys-svr4.c	Thu Apr 13 06:42:06 2000
++++ ppp-2.4.0/pppd/sys-svr4.c	Sun Aug  6 11:39:28 2000
 @@ -871,6 +871,14 @@
  }
  
@@ -4255,9 +4258,9 @@ diff -urN ppp-2.4.0b4.org/pppd/sys-svr4.c ppp-2.4.0b4/pppd/sys-svr4.c
   * establish_ppp - Turn the serial port into a ppp interface.
   */
  int
-diff -urN ppp-2.4.0b4.org/pppd/tty.c ppp-2.4.0b4/pppd/tty.c
---- ppp-2.4.0b4.org/pppd/tty.c	Sun Feb 11 11:05:08 2001
-+++ ppp-2.4.0b4/pppd/tty.c	Sun Feb 11 11:06:05 2001
+diff -r -N -u ppp-2.4.0.orig/pppd/tty.c ppp-2.4.0/pppd/tty.c
+--- ppp-2.4.0.orig/pppd/tty.c	Mon Jul 24 10:58:15 2000
++++ ppp-2.4.0/pppd/tty.c	Thu Oct 12 16:53:13 2000
 @@ -46,6 +46,7 @@
  #include <arpa/inet.h>
  
