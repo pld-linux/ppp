@@ -209,7 +209,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(600,root,root) %config(missingok,noreplace) %verify(not md5 size mtime) %{_sysconfdir}/ppp/*-secrets
 %attr(644,root,root) %config(missingok,noreplace) %verify(not md5 size mtime) %{_sysconfdir}/ppp/options*
 %attr(640,root,root) %config(noreplace) %verify(not md5 size mtime) /etc/pam.d/ppp
-%attr(640,root,root) /etc/logrotate.d/ppp
+%attr(640,root,root) %config(noreplace) %verify(not size mtime md5) /etc/logrotate.d/ppp
 %attr(640,root,root) %ghost /var/log/ppp.log
 
 %dir %{_sysconfdir}/ppp/peers
