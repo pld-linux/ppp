@@ -115,7 +115,7 @@ PPPoATM plugin for pppd.
 Wtyczka PPPoATM dla pppd.
 
 %prep
-%setup -q 
+%setup -q
 %patch0 -p1
 %patch1 -p1
 %patch2 -p1
@@ -190,7 +190,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(644,root,root,755)
 %doc README.linux debian/README.debian scripts
 %doc debian/win95.ppp README.MSCHAP8* FAQ debian/ppp-2.3.0.STATIC.README
-%doc README.MPPE README.pppoe README.cbcp README.pwfd 
+%doc README.MPPE README.pppoe README.cbcp README.pwfd
 %attr(755,root,root) %{_bindir}/*
 %attr(755,root,root) %{_sbindir}/chat
 %attr(755,root,root) %{_sbindir}/ppp*
@@ -208,10 +208,10 @@ rm -rf $RPM_BUILD_ROOT
 %lang(ko) %{_mandir}/ko/man8/*
 %lang(pl) %{_mandir}/pl/man8/*
 
-%attr(600,root,root) %config(missingok,noreplace) %verify(not md5 size mtime) %{_sysconfdir}/ppp/*-secrets
-%attr(644,root,root) %config(missingok,noreplace) %verify(not md5 size mtime) %{_sysconfdir}/ppp/options*
-%attr(640,root,root) %config(noreplace) %verify(not md5 size mtime) /etc/pam.d/ppp
-%attr(640,root,root) %config(noreplace) %verify(not size mtime md5) /etc/logrotate.d/ppp
+%attr(600,root,root) %config(missingok,noreplace) %verify(not md5 mtime size) %{_sysconfdir}/ppp/*-secrets
+%attr(644,root,root) %config(missingok,noreplace) %verify(not md5 mtime size) %{_sysconfdir}/ppp/options*
+%attr(640,root,root) %config(noreplace) %verify(not md5 mtime size) /etc/pam.d/ppp
+%attr(640,root,root) %config(noreplace) %verify(not md5 mtime size) /etc/logrotate.d/ppp
 %attr(640,root,root) %ghost /var/log/ppp.log
 
 %dir %{_sysconfdir}/ppp/peers
