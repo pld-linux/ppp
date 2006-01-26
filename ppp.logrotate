@@ -1,2 +1,4 @@
+/var/log/ppp {
+}
 /var/log/ppp.log {
 }
