@@ -171,6 +171,7 @@ install debian/options.ttyXX $RPM_BUILD_ROOT%{_sysconfdir}/ppp
 bzip2 -dc %{SOURCE4} | tar xf - -C $RPM_BUILD_ROOT%{_mandir}
 
 install %{SOURCE5} $RPM_BUILD_ROOT/etc/logrotate.d/ppp
+> $RPM_BUILD_ROOT/var/log/ppp
 > $RPM_BUILD_ROOT/var/log/ppp.log
 
 rm -f scripts/README
@@ -212,6 +213,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(644,root,root) %config(missingok,noreplace) %verify(not md5 mtime size) %{_sysconfdir}/ppp/options*
 %attr(640,root,root) %config(noreplace) %verify(not md5 mtime size) /etc/pam.d/ppp
 %attr(640,root,root) %config(noreplace) %verify(not md5 mtime size) /etc/logrotate.d/ppp
+%attr(640,root,root) %ghost /var/log/ppp
 %attr(640,root,root) %ghost /var/log/ppp.log
 
 %dir %{_sysconfdir}/ppp/peers
