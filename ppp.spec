@@ -33,7 +33,7 @@ Patch4:		%{name}-pidfile-owner.patch
 Patch5:		%{name}-rp-pppoe-update.patch
 Patch6:		%{name}-rp-pppoe-macaddr.patch
 #Patch7:		http://public.planetmirror.com/pub/mppe/pppd-2.4.2-chapms-strip-domain.patch.gz
-Patch7:		pppd-2.4.2-chapms-strip-domain.patch.gz
+Patch7:		pppd-2.4.2-chapms-strip-domain.patch
 Patch8:		%{name}-radius.patch
 Patch9:		%{name}-openssl.patch
 Patch10:	%{name}-lib64.patch
