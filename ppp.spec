@@ -37,7 +37,9 @@ Patch7:		pppd-2.4.2-chapms-strip-domain.patch
 Patch8:		%{name}-radius.patch
 Patch9:		%{name}-openssl.patch
 Patch10:	%{name}-lib64.patch
-Patch11:	http://mppe-mppc.alphacron.de/%{name}-2.4.3-mppe-mppc-1.1.patch.gz
+#Patch11:	http://mppe-mppc.alphacron.de/%{name}-2.4.3-mppe-mppc-1.1.patch.gz
+Patch11:	%{name}-2.4.3-mppe-mppc-1.1.patch
+Patch12:	%{name}-rechallenge.patch
 URL:		http://www.samba.org/ppp/
 BuildRequires:	autoconf
 BuildRequires:	automake
@@ -127,6 +129,7 @@ Wtyczka PPPoATM dla pppd.
 %patch10 -p1
 %endif
 %patch11 -p1
+%patch12 -p1
 
 %build
 # note: not autoconf configure
