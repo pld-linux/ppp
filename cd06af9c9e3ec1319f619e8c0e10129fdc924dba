@@ -1,0 +1,3 @@
+- /etc/pam.d/* marked with %config(noreplace).
+- Release++ (I'm too lazy to write here new release number for each
+  spec. Sorry).
