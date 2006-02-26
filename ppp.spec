@@ -137,6 +137,7 @@ Wtyczka PPPoATM dla pppd.
 %{__make} \
 	%{?with_pppoatm:HAVE_LIBATM=y} \
 	OPT_FLAGS="%{rpmcflags}" \
+	COPTS="%{rpmcflags}" \
 	CC="%{__cc}"
 
 %install
