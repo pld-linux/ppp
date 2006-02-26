@@ -1,0 +1,2 @@
+- updated make patch, use %configure in radiusclient to use proper optflags
+- headers are installed by make install now, no need to do it manually
