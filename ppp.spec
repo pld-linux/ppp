@@ -1,6 +1,7 @@
 #
 # Conditional build:
 %bcond_without	pppoatm	# without PPPoATM plugin (which requires kernel 2.4 and atm-devel)
+%bcond_without	srp
 #
 Summary:	ppp daemon package for Linux
 Summary(de):	ppp-Dämonpaket für Linux
@@ -48,7 +49,7 @@ BuildRequires:	libtool
 %{?with_pppoatm:BuildRequires:	linux-atm-devel}
 BuildRequires:	openssl-devel
 BuildRequires:	pam-devel
-BuildRequires:	srp-devel
+%{?with_srp:BuildRequires:	srp-devel}
 Requires:	pam >= 0.77.3
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
@@ -136,6 +137,7 @@ Wtyczka PPPoATM dla pppd.
 %configure
 %{__make} \
 	%{?with_pppoatm:HAVE_LIBATM=y} \
+	%{?with_srp:USE_SRP=y} \
 	OPT_FLAGS="%{rpmcflags}" \
 	COPTS="%{rpmcflags}" \
 	CC="%{__cc}"
@@ -148,6 +150,7 @@ install -d $RPM_BUILD_ROOT{%{_sbindir},%{_bindir},%{_mandir}/man{1,8}} \
 
 %{__make} install \
 	%{?with_pppoatm:HAVE_LIBATM=y} \
+	%{?with_srp:USE_SRP=y} \
 	DESTDIR=$RPM_BUILD_ROOT%{_prefix}
 
 install %{SOURCE2} $RPM_BUILD_ROOT%{_bindir}/pon
@@ -185,7 +188,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_bindir}/*
 %attr(755,root,root) %{_sbindir}/chat
 %attr(755,root,root) %{_sbindir}/ppp*
-%attr(755,root,root) %{_sbindir}/srp-entry
+%{?with_srp:%attr(755,root,root) %{_sbindir}/srp-entry}
 %dir %{_libdir}/pppd
 %dir %{_libdir}/pppd/*.*
 %{_libdir}/pppd/plugins
