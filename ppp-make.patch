@@ -47,7 +47,7 @@ diff -urN ppp-2.4.3.org/pppd/Makefile.linux ppp-2.4.3/pppd/Makefile.linux
  
  # Enable EAP SRP-SHA1 authentication (requires libsrp)
 -#USE_SRP=y
-+USE_SRP=y
++#USE_SRP=y
  
  MAXOCTETS=y
  
