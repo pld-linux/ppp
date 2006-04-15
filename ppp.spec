@@ -1,7 +1,7 @@
 #
 # Conditional build:
 %bcond_without	pppoatm	# without PPPoATM plugin (which requires kernel 2.4 and atm-devel)
-%bcond_without	srp
+%bcond_without	srp	# without SRP support
 #
 Summary:	ppp daemon package for Linux
 Summary(de):	ppp-Dämonpaket für Linux
