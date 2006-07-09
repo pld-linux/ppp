@@ -1,4 +1,6 @@
-#
+# TODO:
+# - fix mppc patch
+
 # Conditional build:
 %bcond_without	pppoatm	# without PPPoATM plugin (which requires kernel 2.4 and atm-devel)
 %bcond_without	srp	# without SRP support
@@ -13,13 +15,13 @@ Summary(ru):	‰≈ÕœŒ ppp
 Summary(tr):	PPP sunucu s¸reci
 Summary(zh_CN):	PPP ≈‰÷√∫Õπ‹¿Ì»Ìº˛∞¸.
 Name:		ppp
-Version:	2.4.3
+Version:	2.4.4
 Release:	0.1
 Epoch:		3
 License:	distributable
 Group:		Networking/Daemons
 Source0:	ftp://ftp.samba.org/pub/ppp/%{name}-%{version}.tar.gz
-# Source0-md5:	848f6c3cafeb6074ffeb293c3af79b7c
+# Source0-md5:	183800762e266132218b204dfb428d29
 Source1:	%{name}.pamd
 Source2:	%{name}.pon
 Source3:	%{name}.poff
@@ -124,13 +126,15 @@ Wtyczka PPPoATM dla pppd.
 %patch5 -p1
 %patch6 -p1
 %patch7 -p1
-%patch8 -p1
+#%patch8 -p1
 %patch9 -p1
 %if "%{_lib}" == "lib64"
 %patch10 -p1
 %endif
-%patch11 -p1
-%patch12 -p1
+# FIXME !!!!
+#%patch11 -p1
+# ???
+#%patch12 -p1
 
 %build
 # note: not autoconf configure
