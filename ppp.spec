@@ -1,5 +1,5 @@
 # TODO:
-# - fix mppc patch
+# - check mppc patch
 
 # Conditional build:
 %bcond_without	pppoatm	# without PPPoATM plugin (which requires kernel 2.4 and atm-devel)
@@ -37,12 +37,10 @@ Patch5:		%{name}-rp-pppoe-update.patch
 Patch6:		%{name}-rp-pppoe-macaddr.patch
 #Patch7:		http://public.planetmirror.com/pub/mppe/pppd-2.4.2-chapms-strip-domain.patch.gz
 Patch7:		pppd-2.4.2-chapms-strip-domain.patch
-Patch8:		%{name}-radius.patch
-Patch9:		%{name}-openssl.patch
-Patch10:	%{name}-lib64.patch
-#Patch11:	http://mppe-mppc.alphacron.de/%{name}-2.4.3-mppe-mppc-1.1.patch.gz
-Patch11:	%{name}-2.4.3-mppe-mppc-1.1.patch
-Patch12:	%{name}-rechallenge.patch
+Patch8:		%{name}-openssl.patch
+Patch9:		%{name}-lib64.patch
+#Patch10:	http://mppe-mppc.alphacron.de/%{name}-2.4.3-mppe-mppc-1.1.patch.gz
+Patch10:	%{name}-2.4.3-mppe-mppc-1.1.patch
 URL:		http://www.samba.org/ppp/
 BuildRequires:	autoconf
 BuildRequires:	automake
@@ -126,15 +124,11 @@ Wtyczka PPPoATM dla pppd.
 %patch5 -p1
 %patch6 -p1
 %patch7 -p1
-#%patch8 -p1
-%patch9 -p1
+%patch8 -p1
 %if "%{_lib}" == "lib64"
-%patch10 -p1
+%patch9 -p1
 %endif
-# FIXME !!!!
-#%patch11 -p1
-# ???
-#%patch12 -p1
+%patch10 -p1
 
 %build
 # note: not autoconf configure
