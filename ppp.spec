@@ -203,7 +203,7 @@ rm -rf $RPM_BUILD_ROOT
 %lang(pl) %{_mandir}/pl/man8/*
 
 %attr(600,root,root) %config(missingok,noreplace) %verify(not md5 mtime size) %{_sysconfdir}/ppp/*-secrets
-%attr(644,root,root) %config(missingok,noreplace) %verify(not md5 mtime size) %{_sysconfdir}/ppp/options*
+%config(missingok,noreplace) %verify(not md5 mtime size) %{_sysconfdir}/ppp/options*
 %attr(640,root,root) %config(noreplace) %verify(not md5 mtime size) /etc/pam.d/ppp
 %attr(640,root,root) %config(noreplace) %verify(not md5 mtime size) /etc/logrotate.d/ppp
 %attr(640,root,root) %ghost /var/log/ppp.log
