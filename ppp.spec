@@ -138,6 +138,7 @@ Wtyczka PPPoATM dla pppd.
 	%{?with_srp:USE_SRP=y} \
 	OPT_FLAGS="%{rpmcflags}" \
 	COPTS="%{rpmcflags}" \
+	OPTLDFLAGS="%{rpmldflags}" \
 	CC="%{__cc}"
 
 %install
