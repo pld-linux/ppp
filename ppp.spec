@@ -148,7 +148,7 @@ cd ../../../..
 %configure
 %{__make} \
 	OPT_FLAGS="%{rpmcflags}" \
-	CC=%{__cc}
+	CC="%{__cc}"
 
 %install
 rm -rf $RPM_BUILD_ROOT
