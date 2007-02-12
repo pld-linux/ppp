@@ -6,14 +6,14 @@
 %bcond_without	srp	# without SRP support
 #
 Summary:	ppp daemon package for Linux
-Summary(de):	ppp-Dämonpaket für Linux
-Summary(es):	Servidor ppp para Linux
-Summary(fr):	Paquetage du démon ppp pour Linux
-Summary(pl):	Demon PPP dla Linuksa
-Summary(pt_BR):	Servidor ppp para Linux
-Summary(ru):	äÅÍÏÎ ppp
-Summary(tr):	PPP sunucu süreci
-Summary(zh_CN):	PPP ÅäÖÃºÍ¹ÜÀíÈí¼ş°ü.
+Summary(de.UTF-8):   ppp-DÃ¤monpaket fÃ¼r Linux
+Summary(es.UTF-8):   Servidor ppp para Linux
+Summary(fr.UTF-8):   Paquetage du dÃ©mon ppp pour Linux
+Summary(pl.UTF-8):   Demon PPP dla Linuksa
+Summary(pt_BR.UTF-8):   Servidor ppp para Linux
+Summary(ru.UTF-8):   Ğ”ĞµĞ¼Ğ¾Ğ½ ppp
+Summary(tr.UTF-8):   PPP sunucu sÃ¼reci
+Summary(zh_CN.UTF-8):   PPP é…ç½®å’Œç®¡ç†è½¯ä»¶åŒ….
 Name:		ppp
 Version:	2.4.4
 Release:	0.1
@@ -59,39 +59,39 @@ kernel greater than 2.2.11 which is built with PPP support. The
 default kernels include PPP support as a module. This version supports
 IPv6, too.
 
-%description -l de
-Dies ist der Dämon und die Dokumentation für PPP-Support. Erfordert
-einen Kernel höher als 2.2.11, der mit PPP-Support gebaut ist. Die
-Standard-Kernel schließen PPP-Support als Modul ein. (IPv6)
+%description -l de.UTF-8
+Dies ist der DÃ¤mon und die Dokumentation fÃ¼r PPP-Support. Erfordert
+einen Kernel hÃ¶her als 2.2.11, der mit PPP-Support gebaut ist. Die
+Standard-Kernel schlieÃŸen PPP-Support als Modul ein. (IPv6)
 
-%description -l es
-Este es el servidor y la documentación para soporte PPP. Requiere un
+%description -l es.UTF-8
+Este es el servidor y la documentaciÃ³n para soporte PPP. Requiere un
 kernel superior al 2.0.
 
-%description -l fr
-Ceci est le démon et la documentation pour le support PPP. Cela
-réclame un noyau supérieur au 2.2.11 et construit avec le support PPP.
+%description -l fr.UTF-8
+Ceci est le dÃ©mon et la documentation pour le support PPP. Cela
+rÃ©clame un noyau supÃ©rieur au 2.2.11 et construit avec le support PPP.
 
-%description -l pl
-Pakiet zawiera demona i dokumentacjê umo¿liwiaj±c± korzystanie z
-protoko³u PPP. Wymaga j±dra 2.2.11 - lub pó¼niejszego - z wkompilowan±
-obs³ug± protoko³u PPP. Standardowe j±dro z dystrybucji zawiera
-wsparcie dla PPP skompilowane jako modu³. (IPv6)
+%description -l pl.UTF-8
+Pakiet zawiera demona i dokumentacjÄ™ umoÅ¼liwiajÄ…cÄ… korzystanie z
+protokoÅ‚u PPP. Wymaga jÄ…dra 2.2.11 - lub pÃ³Åºniejszego - z wkompilowanÄ…
+obsÅ‚ugÄ… protokoÅ‚u PPP. Standardowe jÄ…dro z dystrybucji zawiera
+wsparcie dla PPP skompilowane jako moduÅ‚. (IPv6)
 
-%description -l pt_BR
-Este é o servidor e a documentação para suporte PPP. Ele requer um
+%description -l pt_BR.UTF-8
+Este Ã© o servidor e a documentaÃ§Ã£o para suporte PPP. Ele requer um
 kernel superior ao 2.0.
 
-%description -l ru
-äÅÍÏÎ, ËÏÎÆÉÇÕÒÁÃÉÏÎÎÙÅ ÆÁÊÌÙ É ÄÏËÕÍÅÎÔÁÃÉÑ ÄÌÑ ĞÏÄÄÅÒÖËÉ PPP.
+%description -l ru.UTF-8
+Ğ”ĞµĞ¼Ğ¾Ğ½, ĞºĞ¾Ğ½Ñ„Ğ¸Ğ³ÑƒÑ€Ğ°Ñ†Ğ¸Ğ¾Ğ½Ğ½Ñ‹Ğµ Ñ„Ğ°Ğ¹Ğ»Ñ‹ Ğ¸ Ğ´Ğ¾ĞºÑƒĞ¼ĞµĞ½Ñ‚Ğ°Ñ†Ğ¸Ñ Ğ´Ğ»Ñ Ğ¿Ğ¾Ğ´Ğ´ĞµÑ€Ğ¶ĞºĞ¸ PPP.
 
-%description -l tr
-Bu paket PPP desteği için belgeler ve sunucu sürecini içerir. Çekirdek
-sürümünun 2.2.11'dan daha yüksek olmasını gerektirir.
+%description -l tr.UTF-8
+Bu paket PPP desteÄŸi iÃ§in belgeler ve sunucu sÃ¼recini iÃ§erir. Ã‡ekirdek
+sÃ¼rÃ¼mÃ¼nun 2.2.11'dan daha yÃ¼ksek olmasÄ±nÄ± gerektirir.
 
 %package plugin-devel
 Summary:	Stuff needed to build plugins for pppd
-Summary(pl):	Rzeczy potrzebne do budowania wtyczek dla pppd
+Summary(pl.UTF-8):   Rzeczy potrzebne do budowania wtyczek dla pppd
 Group:		Development/Libraries
 # doesn't require base but enforce new version
 Conflicts:	%{name} < %{epoch}:%{version}-%{release}
@@ -99,19 +99,19 @@ Conflicts:	%{name} < %{epoch}:%{version}-%{release}
 %description plugin-devel
 Development files needed to build plugins for pppd.
 
-%description plugin-devel -l pl
-Pliki nag³ówkowe potrzebne do budowania wtyczek dla pppd.
+%description plugin-devel -l pl.UTF-8
+Pliki nagÅ‚Ã³wkowe potrzebne do budowania wtyczek dla pppd.
 
 %package plugin-pppoatm
 Summary:	PPPoATM plugin for pppd
-Summary(pl):	Wtyczka PPPoATM dla pppd
+Summary(pl.UTF-8):   Wtyczka PPPoATM dla pppd
 Group:		Libraries
 Requires:	%{name} = %{epoch}:%{version}-%{release}
 
 %description plugin-pppoatm
 PPPoATM plugin for pppd.
 
-%description plugin-pppoatm -l pl
+%description plugin-pppoatm -l pl.UTF-8
 Wtyczka PPPoATM dla pppd.
 
 %prep
