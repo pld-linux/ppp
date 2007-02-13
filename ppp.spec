@@ -6,14 +6,14 @@
 %bcond_without	srp	# without SRP support
 #
 Summary:	ppp daemon package for Linux
-Summary(de.UTF-8):   ppp-Dämonpaket für Linux
-Summary(es.UTF-8):   Servidor ppp para Linux
-Summary(fr.UTF-8):   Paquetage du démon ppp pour Linux
-Summary(pl.UTF-8):   Demon PPP dla Linuksa
-Summary(pt_BR.UTF-8):   Servidor ppp para Linux
-Summary(ru.UTF-8):   Демон ppp
-Summary(tr.UTF-8):   PPP sunucu süreci
-Summary(zh_CN.UTF-8):   PPP 配置和管理软件包.
+Summary(de.UTF-8):	ppp-Dämonpaket für Linux
+Summary(es.UTF-8):	Servidor ppp para Linux
+Summary(fr.UTF-8):	Paquetage du démon ppp pour Linux
+Summary(pl.UTF-8):	Demon PPP dla Linuksa
+Summary(pt_BR.UTF-8):	Servidor ppp para Linux
+Summary(ru.UTF-8):	Демон ppp
+Summary(tr.UTF-8):	PPP sunucu süreci
+Summary(zh_CN.UTF-8):	PPP 配置和管理软件包.
 Name:		ppp
 Version:	2.4.4
 Release:	0.1
@@ -91,7 +91,7 @@ sürümünun 2.2.11'dan daha yüksek olmasını gerektirir.
 
 %package plugin-devel
 Summary:	Stuff needed to build plugins for pppd
-Summary(pl.UTF-8):   Rzeczy potrzebne do budowania wtyczek dla pppd
+Summary(pl.UTF-8):	Rzeczy potrzebne do budowania wtyczek dla pppd
 Group:		Development/Libraries
 # doesn't require base but enforce new version
 Conflicts:	%{name} < %{epoch}:%{version}-%{release}
@@ -104,7 +104,7 @@ Pliki nagłówkowe potrzebne do budowania wtyczek dla pppd.
 
 %package plugin-pppoatm
 Summary:	PPPoATM plugin for pppd
-Summary(pl.UTF-8):   Wtyczka PPPoATM dla pppd
+Summary(pl.UTF-8):	Wtyczka PPPoATM dla pppd
 Group:		Libraries
 Requires:	%{name} = %{epoch}:%{version}-%{release}
 
