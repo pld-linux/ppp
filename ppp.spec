@@ -16,7 +16,7 @@ Summary(tr.UTF-8):	PPP sunucu süreci
 Summary(zh_CN.UTF-8):	PPP 配置和管理软件包.
 Name:		ppp
 Version:	2.4.4
-Release:	1
+Release:	2
 Epoch:		3
 License:	distributable
 Group:		Networking/Daemons
@@ -41,6 +41,7 @@ Patch8:		%{name}-openssl.patch
 Patch9:		%{name}-lib64.patch
 #Patch10:	http://mppe-mppc.alphacron.de/%{name}-2.4.3-mppe-mppc-1.1.patch.gz
 Patch10:	%{name}-2.4.3-mppe-mppc-1.1.patch
+Patch11:	%{name}-llc.patch
 URL:		http://www.samba.org/ppp/
 BuildRequires:	autoconf
 BuildRequires:	automake
@@ -129,6 +130,7 @@ Wtyczka PPPoATM dla pppd.
 %patch9 -p1
 %endif
 %patch10 -p1
+%patch11 -p1
 
 %build
 # note: not autoconf configure
@@ -214,6 +216,8 @@ rm -rf $RPM_BUILD_ROOT
 %files plugin-devel
 %defattr(644,root,root,755)
 %dir %{_includedir}/pppd
+%{_includedir}/pppd/fsm.h
+%{_includedir}/pppd/ipcp.h
 %{_includedir}/pppd/pppd.h
 %{_includedir}/pppd/patchlevel.h
 
