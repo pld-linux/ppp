@@ -61,3 +61,14 @@ diff -urN ppp-2.4.4.org/pppd/plugins/rp-pppoe/Makefile.linux ppp-2.4.4/pppd/plug
  
  PPPDVERSION = $(shell awk -F '"' '/VERSION/ { print $$2; }' ../../patchlevel.h)
  
+--- ppp-2.4.5/pppd/plugins/pppol2tp/Makefile.linux~	2010-05-23 20:09:01.894181407 +0200
++++ ppp-2.4.5/pppd/plugins/pppol2tp/Makefile.linux	2010-05-23 20:10:05.074174654 +0200
+@@ -7,7 +7,7 @@
+ #***********************************************************************
+ 
+ DESTDIR = @DESTDIR@
+-LIBDIR = $(DESTDIR)/lib/pppd/$(VERSION)
++LIBDIR = $(DESTDIR)/lib64/pppd/$(VERSION)
+ 
+ VERSION = $(shell awk -F '"' '/VERSION/ { print $$2; }' ../../patchlevel.h)
+ 
