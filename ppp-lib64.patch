@@ -31,7 +31,7 @@ diff -urN ppp-2.4.4.org/pppd/plugins/pppoatm/Makefile.linux ppp-2.4.4/pppd/plugi
 @@ -7,7 +7,7 @@
  #***********************************************************************
  
- DESTDIR = @DESTDIR@
+ DESTDIR = $(INSTROOT)@DESTDIR@
 -LIBDIR = $(DESTDIR)/lib/pppd/$(VERSION)
 +LIBDIR = $(DESTDIR)/lib64/pppd/$(VERSION)
  

@@ -15,13 +15,13 @@ Summary(ru.UTF-8):	Демон ppp
 Summary(tr.UTF-8):	PPP sunucu süreci
 Summary(zh_CN.UTF-8):	PPP 配置和管理软件包.
 Name:		ppp
-Version:	2.4.4
-Release:	4
+Version:	2.4.5
+Release:	1
 Epoch:		3
 License:	distributable
 Group:		Networking/Daemons
 Source0:	ftp://ftp.samba.org/pub/ppp/%{name}-%{version}.tar.gz
-# Source0-md5:	183800762e266132218b204dfb428d29
+# Source0-md5:	4621bc56167b6953ec4071043fe0ec57
 Source1:	%{name}.pamd
 Source2:	%{name}.pon
 Source3:	%{name}.poff
@@ -33,7 +33,6 @@ Patch1:		%{name}-expect.patch
 Patch2:		%{name}-debian_scripts.patch
 Patch3:		%{name}-static.patch
 Patch4:		%{name}-pidfile-owner.patch
-Patch5:		%{name}-rp-pppoe-update.patch
 Patch6:		%{name}-rp-pppoe-macaddr.patch
 #Patch7:		http://public.planetmirror.com/pub/mppe/pppd-2.4.2-chapms-strip-domain.patch.gz
 Patch7:		pppd-2.4.2-chapms-strip-domain.patch
@@ -122,7 +121,6 @@ Wtyczka PPPoATM dla pppd.
 %patch2 -p1
 %patch3 -p1
 %patch4 -p1
-%patch5 -p1
 %patch6 -p1
 %patch7 -p1
 %patch8 -p1
@@ -138,8 +136,8 @@ Wtyczka PPPoATM dla pppd.
 %{__make} \
 	%{?with_pppoatm:HAVE_LIBATM=y} \
 	%{?with_srp:USE_SRP=y} \
-	OPT_FLAGS="%{rpmcflags}" \
-	COPTS="%{rpmcflags}" \
+	OPT_FLAGS="%{rpmcflags} %{rpmcppflags}" \
+	COPTS="%{rpmcflags} %{rpmcppflags}" \
 	OPTLDFLAGS="%{rpmldflags}" \
 	CC="%{__cc}"
 
@@ -194,6 +192,8 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_libdir}/pppd/*.*
 %{_libdir}/pppd/plugins
 %attr(755,root,root) %{_libdir}/pppd/*.*/minconn.so
+%attr(755,root,root) %{_libdir}/pppd/*.*/openl2tp.so
+%attr(755,root,root) %{_libdir}/pppd/*.*/pppol2tp.so
 %attr(755,root,root) %{_libdir}/pppd/*.*/pass*.so
 %attr(755,root,root) %{_libdir}/pppd/*.*/rp-pppoe.so
 %attr(755,root,root) %{_libdir}/pppd/*.*/rad*.so

@@ -71,7 +71,7 @@ diff -Nur ppp-2.4.4.orig/pppd/plugins/Makefile.linux ppp-2.4.4.make/pppd/plugins
 --- ppp-2.4.4.orig/pppd/plugins/Makefile.linux	2006-06-04 07:04:14.000000000 +0200
 +++ ppp-2.4.4.make/pppd/plugins/Makefile.linux	2006-08-04 03:12:23.000000000 +0200
 @@ -1,7 +1,7 @@
- CC	= gcc
+ #CC	= gcc
 -COPTS	= -O2 -g
 +COPTS	= $(OPT_FLAGS) -g
  CFLAGS	= $(COPTS) -I.. -I../../include -fPIC
@@ -134,33 +134,38 @@ diff -Nur ppp-2.4.4.orig/pppd/plugins/radius/Makefile.linux ppp-2.4.4.make/pppd/
 diff -Nur ppp-2.4.4.orig/pppd/plugins/rp-pppoe/Makefile.linux ppp-2.4.4.make/pppd/plugins/rp-pppoe/Makefile.linux
 --- ppp-2.4.4.orig/pppd/plugins/rp-pppoe/Makefile.linux	2006-06-04 07:07:46.000000000 +0200
 +++ ppp-2.4.4.make/pppd/plugins/rp-pppoe/Makefile.linux	2006-08-04 03:14:35.000000000 +0200
-@@ -24,22 +24,22 @@
+@@ -25,12 +25,12 @@
  # Version is set ONLY IN THE MAKEFILE!  Don't delete this!
- VERSION=3.3
+ RP_VERSION=3.8p
  
 -COPTS=-O2 -g
 +COPTS=$(OPT_FLAGS) -g
- CFLAGS=$(COPTS) -I../../../include/linux
+ CFLAGS=$(COPTS) -I../../../include '-DRP_VERSION="$(RP_VERSION)"'
  all: rp-pppoe.so pppoe-discovery
  
- pppoe-discovery: libplugin.a pppoe-discovery.o
--	$(CC) -o pppoe-discovery pppoe-discovery.o libplugin.a
-+	$(CC) $(OPTLDFLAGS) -o pppoe-discovery pppoe-discovery.o libplugin.a
+ pppoe-discovery: pppoe-discovery.o debug.o
+-	$(CC) -o pppoe-discovery pppoe-discovery.o debug.o
++	$(CC) $(OPTLDFLAGS) -o pppoe-discovery pppoe-discovery.o debug.o
  
  pppoe-discovery.o: pppoe-discovery.c
- 	$(CC) $(CFLAGS) '-DVERSION="$(VERSION)"' -c -o pppoe-discovery.o pppoe-discovery.c
+ 	$(CC) $(CFLAGS) -c -o pppoe-discovery.o pppoe-discovery.c
+@@ -39,13 +39,13 @@
+ 	$(CC) $(CFLAGS) -c -o debug.o debug.c
  
- rp-pppoe.so: libplugin.a plugin.o
--	$(CC) -o rp-pppoe.so -shared plugin.o libplugin.a
-+	$(CC) $(OPTLDFLAGS) -o rp-pppoe.so -shared plugin.o libplugin.a
+ rp-pppoe.so: plugin.o discovery.o if.o common.o
+-	$(CC) -o rp-pppoe.so -shared plugin.o discovery.o if.o common.o
++	$(CC) $(OPTLDFLAGS) -o rp-pppoe.so -shared plugin.o discovery.o if.o common.o
  
  install: all
  	$(INSTALL) -d -m 755 $(LIBDIR)
 -	$(INSTALL) -s -c -m 4550 rp-pppoe.so $(LIBDIR)
 +	$(INSTALL) -c -m 4550 rp-pppoe.so $(LIBDIR)
  	$(INSTALL) -d -m 755 $(BINDIR)
- 	$(INSTALL) -s -c -m 555 pppoe-discovery $(BINDIR)
+-	$(INSTALL) -s -c -m 555 pppoe-discovery $(BINDIR)
++	$(INSTALL) -c -m 555 pppoe-discovery $(BINDIR)
  
+ clean:
+ 	rm -f *.o *.so pppoe-discovery
 diff -Nur ppp-2.4.4.orig/pppdump/Makefile.linux ppp-2.4.4.make/pppdump/Makefile.linux
 --- ppp-2.4.4.orig/pppdump/Makefile.linux	2006-06-04 07:04:14.000000000 +0200
 +++ ppp-2.4.4.make/pppdump/Makefile.linux	2006-08-04 03:12:23.000000000 +0200
