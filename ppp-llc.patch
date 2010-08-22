@@ -1,0 +1,10 @@
+--- ppp-2.4.4/pppd/plugins/rp-pppoe/plugin.c~	2008-01-03 19:52:31.000000000 +0100
++++ ppp-2.4.4/pppd/plugins/rp-pppoe/plugin.c	2008-01-03 19:53:20.997057881 +0100
+@@ -52,7 +49,6 @@
+ #include <net/ethernet.h>
+ #include <net/if_arp.h>
+ #include <linux/ppp_defs.h>
+-#include <linux/if_ppp.h>
+ #include <linux/if_pppox.h>
+ 
+ #define _PATH_ETHOPT         _ROOT_PATH "/etc/ppp/options."

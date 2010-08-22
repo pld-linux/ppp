@@ -1,0 +1,63 @@
+diff -urN ppp-2.4.4.org/pppd/pathnames.h ppp-2.4.4/pppd/pathnames.h
+--- ppp-2.4.4.org/pppd/pathnames.h	2005-08-26 01:59:34.000000000 +0200
++++ ppp-2.4.4/pppd/pathnames.h	2006-07-09 13:33:56.089093750 +0200
+@@ -57,9 +57,9 @@
+ 
+ #ifdef PLUGIN
+ #ifdef __STDC__
+-#define _PATH_PLUGIN	DESTDIR "/lib/pppd/" VERSION
++#define _PATH_PLUGIN	DESTDIR "/lib64/pppd/" VERSION
+ #else /* __STDC__ */
+-#define _PATH_PLUGIN	"/usr/lib/pppd"
++#define _PATH_PLUGIN	"/usr/lib64/pppd"
+ #endif /* __STDC__ */
+ 
+ #endif /* PLUGIN */
+diff -urN ppp-2.4.4.org/pppd/plugins/Makefile.linux ppp-2.4.4/pppd/plugins/Makefile.linux
+--- ppp-2.4.4.org/pppd/plugins/Makefile.linux	2006-07-09 13:32:56.401363000 +0200
++++ ppp-2.4.4/pppd/plugins/Makefile.linux	2006-07-09 13:33:28.519370750 +0200
+@@ -7,7 +7,7 @@
+ DESTDIR = $(INSTROOT)@DESTDIR@
+ BINDIR = $(DESTDIR)/sbin
+ MANDIR = $(DESTDIR)/share/man/man8
+-LIBDIR = $(DESTDIR)/lib/pppd/$(VERSION)
++LIBDIR = $(DESTDIR)/lib64/pppd/$(VERSION)
+ 
+ SUBDIRS := rp-pppoe pppoatm
+ # Uncomment the next line to include the radius authentication plugin
+diff -urN ppp-2.4.4.org/pppd/plugins/pppoatm/Makefile.linux ppp-2.4.4/pppd/plugins/pppoatm/Makefile.linux
+--- ppp-2.4.4.org/pppd/plugins/pppoatm/Makefile.linux	2004-11-14 02:12:10.000000000 +0100
++++ ppp-2.4.4/pppd/plugins/pppoatm/Makefile.linux	2006-07-09 13:33:28.523371000 +0200
+@@ -7,7 +7,7 @@
+ #***********************************************************************
+ 
+ DESTDIR = @DESTDIR@
+-LIBDIR = $(DESTDIR)/lib/pppd/$(VERSION)
++LIBDIR = $(DESTDIR)/lib64/pppd/$(VERSION)
+ 
+ VERSION = $(shell awk -F '"' '/VERSION/ { print $$2; }' ../../patchlevel.h)
+ 
+diff -urN ppp-2.4.4.org/pppd/plugins/radius/Makefile.linux ppp-2.4.4/pppd/plugins/radius/Makefile.linux
+--- ppp-2.4.4.org/pppd/plugins/radius/Makefile.linux	2006-07-09 13:32:56.401363000 +0200
++++ ppp-2.4.4/pppd/plugins/radius/Makefile.linux	2006-07-09 13:33:28.523371000 +0200
+@@ -5,7 +5,7 @@
+ 
+ DESTDIR = $(INSTROOT)@DESTDIR@
+ MANDIR = $(DESTDIR)/share/man/man8
+-LIBDIR = $(DESTDIR)/lib/pppd/$(VERSION)
++LIBDIR = $(DESTDIR)/lib64/pppd/$(VERSION)
+ 
+ VERSION = $(shell awk -F '"' '/VERSION/ { print $$2; }' ../../patchlevel.h)
+ 
+diff -urN ppp-2.4.4.org/pppd/plugins/rp-pppoe/Makefile.linux ppp-2.4.4/pppd/plugins/rp-pppoe/Makefile.linux
+--- ppp-2.4.4.org/pppd/plugins/rp-pppoe/Makefile.linux	2006-07-09 13:32:56.401363000 +0200
++++ ppp-2.4.4/pppd/plugins/rp-pppoe/Makefile.linux	2006-07-09 13:33:28.523371000 +0200
+@@ -15,7 +15,7 @@
+ 
+ DESTDIR = $(INSTROOT)@DESTDIR@
+ BINDIR = $(DESTDIR)/sbin
+-LIBDIR = $(DESTDIR)/lib/pppd/$(PPPDVERSION)
++LIBDIR = $(DESTDIR)/lib64/pppd/$(PPPDVERSION)
+ 
+ PPPDVERSION = $(shell awk -F '"' '/VERSION/ { print $$2; }' ../../patchlevel.h)
+ 
