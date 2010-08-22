@@ -41,12 +41,15 @@ Patch9:		%{name}-lib64.patch
 #Patch10:	http://mppe-mppc.alphacron.de/%{name}-2.4.3-mppe-mppc-1.1.patch.gz
 Patch10:	%{name}-2.4.3-mppe-mppc-1.1.patch
 Patch11:	%{name}-llc.patch
+Patch12:	%{name}-llh.patch
 URL:		http://www.samba.org/ppp/
 BuildRequires:	autoconf
 BuildRequires:	automake
 BuildRequires:	libpcap-devel >= 2:0.8.1
 BuildRequires:	libtool
 %{?with_pppoatm:BuildRequires:	linux-atm-devel}
+# <linux/if_pppol2tp.h>
+BuildRequires:	linux-libc-headers >= 7:2.6.23
 BuildRequires:	openssl-devel
 BuildRequires:	pam-devel
 %{?with_srp:BuildRequires:	srp-devel}
@@ -129,6 +132,10 @@ Wtyczka PPPoATM dla pppd.
 %endif
 %patch10 -p1
 %patch11 -p1
+%patch12 -p1
+
+# use headers from llh instead of older supplied by ppp, incompatible with current llh
+%{__rm} include/linux/*.h
 
 %build
 # note: not autoconf configure
@@ -143,9 +150,8 @@ Wtyczka PPPoATM dla pppd.
 
 %install
 rm -rf $RPM_BUILD_ROOT
-install -d $RPM_BUILD_ROOT{%{_sbindir},%{_bindir},%{_mandir}/man{1,8}} \
-	$RPM_BUILD_ROOT{%{_sysconfdir}/{pam.d,ppp/peers},/var/log} \
-	$RPM_BUILD_ROOT/etc/logrotate.d
+install -d $RPM_BUILD_ROOT{%{_bindir},%{_sysconfdir}/ppp/peers,/var/log} \
+	$RPM_BUILD_ROOT/etc/{pam.d,logrotate.d}
 
 %{__make} install \
 	%{?with_pppoatm:HAVE_LIBATM=y} \
@@ -176,53 +182,60 @@ ln -s %{version}* plugins
 %clean
 rm -rf $RPM_BUILD_ROOT
 
-%post	-p /sbin/ldconfig
-%postun -p /sbin/ldconfig
-
 %files
 %defattr(644,root,root,755)
 %doc README.linux debian/README.debian scripts
 %doc debian/win95.ppp README.MSCHAP8* FAQ debian/ppp-2.3.0.STATIC.README
 %doc README.MPPE README.pppoe README.cbcp README.pwfd
-%attr(755,root,root) %{_bindir}/*
+%attr(755,root,root) %{_bindir}/plog
+%attr(755,root,root) %{_bindir}/poff
+%attr(755,root,root) %{_bindir}/pon
 %attr(755,root,root) %{_sbindir}/chat
-%attr(755,root,root) %{_sbindir}/ppp*
+%attr(755,root,root) %{_sbindir}/pppd
+%attr(755,root,root) %{_sbindir}/pppdump
+%attr(755,root,root) %{_sbindir}/pppoe-discovery
+%attr(755,root,root) %{_sbindir}/pppstats
 %{?with_srp:%attr(755,root,root) %{_sbindir}/srp-entry}
 %dir %{_libdir}/pppd
-%dir %{_libdir}/pppd/*.*
+%dir %{_libdir}/pppd/%{version}
 %{_libdir}/pppd/plugins
-%attr(755,root,root) %{_libdir}/pppd/*.*/minconn.so
-%attr(755,root,root) %{_libdir}/pppd/*.*/openl2tp.so
-%attr(755,root,root) %{_libdir}/pppd/*.*/pppol2tp.so
-%attr(755,root,root) %{_libdir}/pppd/*.*/pass*.so
-%attr(755,root,root) %{_libdir}/pppd/*.*/rp-pppoe.so
-%attr(755,root,root) %{_libdir}/pppd/*.*/rad*.so
-%attr(755,root,root) %{_libdir}/pppd/*.*/winbind.so
+%attr(755,root,root) %{_libdir}/pppd/%{version}/minconn.so
+%attr(755,root,root) %{_libdir}/pppd/%{version}/openl2tp.so
+%attr(755,root,root) %{_libdir}/pppd/%{version}/pppol2tp.so
+%attr(755,root,root) %{_libdir}/pppd/%{version}/passprompt.so
+%attr(755,root,root) %{_libdir}/pppd/%{version}/passwordfd.so
+%attr(755,root,root) %{_libdir}/pppd/%{version}/rp-pppoe.so
+%attr(755,root,root) %{_libdir}/pppd/%{version}/radattr.so
+%attr(755,root,root) %{_libdir}/pppd/%{version}/radius.so
+%attr(755,root,root) %{_libdir}/pppd/%{version}/radrealms.so
+%attr(755,root,root) %{_libdir}/pppd/%{version}/winbind.so
 
-%{_mandir}/man8/*
+%{_mandir}/man8/chat.8*
+%{_mandir}/man8/pppd.8*
+%{_mandir}/man8/pppd-radattr.8*
+%{_mandir}/man8/pppd-radius.8*
+%{_mandir}/man8/pppdump.8*
+%{_mandir}/man8/pppstats.8*
 %lang(fr) %{_mandir}/fr/man8/*
 %lang(ja) %{_mandir}/ja/man8/*
 %lang(ko) %{_mandir}/ko/man8/*
 %lang(pl) %{_mandir}/pl/man8/*
 
-%attr(600,root,root) %config(missingok,noreplace) %verify(not md5 mtime size) %{_sysconfdir}/ppp/*-secrets
-%config(missingok,noreplace) %verify(not md5 mtime size) %{_sysconfdir}/ppp/options*
+%attr(600,root,root) %config(missingok,noreplace) %verify(not md5 mtime size) %{_sysconfdir}/ppp/chap-secrets
+%attr(600,root,root) %config(missingok,noreplace) %verify(not md5 mtime size) %{_sysconfdir}/ppp/pap-secrets
+%config(missingok,noreplace) %verify(not md5 mtime size) %{_sysconfdir}/ppp/options
+%config(missingok,noreplace) %verify(not md5 mtime size) %{_sysconfdir}/ppp/options.ttyXX
+%dir %{_sysconfdir}/ppp/peers
 %attr(640,root,root) %config(noreplace) %verify(not md5 mtime size) /etc/pam.d/ppp
 %attr(640,root,root) %config(noreplace) %verify(not md5 mtime size) /etc/logrotate.d/ppp
 %attr(640,root,root) %ghost /var/log/ppp.log
 
-%dir %{_sysconfdir}/ppp/peers
-
 %files plugin-devel
 %defattr(644,root,root,755)
-%dir %{_includedir}/pppd
-%{_includedir}/pppd/fsm.h
-%{_includedir}/pppd/ipcp.h
-%{_includedir}/pppd/pppd.h
-%{_includedir}/pppd/patchlevel.h
+%{_includedir}/pppd
 
 %if %{with pppoatm}
 %files plugin-pppoatm
 %defattr(644,root,root,755)
-%attr(755,root,root) %{_libdir}/pppd/*.*/pppoatm.so
+%attr(755,root,root) %{_libdir}/pppd/%{version}/pppoatm.so
 %endif
