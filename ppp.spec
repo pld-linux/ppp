@@ -17,7 +17,7 @@ Summary(tr.UTF-8):	PPP sunucu süreci
 Summary(zh_CN.UTF-8):	PPP 配置和管理软件包.
 Name:		ppp
 Version:	2.4.5
-Release:	6
+Release:	7
 Epoch:		3
 License:	distributable
 Group:		Networking/Daemons
@@ -186,6 +186,15 @@ ln -s plugins $v
 
 %clean
 rm -rf $RPM_BUILD_ROOT
+
+%pretrans
+# %{version} used to be directory
+if [ -d %{_libdir}/pppd/%{version} -a ! -L %{_libdir}/pppd/%{version} ]; then
+	set -e
+	rm -f %{_libdir}/pppd/plugins
+	mv %{_libdir}/pppd/{%{version},plugins}
+	ln -sn plugins %{_libdir}/pppd/%{version}
+fi
 
 %files
 %defattr(644,root,root,755)
