@@ -1,5 +1,6 @@
 # TODO:
 # - check mppc patch
+# - check if %{_libdir}/pppd/%{version} path is needed, if not drop the symlink
 
 # Conditional build:
 %bcond_without	pppoatm	# without PPPoATM plugin (which requires kernel 2.4 and atm-devel)
@@ -16,7 +17,7 @@ Summary(tr.UTF-8):	PPP sunucu süreci
 Summary(zh_CN.UTF-8):	PPP 配置和管理软件包.
 Name:		ppp
 Version:	2.4.5
-Release:	5
+Release:	6
 Epoch:		3
 License:	distributable
 Group:		Networking/Daemons
@@ -158,26 +159,30 @@ install -d $RPM_BUILD_ROOT{%{_bindir},%{_sysconfdir}/ppp/peers,/var/log} \
 	%{?with_srp:USE_SRP=y} \
 	DESTDIR=$RPM_BUILD_ROOT%{_prefix}
 
-install %{SOURCE2} $RPM_BUILD_ROOT%{_bindir}/pon
-install %{SOURCE3} $RPM_BUILD_ROOT%{_bindir}/poff
-install debian/plog $RPM_BUILD_ROOT%{_bindir}
+install -p %{SOURCE2} $RPM_BUILD_ROOT%{_bindir}/pon
+install -p %{SOURCE3} $RPM_BUILD_ROOT%{_bindir}/poff
+install -p debian/plog $RPM_BUILD_ROOT%{_bindir}
 
-install etc.ppp/chap-secrets $RPM_BUILD_ROOT%{_sysconfdir}/ppp
-install debian/pap-secrets $RPM_BUILD_ROOT%{_sysconfdir}/ppp
-install debian/options $RPM_BUILD_ROOT%{_sysconfdir}/ppp
-install debian/options.ttyXX $RPM_BUILD_ROOT%{_sysconfdir}/ppp
+cp -p etc.ppp/chap-secrets $RPM_BUILD_ROOT%{_sysconfdir}/ppp
+cp -p debian/pap-secrets $RPM_BUILD_ROOT%{_sysconfdir}/ppp
+cp -p debian/options $RPM_BUILD_ROOT%{_sysconfdir}/ppp
+cp -p debian/options.ttyXX $RPM_BUILD_ROOT%{_sysconfdir}/ppp
 
 bzip2 -dc %{SOURCE4} | tar xf - -C $RPM_BUILD_ROOT%{_mandir}
+%{__rm} $RPM_BUILD_ROOT%{_mandir}/README.ppp-non-english-man-pages
 
-install %{SOURCE5} $RPM_BUILD_ROOT/etc/logrotate.d/ppp
+cp -p %{SOURCE5} $RPM_BUILD_ROOT/etc/logrotate.d/ppp
 > $RPM_BUILD_ROOT/var/log/ppp.log
 
 rm -f scripts/README
 
-install %{SOURCE1} $RPM_BUILD_ROOT/etc/pam.d/ppp
+cp -p %{SOURCE1} $RPM_BUILD_ROOT/etc/pam.d/ppp
 
 cd $RPM_BUILD_ROOT%{_libdir}/pppd
-ln -s %{version}* plugins
+v=$(echo %{version}*)
+mv $v plugins
+# not sure which path used, keep the old path for compat
+ln -s plugins $v
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -197,18 +202,20 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_sbindir}/pppstats
 %{?with_srp:%attr(755,root,root) %{_sbindir}/srp-entry}
 %dir %{_libdir}/pppd
-%dir %{_libdir}/pppd/%{version}
-%{_libdir}/pppd/plugins
-%attr(755,root,root) %{_libdir}/pppd/%{version}/minconn.so
-%attr(755,root,root) %{_libdir}/pppd/%{version}/openl2tp.so
-%attr(755,root,root) %{_libdir}/pppd/%{version}/pppol2tp.so
-%attr(755,root,root) %{_libdir}/pppd/%{version}/passprompt.so
-%attr(755,root,root) %{_libdir}/pppd/%{version}/passwordfd.so
-%attr(755,root,root) %{_libdir}/pppd/%{version}/rp-pppoe.so
-%attr(755,root,root) %{_libdir}/pppd/%{version}/radattr.so
-%attr(755,root,root) %{_libdir}/pppd/%{version}/radius.so
-%attr(755,root,root) %{_libdir}/pppd/%{version}/radrealms.so
-%attr(755,root,root) %{_libdir}/pppd/%{version}/winbind.so
+%dir %{_libdir}/pppd/plugins
+%attr(755,root,root) %{_libdir}/pppd/plugins/minconn.so
+%attr(755,root,root) %{_libdir}/pppd/plugins/openl2tp.so
+%attr(755,root,root) %{_libdir}/pppd/plugins/pppol2tp.so
+%attr(755,root,root) %{_libdir}/pppd/plugins/passprompt.so
+%attr(755,root,root) %{_libdir}/pppd/plugins/passwordfd.so
+%attr(755,root,root) %{_libdir}/pppd/plugins/rp-pppoe.so
+%attr(755,root,root) %{_libdir}/pppd/plugins/radattr.so
+%attr(755,root,root) %{_libdir}/pppd/plugins/radius.so
+%attr(755,root,root) %{_libdir}/pppd/plugins/radrealms.so
+%attr(755,root,root) %{_libdir}/pppd/plugins/winbind.so
+
+# TODO: legacy, try to drop
+%{_libdir}/pppd/%{version}
 
 %{_mandir}/man8/chat.8*
 %{_mandir}/man8/pppd.8*
@@ -237,5 +244,5 @@ rm -rf $RPM_BUILD_ROOT
 %if %{with pppoatm}
 %files plugin-pppoatm
 %defattr(644,root,root,755)
-%attr(755,root,root) %{_libdir}/pppd/%{version}/pppoatm.so
+%attr(755,root,root) %{_libdir}/pppd/plugins/pppoatm.so
 %endif
