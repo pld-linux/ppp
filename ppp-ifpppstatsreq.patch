@@ -1,0 +1,140 @@
+--- ppp-2.4.5/pppd/sys-linux.c~	2013-02-16 23:11:59.688775791 +0100
++++ ppp-2.4.5/pppd/sys-linux.c	2013-02-16 23:14:00.675182263 +0100
+@@ -1364,20 +1364,22 @@
+     int u;
+     struct pppd_stats *stats;
+ {
+-    struct ifpppstatsreq req;
++    struct ifreq req;
++    struct ppp_stats rstats;
+ 
+     memset (&req, 0, sizeof (req));
++    memset (&rstats, 0, sizeof (rstats));
+ 
+-    req.stats_ptr = (caddr_t) &req.stats;
+-    strlcpy(req.ifr__name, ifname, sizeof(req.ifr__name));
++    req.ifr_data = (caddr_t) &rstats;
++    strlcpy(req.ifr_name, ifname, sizeof(req.ifr_name));
+     if (ioctl(sock_fd, SIOCGPPPSTATS, &req) < 0) {
+ 	error("Couldn't get PPP statistics: %m");
+ 	return 0;
+     }
+-    stats->bytes_in = req.stats.p.ppp_ibytes;
+-    stats->bytes_out = req.stats.p.ppp_obytes;
+-    stats->pkts_in = req.stats.p.ppp_ipackets;
+-    stats->pkts_out = req.stats.p.ppp_opackets;
++    stats->bytes_in = rstats.p.ppp_ibytes;
++    stats->bytes_out = rstats.p.ppp_obytes;
++    stats->pkts_in = rstats.p.ppp_ipackets;
++    stats->pkts_out = rstats.p.ppp_opackets;
+     return 1;
+ }
+ 
+--- ppp-2.4.5/pppstats/pppstats.c~	2013-02-16 23:15:47.231215213 +0100
++++ ppp-2.4.5/pppstats/pppstats.c	2013-02-16 23:17:58.624537526 +0100
+@@ -143,12 +143,14 @@
+ get_ppp_stats(curp)
+     struct ppp_stats *curp;
+ {
+-    struct ifpppstatsreq req;
++    struct ifreq req;
++    struct ppp_stats rstats; 
+ 
+     memset (&req, 0, sizeof (req));
++    memset (&rstats, 0, sizeof (rstats));
+ 
+ #ifdef __linux__
+-    req.stats_ptr = (caddr_t) &req.stats;
++    req.ifr_data = (caddr_t) &rstats;
+ #undef ifr_name
+ #define ifr_name ifr__name
+ #endif
+@@ -162,7 +164,7 @@
+ 	    perror("couldn't get PPP statistics");
+ 	exit(1);
+     }
+-    *curp = req.stats;
++    *curp = rstats;
+ }
+ 
+ static void
+--- ppp-2.4.5/pppstats/pppstats.c~	2013-02-16 23:20:18.148057503 +0100
++++ ppp-2.4.5/pppstats/pppstats.c	2013-02-16 23:20:27.984972162 +0100
+@@ -149,11 +149,7 @@
+     memset (&req, 0, sizeof (req));
+     memset (&rstats, 0, sizeof (rstats));
+ 
+-#ifdef __linux__
+     req.ifr_data = (caddr_t) &rstats;
+-#undef ifr_name
+-#define ifr_name ifr__name
+-#endif
+ 
+     strncpy(req.ifr_name, interface, sizeof(req.ifr_name));
+     if (ioctl(s, SIOCGPPPSTATS, &req) < 0) {
+--- ppp-2.4.5/pppstats/pppstats.c~	2013-02-16 23:20:49.762187752 +0100
++++ ppp-2.4.5/pppstats/pppstats.c	2013-02-16 23:23:53.923478616 +0100
+@@ -167,15 +167,13 @@
+ get_ppp_cstats(csp)
+     struct ppp_comp_stats *csp;
+ {
+-    struct ifpppcstatsreq creq;
++    struct ifreq creq;
++    struct ppp_comp_stats rstats;
+ 
+     memset (&creq, 0, sizeof (creq));
++    memset (&rstats, 0, sizeof (rstats));
+ 
+-#ifdef __linux__
+-    creq.stats_ptr = (caddr_t) &creq.stats;
+-#undef  ifr_name
+-#define ifr_name ifr__name
+-#endif
++    creq.ifr_data = (caddr_t) &rstats;
+ 
+     strncpy(creq.ifr_name, interface, sizeof(creq.ifr_name));
+     if (ioctl(s, SIOCGPPPCSTATS, &creq) < 0) {
+@@ -192,28 +190,28 @@
+     }
+ 
+ #ifdef __linux__
+-    if (creq.stats.c.bytes_out == 0) {
+-	creq.stats.c.bytes_out = creq.stats.c.comp_bytes + creq.stats.c.inc_bytes;
+-	creq.stats.c.in_count = creq.stats.c.unc_bytes;
++    if (rstats.c.bytes_out == 0) {
++	rstats.c.bytes_out = rstats.c.comp_bytes + rstats.c.inc_bytes;
++	rstats.c.in_count = rstats.c.unc_bytes;
+     }
+-    if (creq.stats.c.bytes_out == 0)
+-	creq.stats.c.ratio = 0.0;
++    if (rstats.c.bytes_out == 0)
++	rstats.c.ratio = 0.0;
+     else
+-	creq.stats.c.ratio = 256.0 * creq.stats.c.in_count /
+-			     creq.stats.c.bytes_out;
++	rstats.c.ratio = 256.0 * rstats.c.in_count /
++			     rstats.c.bytes_out;
+ 
+-    if (creq.stats.d.bytes_out == 0) {
+-	creq.stats.d.bytes_out = creq.stats.d.comp_bytes + creq.stats.d.inc_bytes;
+-	creq.stats.d.in_count = creq.stats.d.unc_bytes;
++    if (rstats.d.bytes_out == 0) {
++	rstats.d.bytes_out = rstats.d.comp_bytes + rstats.d.inc_bytes;
++	rstats.d.in_count = rstats.d.unc_bytes;
+     }
+-    if (creq.stats.d.bytes_out == 0)
+-	creq.stats.d.ratio = 0.0;
++    if (rstats.d.bytes_out == 0)
++	rstats.d.ratio = 0.0;
+     else
+-	creq.stats.d.ratio = 256.0 * creq.stats.d.in_count /
+-			     creq.stats.d.bytes_out;
++	rstats.d.ratio = 256.0 * rstats.d.in_count /
++			     rstats.d.bytes_out;
+ #endif
+ 
+-    *csp = creq.stats;
++    *csp = rstats;
+ }
+ 
+ #else	/* STREAMS */

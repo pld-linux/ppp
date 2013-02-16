@@ -43,6 +43,7 @@ Patch9:		%{name}-lib64.patch
 Patch10:	%{name}-2.4.3-mppe-mppc-1.1.patch
 Patch11:	%{name}-llc.patch
 Patch12:	%{name}-llh.patch
+Patch13:	%{name}-ifpppstatsreq.patch 
 URL:		http://www.samba.org/ppp/
 BuildRequires:	autoconf
 BuildRequires:	automake
@@ -134,6 +135,7 @@ Wtyczka PPPoATM dla pppd.
 %patch10 -p1
 %patch11 -p1
 %patch12 -p1
+%patch13 -p1
 
 # use headers from llh instead of older supplied by ppp, incompatible with current llh
 %{__rm} include/linux/*.h
