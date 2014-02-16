@@ -14,15 +14,15 @@ Summary(pl.UTF-8):	Demon PPP dla Linuksa
 Summary(pt_BR.UTF-8):	Servidor ppp para Linux
 Summary(ru.UTF-8):	Демон ppp
 Summary(tr.UTF-8):	PPP sunucu süreci
-Summary(zh_CN.UTF-8):	PPP 配置和管理软件包.
+Summary(zh_CN.UTF-8):	PPP 配置和管理软件包
 Name:		ppp
-Version:	2.4.5
-Release:	7
+Version:	2.4.6
+Release:	1
 Epoch:		3
 License:	distributable
 Group:		Networking/Daemons
 Source0:	ftp://ftp.samba.org/pub/ppp/%{name}-%{version}.tar.gz
-# Source0-md5:	4621bc56167b6953ec4071043fe0ec57
+# Source0-md5:	3434d2cc9327167a0723aaaa8670083b
 Source1:	%{name}.pamd
 Source2:	%{name}.pon
 Source3:	%{name}.poff
@@ -41,14 +41,9 @@ Patch8:		%{name}-openssl.patch
 Patch9:		%{name}-lib64.patch
 #Patch10:	http://mppe-mppc.alphacron.de/%{name}-2.4.3-mppe-mppc-1.1.patch.gz
 Patch10:	%{name}-2.4.3-mppe-mppc-1.1.patch
-Patch11:	%{name}-llc.patch
-Patch12:	%{name}-llh.patch
-Patch13:	%{name}-ifpppstatsreq.patch 
-URL:		http://www.samba.org/ppp/
-BuildRequires:	autoconf
-BuildRequires:	automake
+Patch11:	%{name}-ifpppstatsreq.patch
+URL:		http://ppp.samba.org/
 BuildRequires:	libpcap-devel >= 2:0.8.1
-BuildRequires:	libtool
 %{?with_pppoatm:BuildRequires:	linux-atm-devel}
 # <linux/if_pppol2tp.h>
 BuildRequires:	linux-libc-headers >= 7:2.6.23
@@ -134,8 +129,6 @@ Wtyczka PPPoATM dla pppd.
 %endif
 %patch10 -p1
 %patch11 -p1
-%patch12 -p1
-%patch13 -p1
 
 # use headers from llh instead of older supplied by ppp, incompatible with current llh
 %{__rm} include/linux/*.h
@@ -145,6 +138,7 @@ Wtyczka PPPoATM dla pppd.
 %configure
 %{__make} \
 	%{?with_pppoatm:HAVE_LIBATM=y} \
+	USE_PAM=y \
 	%{?with_srp:USE_SRP=y} \
 	OPT_FLAGS="%{rpmcflags} %{rpmcppflags}" \
 	COPTS="%{rpmcflags} %{rpmcppflags}" \

@@ -55,7 +55,7 @@
 +/* Added to allow static and dynamic ip(s).
 + * Holds the static ip from pap-secrets
 + */
-+u_int32_t staticaddr;
++extern u_int32_t staticaddr;
 +/******************************************/
 +
  extern struct protent ipcp_protent;

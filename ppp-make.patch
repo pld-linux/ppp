@@ -27,9 +27,8 @@ diff -Nur ppp-2.4.4.orig/chat/Makefile.linux ppp-2.4.4.make/chat/Makefile.linux
  	$(INSTALL) -c -m 644 chat.8 $(MANDIR)
  
  clean:
-diff -Nur ppp-2.4.4.orig/pppd/Makefile.linux ppp-2.4.4.make/pppd/Makefile.linux
---- ppp-2.4.4.orig/pppd/Makefile.linux	2006-06-04 07:07:46.000000000 +0200
-+++ ppp-2.4.4.make/pppd/Makefile.linux	2006-08-04 03:12:23.000000000 +0200
+--- ppp-2.4.6/pppd/Makefile.linux.orig	2014-01-02 05:42:08.000000000 +0100
++++ ppp-2.4.6/pppd/Makefile.linux	2014-02-16 12:21:01.278474470 +0100
 @@ -32,7 +32,8 @@
  
  # CC = gcc
@@ -40,14 +39,7 @@ diff -Nur ppp-2.4.4.orig/pppd/Makefile.linux ppp-2.4.4.make/pppd/Makefile.linux
  LIBS =
  
  # Uncomment the next 2 lines to include support for Microsoft's
-@@ -62,13 +63,13 @@
- 
- HAS_SHADOW=y
- #USE_PAM=y
--#HAVE_INET6=y
-+HAVE_INET6=y
- 
- # Enable plugins
+@@ -68,7 +69,7 @@
  PLUGIN=y
  
  # Enable Microsoft proprietary Callback Control Protocol
@@ -56,7 +48,7 @@ diff -Nur ppp-2.4.4.orig/pppd/Makefile.linux ppp-2.4.4.make/pppd/Makefile.linux
  
  # Enable EAP SRP-SHA1 authentication (requires libsrp)
  #USE_SRP=y
-@@ -200,9 +201,7 @@
+@@ -208,9 +209,7 @@
  install: pppd
  	mkdir -p $(BINDIR) $(MANDIR)
  	$(EXTRAINSTALL)
