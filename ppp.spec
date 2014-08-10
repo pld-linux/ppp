@@ -16,13 +16,13 @@ Summary(ru.UTF-8):	Демон ppp
 Summary(tr.UTF-8):	PPP sunucu süreci
 Summary(zh_CN.UTF-8):	PPP 配置和管理软件包
 Name:		ppp
-Version:	2.4.6
+Version:	2.4.7
 Release:	1
 Epoch:		3
 License:	distributable
 Group:		Networking/Daemons
 Source0:	ftp://ftp.samba.org/pub/ppp/%{name}-%{version}.tar.gz
-# Source0-md5:	3434d2cc9327167a0723aaaa8670083b
+# Source0-md5:	78818f40e6d33a1d1de68a1551f6595a
 Source1:	%{name}.pamd
 Source2:	%{name}.pon
 Source3:	%{name}.poff
