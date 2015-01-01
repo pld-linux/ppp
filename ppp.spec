@@ -42,6 +42,7 @@ Patch9:		%{name}-lib64.patch
 #Patch10:	http://mppe-mppc.alphacron.de/%{name}-2.4.3-mppe-mppc-1.1.patch.gz
 Patch10:	%{name}-2.4.3-mppe-mppc-1.1.patch
 Patch11:	%{name}-ifpppstatsreq.patch
+Patch12:	%{name}-libx32.patch
 URL:		http://ppp.samba.org/
 BuildRequires:	libpcap-devel >= 2:0.8.1
 %{?with_pppoatm:BuildRequires:	linux-atm-devel}
@@ -129,6 +130,9 @@ Wtyczka PPPoATM dla pppd.
 %endif
 %patch10 -p1
 %patch11 -p1
+%if "%{_lib}" == "libx32"
+%patch12 -p1
+%endif
 
 # use headers from llh instead of older supplied by ppp, incompatible with current llh
 %{__rm} include/linux/*.h
