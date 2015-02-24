@@ -17,7 +17,7 @@ Summary(tr.UTF-8):	PPP sunucu süreci
 Summary(zh_CN.UTF-8):	PPP 配置和管理软件包
 Name:		ppp
 Version:	2.4.7
-Release:	1
+Release:	2
 Epoch:		3
 License:	distributable
 Group:		Networking/Daemons
