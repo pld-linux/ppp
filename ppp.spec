@@ -3,6 +3,7 @@
 # - check if %{_libdir}/pppd/%{version} path is needed, if not drop the symlink
 
 # Conditional build:
+%bcond_without	mppc	# without MPPC support
 %bcond_without	pppoatm	# without PPPoATM plugin (which requires kernel 2.4 and atm-devel)
 %bcond_without	srp	# without SRP support
 #
@@ -128,7 +129,9 @@ Wtyczka PPPoATM dla pppd.
 %if "%{_lib}" == "lib64"
 %patch9 -p1
 %endif
+%if %{with mppc}
 %patch10 -p1
+%endif
 %patch11 -p1
 %if "%{_lib}" == "libx32"
 %patch12 -p1
