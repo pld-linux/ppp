@@ -5,7 +5,7 @@
 # Conditional build:
 %bcond_without	mppc	# without MPPC support
 %bcond_without	pppoatm	# without PPPoATM plugin (which requires kernel 2.4 and atm-devel)
-%bcond_without	srp	# without SRP support
+%bcond_with	srp	# without SRP support
 #
 Summary:	ppp daemon package for Linux
 Summary(de.UTF-8):	ppp-Dämonpaket für Linux
@@ -18,7 +18,7 @@ Summary(tr.UTF-8):	PPP sunucu süreci
 Summary(zh_CN.UTF-8):	PPP 配置和管理软件包
 Name:		ppp
 Version:	2.4.7
-Release:	3
+Release:	4
 Epoch:		3
 License:	distributable
 Group:		Networking/Daemons
@@ -44,6 +44,8 @@ Patch9:		%{name}-lib64.patch
 Patch10:	%{name}-2.4.3-mppe-mppc-1.1.patch
 Patch11:	%{name}-ifpppstatsreq.patch
 Patch12:	%{name}-libx32.patch
+Patch13:	ppp-2.4.7-DES-openssl.patch
+Patch14:	ppp-linux48.patch
 URL:		http://ppp.samba.org/
 BuildRequires:	libpcap-devel >= 2:0.8.1
 %{?with_pppoatm:BuildRequires:	linux-atm-devel}
@@ -136,6 +138,8 @@ Wtyczka PPPoATM dla pppd.
 %if "%{_lib}" == "libx32"
 %patch12 -p1
 %endif
+%patch13 -p1
+%patch14 -p1
 
 # use headers from llh instead of older supplied by ppp, incompatible with current llh
 %{__rm} include/linux/*.h
