@@ -1,6 +1,5 @@
-diff -Nur ppp-2.4.4.orig/chat/Makefile.linux ppp-2.4.4.make/chat/Makefile.linux
---- ppp-2.4.4.orig/chat/Makefile.linux	2006-06-04 07:07:46.000000000 +0200
-+++ ppp-2.4.4.make/chat/Makefile.linux	2006-08-04 03:12:23.000000000 +0200
+--- ppp-2.4.8/chat/Makefile.linux.orig	2019-12-31 02:31:26.000000000 +0100
++++ ppp-2.4.8/chat/Makefile.linux	2020-04-15 21:37:01.126848887 +0200
 @@ -10,7 +10,7 @@
  CDEF4=	-DFNDELAY=O_NDELAY		# Old name value
  CDEFS=	$(CDEF1) $(CDEF2) $(CDEF3) $(CDEF4)
@@ -10,15 +9,7 @@ diff -Nur ppp-2.4.4.orig/chat/Makefile.linux ppp-2.4.4.make/chat/Makefile.linux
  CFLAGS=	$(COPTS) $(CDEFS)
  
  INSTALL= install
-@@ -18,14 +18,14 @@
- all:	chat
- 
- chat:	chat.o
--	$(CC) -o chat chat.o
-+	$(CC) $(OPTLDFLAGS) -o chat chat.o
- 
- chat.o:	chat.c
- 	$(CC) -c $(CFLAGS) -o chat.o chat.c
+@@ -25,7 +25,7 @@
  
  install: chat
  	mkdir -p $(BINDIR) $(MANDIR)
@@ -27,19 +18,18 @@ diff -Nur ppp-2.4.4.orig/chat/Makefile.linux ppp-2.4.4.make/chat/Makefile.linux
  	$(INSTALL) -c -m 644 chat.8 $(MANDIR)
  
  clean:
---- ppp-2.4.6/pppd/Makefile.linux.orig	2014-01-02 05:42:08.000000000 +0100
-+++ ppp-2.4.6/pppd/Makefile.linux	2014-02-16 12:21:01.278474470 +0100
-@@ -32,7 +32,8 @@
+--- ppp-2.4.8/pppd/Makefile.linux.orig	2019-12-31 02:31:26.000000000 +0100
++++ ppp-2.4.8/pppd/Makefile.linux	2020-04-16 06:28:33.674072135 +0200
+@@ -32,7 +32,7 @@
  
  # CC = gcc
  #
 -COPTS = -O2 -pipe -Wall -g
 +COPTS = $(OPT_FLAGS) -pipe -Wall -g
-+LDFLAGS += $(OPTLDFLAGS)
  LIBS =
  
- # Uncomment the next 2 lines to include support for Microsoft's
-@@ -68,7 +69,7 @@
+ # Uncomment the next line to include support for Microsoft's
+@@ -73,7 +73,7 @@
  PLUGIN=y
  
  # Enable Microsoft proprietary Callback Control Protocol
@@ -48,7 +38,16 @@ diff -Nur ppp-2.4.4.orig/chat/Makefile.linux ppp-2.4.4.make/chat/Makefile.linux
  
  # Enable EAP SRP-SHA1 authentication (requires libsrp)
  #USE_SRP=y
-@@ -208,9 +209,7 @@
+@@ -107,7 +107,7 @@
+ CFLAGS	+= -DUSE_SRP -DOPENSSL -I/usr/local/ssl/include
+ LIBS	+= -lsrp -L/usr/local/ssl/lib -lcrypto
+ TARGETS	+= srp-entry
+-EXTRAINSTALL = $(INSTALL) -s -c -m 555 srp-entry $(BINDIR)/srp-entry
++EXTRAINSTALL = $(INSTALL) -c -m 555 srp-entry $(BINDIR)/srp-entry
+ MANPAGES += srp-entry.8
+ EXTRACLEAN += srp-entry.o
+ NEEDDES=y
+@@ -219,9 +219,7 @@
  install: pppd
  	mkdir -p $(BINDIR) $(MANDIR)
  	$(EXTRAINSTALL)
@@ -59,34 +58,26 @@ diff -Nur ppp-2.4.4.orig/chat/Makefile.linux ppp-2.4.4.make/chat/Makefile.linux
  	$(INSTALL) -c -m 444 pppd.8 $(MANDIR)
  
  pppd: $(PPPDOBJS)
-diff -Nur ppp-2.4.4.orig/pppd/plugins/Makefile.linux ppp-2.4.4.make/pppd/plugins/Makefile.linux
---- ppp-2.4.4.orig/pppd/plugins/Makefile.linux	2006-06-04 07:04:14.000000000 +0200
-+++ ppp-2.4.4.make/pppd/plugins/Makefile.linux	2006-08-04 03:12:23.000000000 +0200
-@@ -1,7 +1,7 @@
+--- ppp-2.4.8/pppd/plugins/Makefile.linux.orig	2020-04-15 06:28:15.995570205 +0200
++++ ppp-2.4.8/pppd/plugins/Makefile.linux	2020-04-16 06:29:27.190448878 +0200
+@@ -1,5 +1,5 @@
  #CC	= gcc
 -COPTS	= -O2 -g
 +COPTS	= $(OPT_FLAGS) -g
  CFLAGS	= $(COPTS) -I.. -I../../include -fPIC
--LDFLAGS	= -shared
-+LDFLAGS	= $(OPTLDFLAGS) -shared
+ LDFLAGS_SHARED	= -shared
  INSTALL	= install
- 
- DESTDIR = $(INSTROOT)@DESTDIR@
-diff -Nur ppp-2.4.4.orig/pppd/plugins/pppoatm/Makefile.linux ppp-2.4.4.make/pppd/plugins/pppoatm/Makefile.linux
---- ppp-2.4.4.orig/pppd/plugins/pppoatm/Makefile.linux	2004-11-14 02:12:10.000000000 +0100
-+++ ppp-2.4.4.make/pppd/plugins/pppoatm/Makefile.linux	2006-08-04 03:15:04.000000000 +0200
-@@ -33,7 +33,7 @@
- all: $(PLUGIN)
- 
- $(PLUGIN): $(PLUGIN_OBJS)
--	$(CC) $(CFLAGS) -o $@ -shared $^ $(LIBS)
-+	$(CC) $(OPTLDFLAGS) $(CFLAGS) -o $@ -shared $^ $(LIBS)
- 
- install: all
- 	$(INSTALL) -d -m 755 $(LIBDIR)
-diff -Nur ppp-2.4.4.orig/pppd/plugins/radius/Makefile.linux ppp-2.4.4.make/pppd/plugins/radius/Makefile.linux
---- ppp-2.4.4.orig/pppd/plugins/radius/Makefile.linux	2006-06-04 07:04:14.000000000 +0200
-+++ ppp-2.4.4.make/pppd/plugins/radius/Makefile.linux	2006-08-04 03:13:58.000000000 +0200
+--- ppp-2.4.8/pppd/plugins/pppoatm/Makefile.linux.orig	2020-04-15 06:28:15.995570205 +0200
++++ ppp-2.4.8/pppd/plugins/pppoatm/Makefile.linux	2020-04-16 06:29:56.933621079 +0200
+@@ -1,5 +1,5 @@
+ #CC	= gcc
+-COPTS	= -O2 -g
++COPTS	= $(OPT_FLAGS) -g
+ CFLAGS	= $(COPTS) -I../.. -I../../../include -fPIC
+ LDFLAGS_SHARED	= -shared
+ INSTALL	= install
+--- ppp-2.4.8/pppd/plugins/radius/Makefile.linux.orig	2019-12-31 02:31:26.000000000 +0100
++++ ppp-2.4.8/pppd/plugins/radius/Makefile.linux	2020-04-16 06:30:55.366637854 +0200
 @@ -12,7 +12,7 @@
  INSTALL	= install
  
@@ -96,7 +87,7 @@ diff -Nur ppp-2.4.4.orig/pppd/plugins/radius/Makefile.linux ppp-2.4.4.make/pppd/
  
  # Uncomment the next line to include support for Microsoft's
  # MS-CHAP authentication protocol.
-@@ -36,20 +36,20 @@
+@@ -36,9 +36,9 @@
  
  install: all
  	$(INSTALL) -d -m 755 $(LIBDIR)
@@ -109,24 +100,9 @@ diff -Nur ppp-2.4.4.orig/pppd/plugins/radius/Makefile.linux ppp-2.4.4.make/pppd/
  	$(INSTALL) -c -m 444 pppd-radius.8 $(MANDIR)
  	$(INSTALL) -c -m 444 pppd-radattr.8 $(MANDIR)
  
- radius.so: radius.o libradiusclient.a
--	$(CC) -o radius.so -shared radius.o libradiusclient.a
-+	$(CC) $(OPTLDFLAGS) -o radius.so -shared radius.o libradiusclient.a
- 
- radattr.so: radattr.o
--	$(CC) -o radattr.so -shared radattr.o
-+	$(CC) $(OPTLDFLAGS) -o radattr.so -shared radattr.o
- 
- radrealms.so: radrealms.o
--	$(CC) -o radrealms.so -shared radrealms.o
-+	$(CC) $(OPTLDFLAGS) -o radrealms.so -shared radrealms.o
- 
- CLIENTOBJS = avpair.o buildreq.o config.o dict.o ip_util.o \
- 	clientid.o sendserver.o lock.o util.o md5.o
-diff -Nur ppp-2.4.4.orig/pppd/plugins/rp-pppoe/Makefile.linux ppp-2.4.4.make/pppd/plugins/rp-pppoe/Makefile.linux
---- ppp-2.4.4.orig/pppd/plugins/rp-pppoe/Makefile.linux	2006-06-04 07:07:46.000000000 +0200
-+++ ppp-2.4.4.make/pppd/plugins/rp-pppoe/Makefile.linux	2006-08-04 03:14:35.000000000 +0200
-@@ -25,12 +25,12 @@
+--- ppp-2.4.8/pppd/plugins/rp-pppoe/Makefile.linux.orig	2020-04-15 06:28:15.995570205 +0200
++++ ppp-2.4.8/pppd/plugins/rp-pppoe/Makefile.linux	2020-04-16 06:31:56.152975212 +0200
+@@ -25,7 +25,7 @@
  # Version is set ONLY IN THE MAKEFILE!  Don't delete this!
  RP_VERSION=3.8p
  
@@ -135,18 +111,7 @@ diff -Nur ppp-2.4.4.orig/pppd/plugins/rp-pppoe/Makefile.linux ppp-2.4.4.make/ppp
  CFLAGS=$(COPTS) -I../../../include '-DRP_VERSION="$(RP_VERSION)"'
  all: rp-pppoe.so pppoe-discovery
  
- pppoe-discovery: pppoe-discovery.o debug.o
--	$(CC) -o pppoe-discovery pppoe-discovery.o debug.o
-+	$(CC) $(OPTLDFLAGS) -o pppoe-discovery pppoe-discovery.o debug.o
- 
- pppoe-discovery.o: pppoe-discovery.c
- 	$(CC) $(CFLAGS) -c -o pppoe-discovery.o pppoe-discovery.c
-@@ -39,13 +39,13 @@
- 	$(CC) $(CFLAGS) -c -o debug.o debug.c
- 
- rp-pppoe.so: plugin.o discovery.o if.o common.o
--	$(CC) -o rp-pppoe.so -shared plugin.o discovery.o if.o common.o
-+	$(CC) $(OPTLDFLAGS) -o rp-pppoe.so -shared plugin.o discovery.o if.o common.o
+@@ -43,9 +43,9 @@
  
  install: all
  	$(INSTALL) -d -m 755 $(LIBDIR)
@@ -158,9 +123,8 @@ diff -Nur ppp-2.4.4.orig/pppd/plugins/rp-pppoe/Makefile.linux ppp-2.4.4.make/ppp
  
  clean:
  	rm -f *.o *.so pppoe-discovery
-diff -Nur ppp-2.4.4.orig/pppdump/Makefile.linux ppp-2.4.4.make/pppdump/Makefile.linux
---- ppp-2.4.4.orig/pppdump/Makefile.linux	2006-06-04 07:04:14.000000000 +0200
-+++ ppp-2.4.4.make/pppdump/Makefile.linux	2006-08-04 03:12:23.000000000 +0200
+--- ppp-2.4.8/pppdump/Makefile.linux.orig	2019-12-31 02:31:26.000000000 +0100
++++ ppp-2.4.8/pppdump/Makefile.linux	2020-04-16 06:32:37.886082458 +0200
 @@ -2,7 +2,7 @@
  BINDIR = $(DESTDIR)/sbin
  MANDIR = $(DESTDIR)/share/man/man8
@@ -170,24 +134,15 @@ diff -Nur ppp-2.4.4.orig/pppdump/Makefile.linux ppp-2.4.4.make/pppdump/Makefile.
  OBJS = pppdump.o bsd-comp.o deflate.o zlib.o
  
  INSTALL= install
-@@ -10,12 +10,12 @@
- all:	pppdump
- 
- pppdump: $(OBJS)
--	$(CC) -o pppdump $(OBJS)
-+	$(CC) $(OPTLDFLAGS) -o pppdump $(OBJS)
- 
- clean:
- 	rm -f pppdump $(OBJS) *~
+@@ -17,5 +17,5 @@
  
  install:
  	mkdir -p $(BINDIR) $(MANDIR)
 -	$(INSTALL) -s -c pppdump $(BINDIR)
 +	$(INSTALL) -c pppdump $(BINDIR)
  	$(INSTALL) -c -m 444 pppdump.8 $(MANDIR)
-diff -Nur ppp-2.4.4.orig/pppstats/Makefile.linux ppp-2.4.4.make/pppstats/Makefile.linux
---- ppp-2.4.4.orig/pppstats/Makefile.linux	2006-06-04 07:07:46.000000000 +0200
-+++ ppp-2.4.4.make/pppstats/Makefile.linux	2006-08-04 03:12:23.000000000 +0200
+--- ppp-2.4.8/pppstats/Makefile.linux.orig	2019-12-31 02:31:26.000000000 +0100
++++ ppp-2.4.8/pppstats/Makefile.linux	2020-04-16 06:33:05.635932124 +0200
 @@ -10,7 +10,7 @@
  PPPSTATOBJS = pppstats.o
  
@@ -197,7 +152,7 @@ diff -Nur ppp-2.4.4.orig/pppstats/Makefile.linux ppp-2.4.4.make/pppstats/Makefil
  COMPILE_FLAGS = -I../include
  LIBS =
  
-@@ -22,11 +22,11 @@
+@@ -22,7 +22,7 @@
  
  install: pppstats
  	-mkdir -p $(MANDIR)
@@ -206,8 +161,3 @@ diff -Nur ppp-2.4.4.orig/pppstats/Makefile.linux ppp-2.4.4.make/pppstats/Makefil
  	$(INSTALL) -c -m 444 pppstats.8 $(MANDIR)
  
  pppstats: $(PPPSTATSRCS)
--	$(CC) $(CFLAGS) -o pppstats pppstats.c $(LIBS)
-+	$(CC) $(CFLAGS) $(OPTLDFLAGS) -o pppstats pppstats.c $(LIBS)
- 
- clean:
- 	rm -f pppstats *~ #* core

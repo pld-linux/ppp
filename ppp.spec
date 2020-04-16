@@ -3,9 +3,9 @@
 # - check if %{_libdir}/pppd/%{version} path is needed, if not drop the symlink
 
 # Conditional build:
-%bcond_without	mppc	# without MPPC support
-%bcond_without	pppoatm	# without PPPoATM plugin (which requires kernel 2.4 and atm-devel)
-%bcond_with	srp	# without SRP support
+%bcond_without	mppc	# MPPC support
+%bcond_without	pppoatm	# PPPoATM plugin (requires kernel 2.4+ and atm-devel)
+%bcond_with	srp	# SRP support
 #
 Summary:	ppp daemon package for Linux
 Summary(de.UTF-8):	ppp-Dämonpaket für Linux
@@ -17,13 +17,13 @@ Summary(ru.UTF-8):	Демон ppp
 Summary(tr.UTF-8):	PPP sunucu süreci
 Summary(zh_CN.UTF-8):	PPP 配置和管理软件包
 Name:		ppp
-Version:	2.4.7
-Release:	4
+Version:	2.4.8
+Release:	1
 Epoch:		3
 License:	distributable
 Group:		Networking/Daemons
-Source0:	ftp://ftp.samba.org/pub/ppp/%{name}-%{version}.tar.gz
-# Source0-md5:	78818f40e6d33a1d1de68a1551f6595a
+Source0:	https://www.samba.org/ftp/ppp/%{name}-%{version}.tar.gz
+# Source0-md5:	2ca8342b9804be15103fd3f687af701c
 Source1:	%{name}.pamd
 Source2:	%{name}.pon
 Source3:	%{name}.poff
@@ -44,8 +44,6 @@ Patch9:		%{name}-lib64.patch
 Patch10:	%{name}-2.4.3-mppe-mppc-1.1.patch
 Patch11:	%{name}-ifpppstatsreq.patch
 Patch12:	%{name}-libx32.patch
-Patch13:	ppp-2.4.7-DES-openssl.patch
-Patch14:	ppp-linux48.patch
 URL:		http://ppp.samba.org/
 BuildRequires:	libpcap-devel >= 2:0.8.1
 %{?with_pppoatm:BuildRequires:	linux-atm-devel}
@@ -138,8 +136,6 @@ Wtyczka PPPoATM dla pppd.
 %if "%{_lib}" == "libx32"
 %patch12 -p1
 %endif
-%patch13 -p1
-%patch14 -p1
 
 # use headers from llh instead of older supplied by ppp, incompatible with current llh
 %{__rm} include/linux/*.h
@@ -153,7 +149,7 @@ Wtyczka PPPoATM dla pppd.
 	%{?with_srp:USE_SRP=y} \
 	OPT_FLAGS="%{rpmcflags} %{rpmcppflags}" \
 	COPTS="%{rpmcflags} %{rpmcppflags}" \
-	OPTLDFLAGS="%{rpmldflags}" \
+	LDFLAGS="%{rpmldflags}" \
 	CC="%{__cc}"
 
 %install
@@ -181,13 +177,13 @@ bzip2 -dc %{SOURCE4} | tar xf - -C $RPM_BUILD_ROOT%{_mandir}
 cp -p %{SOURCE5} $RPM_BUILD_ROOT/etc/logrotate.d/ppp
 > $RPM_BUILD_ROOT/var/log/ppp.log
 
-rm -f scripts/README
+%{__rm} scripts/README
 
 cp -p %{SOURCE1} $RPM_BUILD_ROOT/etc/pam.d/ppp
 
 cd $RPM_BUILD_ROOT%{_libdir}/pppd
 v=$(echo %{version}*)
-mv $v plugins
+%{__mv} $v plugins
 # not sure which path used, keep the old path for compat
 ln -s plugins $v
 
@@ -199,8 +195,8 @@ rm -rf $RPM_BUILD_ROOT
 if [ -d %{_libdir}/pppd/%{version} -a ! -L %{_libdir}/pppd/%{version} ]; then
 	set -e
 	rm -f %{_libdir}/pppd/plugins
-	mv %{_libdir}/pppd/{%{version},plugins}
-	ln -sn plugins %{_libdir}/pppd/%{version}
+	mv -f %{_libdir}/pppd/{%{version},plugins}
+	ln -snf plugins %{_libdir}/pppd/%{version}
 fi
 
 %files
