@@ -17,13 +17,13 @@ Summary(ru.UTF-8):	Демон ppp
 Summary(tr.UTF-8):	PPP sunucu süreci
 Summary(zh_CN.UTF-8):	PPP 配置和管理软件包
 Name:		ppp
-Version:	2.4.8
-Release:	1
+Version:	2.4.9
+Release:	0.1
 Epoch:		3
 License:	distributable
 Group:		Networking/Daemons
-Source0:	https://www.samba.org/ftp/ppp/%{name}-%{version}.tar.gz
-# Source0-md5:	2ca8342b9804be15103fd3f687af701c
+Source0:	https://download.samba.org/pub/ppp/%{name}-%{version}.tar.gz
+# Source0-md5:	c88153ae3d16ae114152cd3c15c7301d
 Source1:	%{name}.pamd
 Source2:	%{name}.pon
 Source3:	%{name}.poff
@@ -31,7 +31,6 @@ Source4:	http://www.mif.pg.gda.pl/homepages/ankry/man-PLD/%{name}-non-english-ma
 # Source4-md5:	3801b59005bef8f52856300fe3167a64
 Source5:	%{name}.logrotate
 Patch0:		%{name}-make.patch
-Patch1:		%{name}-expect.patch
 Patch2:		%{name}-debian_scripts.patch
 Patch3:		%{name}-static.patch
 Patch4:		%{name}-pidfile-owner.patch
@@ -44,7 +43,7 @@ Patch9:		%{name}-lib64.patch
 Patch10:	%{name}-2.4.3-mppe-mppc-1.1.patch
 Patch11:	%{name}-ifpppstatsreq.patch
 Patch12:	%{name}-libx32.patch
-URL:		http://ppp.samba.org/
+URL:		https://ppp.samba.org/
 BuildRequires:	libpcap-devel >= 2:0.8.1
 %{?with_pppoatm:BuildRequires:	linux-atm-devel}
 # <linux/if_pppol2tp.h>
@@ -118,8 +117,7 @@ Wtyczka PPPoATM dla pppd.
 
 %prep
 %setup -q
-%patch0 -p1
-%patch1 -p1
+#%patch0 -p1
 %patch2 -p1
 %patch3 -p1
 %patch4 -p1
@@ -130,7 +128,7 @@ Wtyczka PPPoATM dla pppd.
 %patch9 -p1
 %endif
 %if %{with mppc}
-%patch10 -p1
+#%patch10 -p1
 %endif
 %patch11 -p1
 %if "%{_lib}" == "libx32"
@@ -217,13 +215,14 @@ fi
 %dir %{_libdir}/pppd/plugins
 %attr(755,root,root) %{_libdir}/pppd/plugins/minconn.so
 %attr(755,root,root) %{_libdir}/pppd/plugins/openl2tp.so
-%attr(755,root,root) %{_libdir}/pppd/plugins/pppol2tp.so
 %attr(755,root,root) %{_libdir}/pppd/plugins/passprompt.so
 %attr(755,root,root) %{_libdir}/pppd/plugins/passwordfd.so
-%attr(755,root,root) %{_libdir}/pppd/plugins/rp-pppoe.so
+%attr(755,root,root) %{_libdir}/pppd/plugins/pppoe.so
+%attr(755,root,root) %{_libdir}/pppd/plugins/pppol2tp.so
 %attr(755,root,root) %{_libdir}/pppd/plugins/radattr.so
 %attr(755,root,root) %{_libdir}/pppd/plugins/radius.so
 %attr(755,root,root) %{_libdir}/pppd/plugins/radrealms.so
+%attr(755,root,root) %{_libdir}/pppd/plugins/rp-pppoe.so
 %attr(755,root,root) %{_libdir}/pppd/plugins/winbind.so
 
 # TODO: legacy, try to drop

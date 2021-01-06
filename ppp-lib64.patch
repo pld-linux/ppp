@@ -49,9 +49,8 @@ diff -urN ppp-2.4.4.org/pppd/plugins/radius/Makefile.linux ppp-2.4.4/pppd/plugin
  
  VERSION = $(shell awk -F '"' '/VERSION/ { print $$2; }' ../../patchlevel.h)
  
-diff -urN ppp-2.4.4.org/pppd/plugins/rp-pppoe/Makefile.linux ppp-2.4.4/pppd/plugins/rp-pppoe/Makefile.linux
---- ppp-2.4.4.org/pppd/plugins/rp-pppoe/Makefile.linux	2006-07-09 13:32:56.401363000 +0200
-+++ ppp-2.4.4/pppd/plugins/rp-pppoe/Makefile.linux	2006-07-09 13:33:28.523371000 +0200
+--- ppp-2.4.4.org/pppd/plugins/pppoe/Makefile.linux	2006-07-09 13:32:56.401363000 +0200
++++ ppp-2.4.4/pppd/plugins/pppoe/Makefile.linux	2006-07-09 13:33:28.523371000 +0200
 @@ -15,7 +15,7 @@
  
  DESTDIR = $(INSTROOT)@DESTDIR@
@@ -61,12 +60,12 @@ diff -urN ppp-2.4.4.org/pppd/plugins/rp-pppoe/Makefile.linux ppp-2.4.4/pppd/plug
  
  PPPDVERSION = $(shell awk -F '"' '/VERSION/ { print $$2; }' ../../patchlevel.h)
  
---- ppp-2.4.5/pppd/plugins/pppol2tp/Makefile.linux~	2010-05-23 20:09:01.894181407 +0200
-+++ ppp-2.4.5/pppd/plugins/pppol2tp/Makefile.linux	2010-05-23 20:10:05.074174654 +0200
-@@ -7,7 +7,7 @@
- #***********************************************************************
+--- ppp-2.4.9/pppd/plugins/pppol2tp/Makefile.linux~	2021-01-05 01:06:37.000000000 +0200
++++ ppp-2.4.9/pppd/plugins/pppol2tp/Makefile.linux	2021-01-06 12:47:44.418302301 +0200
+@@ -4,7 +4,7 @@
+ COPTS=@CFLAGS@
  
- DESTDIR = @DESTDIR@
+ DESTDIR = $(INSTROOT)/@DESTDIR@
 -LIBDIR = $(DESTDIR)/lib/pppd/$(VERSION)
 +LIBDIR = $(DESTDIR)/lib64/pppd/$(VERSION)
  
