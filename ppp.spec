@@ -117,7 +117,7 @@ Wtyczka PPPoATM dla pppd.
 
 %prep
 %setup -q
-#%patch0 -p1
+%patch0 -p1
 %patch2 -p1
 %patch3 -p1
 %patch4 -p1
@@ -128,7 +128,7 @@ Wtyczka PPPoATM dla pppd.
 %patch9 -p1
 %endif
 %if %{with mppc}
-#%patch10 -p1
+%patch10 -p1
 %endif
 %patch11 -p1
 %if "%{_lib}" == "libx32"
@@ -140,15 +140,15 @@ Wtyczka PPPoATM dla pppd.
 
 %build
 # note: not autoconf configure
-%configure
+%configure \
+	--cc="%{__cc}" \
+	--cflags="%{rpmcflags} %{rpmcppflags}"
+
 %{__make} \
 	%{?with_pppoatm:HAVE_LIBATM=y} \
 	USE_PAM=y \
 	%{?with_srp:USE_SRP=y} \
-	OPT_FLAGS="%{rpmcflags} %{rpmcppflags}" \
-	COPTS="%{rpmcflags} %{rpmcppflags}" \
-	LDFLAGS="%{rpmldflags}" \
-	CC="%{__cc}"
+	LDFLAGS="%{rpmldflags}"
 
 %install
 rm -rf $RPM_BUILD_ROOT

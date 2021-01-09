@@ -1,35 +1,6 @@
---- ppp-2.4.8/chat/Makefile.linux.orig	2019-12-31 02:31:26.000000000 +0100
-+++ ppp-2.4.8/chat/Makefile.linux	2020-04-15 21:37:01.126848887 +0200
-@@ -10,7 +10,7 @@
- CDEF4=	-DFNDELAY=O_NDELAY		# Old name value
- CDEFS=	$(CDEF1) $(CDEF2) $(CDEF3) $(CDEF4)
- 
--COPTS=	-O2 -g -pipe
-+COPTS=	$(OPT_FLAGS) -g -pipe
- CFLAGS=	$(COPTS) $(CDEFS)
- 
- INSTALL= install
-@@ -25,7 +25,7 @@
- 
- install: chat
- 	mkdir -p $(BINDIR) $(MANDIR)
--	$(INSTALL) -s -c chat $(BINDIR)
-+	$(INSTALL) -c chat $(BINDIR)
- 	$(INSTALL) -c -m 644 chat.8 $(MANDIR)
- 
- clean:
---- ppp-2.4.8/pppd/Makefile.linux.orig	2019-12-31 02:31:26.000000000 +0100
-+++ ppp-2.4.8/pppd/Makefile.linux	2020-04-16 06:28:33.674072135 +0200
-@@ -32,7 +32,7 @@
- 
- # CC = gcc
- #
--COPTS = -O2 -pipe -Wall -g
-+COPTS = $(OPT_FLAGS) -pipe -Wall -g
- LIBS =
- 
- # Uncomment the next line to include support for Microsoft's
-@@ -73,7 +73,7 @@
+--- ppp-2.4.9/pppd/Makefile.linux.orig	2021-01-05 00:06:37.000000000 +0100
++++ ppp-2.4.9/pppd/Makefile.linux	2021-01-09 10:15:09.846752928 +0100
+@@ -74,7 +74,7 @@
  PLUGIN=y
  
  # Enable Microsoft proprietary Callback Control Protocol
@@ -38,126 +9,16 @@
  
  # Enable EAP SRP-SHA1 authentication (requires libsrp)
  #USE_SRP=y
-@@ -107,7 +107,7 @@
- CFLAGS	+= -DUSE_SRP -DOPENSSL -I/usr/local/ssl/include
- LIBS	+= -lsrp -L/usr/local/ssl/lib -lcrypto
- TARGETS	+= srp-entry
--EXTRAINSTALL = $(INSTALL) -s -c -m 555 srp-entry $(BINDIR)/srp-entry
-+EXTRAINSTALL = $(INSTALL) -c -m 555 srp-entry $(BINDIR)/srp-entry
- MANPAGES += srp-entry.8
- EXTRACLEAN += srp-entry.o
- NEEDDES=y
-@@ -219,9 +219,7 @@
- install: pppd
- 	mkdir -p $(BINDIR) $(MANDIR)
- 	$(EXTRAINSTALL)
--	$(INSTALL) -s -c -m 555 pppd $(BINDIR)/pppd
--	if chgrp pppusers $(BINDIR)/pppd 2>/dev/null; then \
--	  chmod o-rx,u+s $(BINDIR)/pppd; fi
-+	$(INSTALL) -c -m 555 pppd $(BINDIR)/pppd
- 	$(INSTALL) -c -m 444 pppd.8 $(MANDIR)
+--- ppp-2.4.9/configure.orig	2021-01-05 00:06:37.000000000 +0100
++++ ppp-2.4.9/configure	2021-01-09 19:19:54.306352685 +0100
+@@ -122,8 +122,8 @@
+     if [ -f $1 ]; then
+ 	echo "  $2 <= $1"
+ 	sed -e "s,@DESTDIR@,$DESTDIR,g" -e "s,@SYSCONF@,$SYSCONF,g" \
+-	    -e "s,@CROSS_COMPILE@,$CROSS_COMPILE,g" -e "s,@CC@,$CC,g" \
+-	    -e "s,@CFLAGS@,$CFLAGS,g" $1 >$2
++	    -e "s,@CROSS_COMPILE@,$CROSS_COMPILE,g" -e "s|@CC@|$CC|g" \
++	    -e "s|@CFLAGS@|$CFLAGS|g" $1 >$2
+     fi
+ }
  
- pppd: $(PPPDOBJS)
---- ppp-2.4.8/pppd/plugins/Makefile.linux.orig	2020-04-15 06:28:15.995570205 +0200
-+++ ppp-2.4.8/pppd/plugins/Makefile.linux	2020-04-16 06:29:27.190448878 +0200
-@@ -1,5 +1,5 @@
- #CC	= gcc
--COPTS	= -O2 -g
-+COPTS	= $(OPT_FLAGS) -g
- CFLAGS	= $(COPTS) -I.. -I../../include -fPIC
- LDFLAGS_SHARED	= -shared
- INSTALL	= install
---- ppp-2.4.8/pppd/plugins/pppoatm/Makefile.linux.orig	2020-04-15 06:28:15.995570205 +0200
-+++ ppp-2.4.8/pppd/plugins/pppoatm/Makefile.linux	2020-04-16 06:29:56.933621079 +0200
-@@ -1,5 +1,5 @@
- #CC	= gcc
--COPTS	= -O2 -g
-+COPTS	= $(OPT_FLAGS) -g
- CFLAGS	= $(COPTS) -I../.. -I../../../include -fPIC
- LDFLAGS_SHARED	= -shared
- INSTALL	= install
---- ppp-2.4.8/pppd/plugins/radius/Makefile.linux.orig	2019-12-31 02:31:26.000000000 +0100
-+++ ppp-2.4.8/pppd/plugins/radius/Makefile.linux	2020-04-16 06:30:55.366637854 +0200
-@@ -12,7 +12,7 @@
- INSTALL	= install
- 
- PLUGIN=radius.so radattr.so radrealms.so
--CFLAGS=-I. -I../.. -I../../../include -O2 -fPIC -DRC_LOG_FACILITY=LOG_DAEMON
-+CFLAGS=-I. -I../.. -I../../../include $(OPT_FLAGS) -fPIC -DRC_LOG_FACILITY=LOG_DAEMON
- 
- # Uncomment the next line to include support for Microsoft's
- # MS-CHAP authentication protocol.
-@@ -36,9 +36,9 @@
- 
- install: all
- 	$(INSTALL) -d -m 755 $(LIBDIR)
--	$(INSTALL) -s -c -m 755 radius.so $(LIBDIR)
--	$(INSTALL) -s -c -m 755 radattr.so $(LIBDIR)
--	$(INSTALL) -s -c -m 755 radrealms.so $(LIBDIR)
-+	$(INSTALL) -c -m 755 radius.so $(LIBDIR)
-+	$(INSTALL) -c -m 755 radattr.so $(LIBDIR)
-+	$(INSTALL) -c -m 755 radrealms.so $(LIBDIR)
- 	$(INSTALL) -c -m 444 pppd-radius.8 $(MANDIR)
- 	$(INSTALL) -c -m 444 pppd-radattr.8 $(MANDIR)
- 
---- ppp-2.4.8/pppd/plugins/rp-pppoe/Makefile.linux.orig	2020-04-15 06:28:15.995570205 +0200
-+++ ppp-2.4.8/pppd/plugins/rp-pppoe/Makefile.linux	2020-04-16 06:31:56.152975212 +0200
-@@ -25,7 +25,7 @@
- # Version is set ONLY IN THE MAKEFILE!  Don't delete this!
- RP_VERSION=3.8p
- 
--COPTS=-O2 -g
-+COPTS=$(OPT_FLAGS) -g
- CFLAGS=$(COPTS) -I../../../include '-DRP_VERSION="$(RP_VERSION)"'
- all: rp-pppoe.so pppoe-discovery
- 
-@@ -43,9 +43,9 @@
- 
- install: all
- 	$(INSTALL) -d -m 755 $(LIBDIR)
--	$(INSTALL) -s -c -m 4550 rp-pppoe.so $(LIBDIR)
-+	$(INSTALL) -c -m 4550 rp-pppoe.so $(LIBDIR)
- 	$(INSTALL) -d -m 755 $(BINDIR)
--	$(INSTALL) -s -c -m 555 pppoe-discovery $(BINDIR)
-+	$(INSTALL) -c -m 555 pppoe-discovery $(BINDIR)
- 
- clean:
- 	rm -f *.o *.so pppoe-discovery
---- ppp-2.4.8/pppdump/Makefile.linux.orig	2019-12-31 02:31:26.000000000 +0100
-+++ ppp-2.4.8/pppdump/Makefile.linux	2020-04-16 06:32:37.886082458 +0200
-@@ -2,7 +2,7 @@
- BINDIR = $(DESTDIR)/sbin
- MANDIR = $(DESTDIR)/share/man/man8
- 
--CFLAGS= -O -I../include/net
-+CFLAGS= $(OPT_FLAGS) -I../include/net
- OBJS = pppdump.o bsd-comp.o deflate.o zlib.o
- 
- INSTALL= install
-@@ -17,5 +17,5 @@
- 
- install:
- 	mkdir -p $(BINDIR) $(MANDIR)
--	$(INSTALL) -s -c pppdump $(BINDIR)
-+	$(INSTALL) -c pppdump $(BINDIR)
- 	$(INSTALL) -c -m 444 pppdump.8 $(MANDIR)
---- ppp-2.4.8/pppstats/Makefile.linux.orig	2019-12-31 02:31:26.000000000 +0100
-+++ ppp-2.4.8/pppstats/Makefile.linux	2020-04-16 06:33:05.635932124 +0200
-@@ -10,7 +10,7 @@
- PPPSTATOBJS = pppstats.o
- 
- #CC = gcc
--COPTS = -O
-+COPTS = $(OPT_FLAGS)
- COMPILE_FLAGS = -I../include
- LIBS =
- 
-@@ -22,7 +22,7 @@
- 
- install: pppstats
- 	-mkdir -p $(MANDIR)
--	$(INSTALL) -s -c pppstats $(BINDIR)
-+	$(INSTALL) -c pppstats $(BINDIR)
- 	$(INSTALL) -c -m 444 pppstats.8 $(MANDIR)
- 
- pppstats: $(PPPSTATSRCS)
