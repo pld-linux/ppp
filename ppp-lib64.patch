@@ -23,13 +23,13 @@ diff -urN ppp-2.4.4.org/pppd/plugins/Makefile.linux ppp-2.4.4/pppd/plugins/Makef
 -LIBDIR = $(DESTDIR)/lib/pppd/$(VERSION)
 +LIBDIR = $(DESTDIR)/lib64/pppd/$(VERSION)
  
- SUBDIRS := rp-pppoe pppoatm
- # Uncomment the next line to include the radius authentication plugin
+ CFLAGS	= $(COPTS) -I.. -I../../include -fPIC
+ LDFLAGS_SHARED	= -shared
 diff -urN ppp-2.4.4.org/pppd/plugins/pppoatm/Makefile.linux ppp-2.4.4/pppd/plugins/pppoatm/Makefile.linux
 --- ppp-2.4.4.org/pppd/plugins/pppoatm/Makefile.linux	2004-11-14 02:12:10.000000000 +0100
 +++ ppp-2.4.4/pppd/plugins/pppoatm/Makefile.linux	2006-07-09 13:33:28.523371000 +0200
 @@ -7,7 +7,7 @@
- #***********************************************************************
+ COPTS=@CFLAGS@
  
  DESTDIR = $(INSTROOT)@DESTDIR@
 -LIBDIR = $(DESTDIR)/lib/pppd/$(VERSION)
