@@ -29,8 +29,8 @@ diff -ruN ppp-2.4.3.orig/include/linux/ppp-comp.h ppp-2.4.3/include/linux/ppp-co
  	/* Update state for an incompressible packet received */
  	void	(*incomp) (void *state, unsigned char *ibuf, int icnt);
 @@ -288,6 +288,33 @@
- 	    opts |= MPPE_OPT_UNKNOWN;		\
-     } while (/* CONSTCOND */ 0)
+ #define CI_MPPE			18	/* config option for MPPE */
+ #define CILEN_MPPE		6	/* length of config option */
  
 +/* MPPE/MPPC definitions by J.D.*/
 +#define MPPE_STATELESS          MPPE_H_BIT	/* configuration bit H */
@@ -66,8 +66,8 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 --- ppp-2.4.3.orig/include/net/ppp-comp.h	2002-12-06 10:49:15.000000000 +0100
 +++ ppp-2.4.3/include/net/ppp-comp.h	2004-11-21 13:54:09.000000000 +0100
 @@ -255,6 +255,33 @@
- 	    opts |= MPPE_OPT_UNKNOWN;		\
-     } while (/* CONSTCOND */ 0)
+ #define CI_MPPE			18	/* config option for MPPE */
+ #define CILEN_MPPE		6	/* length of config option */
  
 +/* MPPE/MPPC definitions by J.D.*/
 +#define MPPE_STATELESS          MPPE_H_BIT	/* configuration bit H */

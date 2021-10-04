@@ -18,7 +18,7 @@ Summary(tr.UTF-8):	PPP sunucu süreci
 Summary(zh_CN.UTF-8):	PPP 配置和管理软件包
 Name:		ppp
 Version:	2.4.9
-Release:	2
+Release:	3
 Epoch:		3
 License:	distributable
 Group:		Networking/Daemons
@@ -34,7 +34,6 @@ Patch0:		%{name}-make.patch
 Patch2:		%{name}-debian_scripts.patch
 Patch3:		%{name}-static.patch
 Patch4:		%{name}-pidfile-owner.patch
-Patch6:		%{name}-rp-pppoe-macaddr.patch
 #Patch7:		http://public.planetmirror.com/pub/mppe/pppd-2.4.2-chapms-strip-domain.patch.gz
 Patch7:		pppd-2.4.2-chapms-strip-domain.patch
 Patch8:		%{name}-openssl.patch
@@ -121,7 +120,6 @@ Wtyczka PPPoATM dla pppd.
 %patch2 -p1
 %patch3 -p1
 %patch4 -p1
-%patch6 -p1
 %patch7 -p1
 %patch8 -p1
 %if "%{_lib}" == "lib64"

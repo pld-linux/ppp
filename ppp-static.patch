@@ -50,7 +50,7 @@
 +++ ppp-2.3.7.new/pppd/ipcp.h	Wed Apr 28 20:27:15 1999
 @@ -70,4 +70,10 @@
  
- char *ip_ntoa __P((u_int32_t));
+ char *ip_ntoa(u_int32_t);
  
 +/* Added to allow static and dynamic ip(s).
 + * Holds the static ip from pap-secrets

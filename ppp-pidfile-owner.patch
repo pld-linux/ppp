@@ -3,7 +3,7 @@ diff -Naur ppp-2.4.1/pppd/main.c ppp-2.4.1-p/pppd/main.c
 +++ ppp-2.4.1-p/pppd/main.c	Thu May 16 11:36:43 2002
 @@ -795,6 +795,11 @@
      if ((pidfile = fopen(pidfilename, "w")) != NULL) {
- 	fprintf(pidfile, "%d\n", getpid());
+ 	fprintf(pidfile, "%d\n", pid);
  	(void) fclose(pidfile);
 +	if (getuid() != geteuid()) {
 +		if ((chown(pidfilename, getuid(), -1)) < 0) {

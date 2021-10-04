@@ -23,7 +23,7 @@ diff -uNra ppp-2.4.2/pppd/chap-new.c ppp-2.4.2-new/pppd/chap-new.c
 +++ ppp-2.4.2-new/pppd/chap-new.c	Sat Dec 20 19:17:42 2003
 @@ -396,6 +396,14 @@
  	int ok;
- 	char secret[MAXSECRETLEN];
+ 	unsigned char secret[MAXSECRETLEN];
  	int secret_len;
 +#ifdef CHAPMS
 +	char nametmp[MAXNAMELEN];
@@ -35,18 +35,18 @@ diff -uNra ppp-2.4.2/pppd/chap-new.c ppp-2.4.2-new/pppd/chap-new.c
 +#endif
  
  	/* Get the secret that the peer is supposed to know */
- 	if (!get_secret(0, name, ourname, secret, &secret_len, 1)) {
+ 	if (!get_secret(0, name, ourname, (char *)secret, &secret_len, 1)) {
 diff -uNra ppp-2.4.2/pppd/pppd.h ppp-2.4.2-new/pppd/pppd.h
 --- ppp-2.4.2/pppd/pppd.h	Mon Apr  7 01:01:46 2003
 +++ ppp-2.4.2-new/pppd/pppd.h	Sat Dec 20 18:58:23 2003
 @@ -310,6 +310,10 @@
- extern bool	dump_options;	/* print out option values */
  extern bool	dryrun;		/* check everything, print options, exit */
+ extern int	child_wait;	/* # seconds to wait for children at end */
  
 +#ifdef CHAPMS
 +extern bool	ms_ignore_domain; /* Ignore any MS domain prefix */
 +#endif
 +
- #ifdef MAXOCTETS
- extern unsigned int maxoctets;	     /* Maximum octetes per session (in bytes) */
- extern int       maxoctets_dir;      /* Direction :
+ #ifdef USE_EAPTLS
+ extern char	*crl_dir;
+ extern char	*crl_file;
