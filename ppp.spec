@@ -32,7 +32,6 @@ Source4:	http://www.mif.pg.gda.pl/homepages/ankry/man-PLD/%{name}-non-english-ma
 Source5:	%{name}.logrotate
 Patch0:		%{name}-make.patch
 Patch2:		%{name}-debian_scripts.patch
-Patch3:		%{name}-static.patch
 Patch4:		%{name}-pidfile-owner.patch
 #Patch7:		http://public.planetmirror.com/pub/mppe/pppd-2.4.2-chapms-strip-domain.patch.gz
 Patch7:		pppd-2.4.2-chapms-strip-domain.patch
@@ -118,7 +117,6 @@ Wtyczka PPPoATM dla pppd.
 %setup -q
 %patch0 -p1
 %patch2 -p1
-%patch3 -p1
 %patch4 -p1
 %patch7 -p1
 %patch8 -p1
