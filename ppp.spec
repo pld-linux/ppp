@@ -3,7 +3,7 @@
 # - check if %{_libdir}/pppd/%{version} path is needed, if not drop the symlink
 
 # Conditional build:
-%bcond_without	mppc	# MPPC support
+%bcond_with	mppc	# MPPC/MPPE-56/LZS support (upstream-incompatible configuration, support not in mainline/PLD kernel)
 %bcond_without	pppoatm	# PPPoATM plugin (requires kernel 2.4+ and atm-devel)
 %bcond_with	srp	# SRP support
 %bcond_without	systemd	# systemd notifications
