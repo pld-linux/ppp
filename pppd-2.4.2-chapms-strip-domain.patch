@@ -1,15 +1,14 @@
-diff -uNra ppp-2.4.2/pppd/auth.c ppp-2.4.2-new/pppd/auth.c
---- ppp-2.4.2/pppd/auth.c	Thu Jun 12 00:56:26 2003
-+++ ppp-2.4.2-new/pppd/auth.c	Sat Dec 20 19:21:38 2003
-@@ -232,6 +232,7 @@
- #ifdef CHAPMS
+--- ppp-2.5.0/pppd/auth.c.orig	2023-03-25 05:38:30.000000000 +0100
++++ ppp-2.5.0/pppd/auth.c	2023-08-21 06:29:42.669826958 +0200
+@@ -242,6 +242,7 @@ bool refuse_eap = 0;		/* Don't wanna aut
+ #ifdef PPP_WITH_CHAPMS
  bool refuse_mschap = 0;		/* Don't wanna auth. ourselves with MS-CHAP */
  bool refuse_mschap_v2 = 0;	/* Don't wanna auth. ourselves with MS-CHAPv2 */
 +bool ms_ignore_domain = 0;	/* Ignore any MS domain prefix */
  #else
  bool refuse_mschap = 1;		/* Don't wanna auth. ourselves with MS-CHAP */
  bool refuse_mschap_v2 = 1;	/* Don't wanna auth. ourselves with MS-CHAPv2 */
-@@ -319,6 +320,8 @@
+@@ -354,6 +355,8 @@ struct option auth_options[] = {
        "Require MS-CHAPv2 authentication from peer",
        OPT_ALIAS | OPT_PRIOSUB | OPT_A2OR | MDTYPE_MICROSOFT_V2,
        &lcp_wantoptions[0].chap_mdtype },
@@ -18,14 +17,13 @@ diff -uNra ppp-2.4.2/pppd/auth.c ppp-2.4.2-new/pppd/auth.c
  #endif
  
      { "refuse-pap", o_bool, &refuse_pap,
-diff -uNra ppp-2.4.2/pppd/chap-new.c ppp-2.4.2-new/pppd/chap-new.c
---- ppp-2.4.2/pppd/chap-new.c	Thu Nov 27 22:22:36 2003
-+++ ppp-2.4.2-new/pppd/chap-new.c	Sat Dec 20 19:17:42 2003
-@@ -396,6 +396,14 @@
+--- ppp-2.5.0/pppd/chap.c.orig	2023-08-21 06:25:48.917759969 +0200
++++ ppp-2.5.0/pppd/chap.c	2023-08-21 06:25:52.174408993 +0200
+@@ -453,6 +453,14 @@ chap_verify_response(char *name, char *o
  	int ok;
  	unsigned char secret[MAXSECRETLEN];
  	int secret_len;
-+#ifdef CHAPMS
++#ifdef PPP_WITH_CHAPMS
 +	char nametmp[MAXNAMELEN];
 +
 +	if (ms_ignore_domain && strrchr(name, '\\')) {
@@ -36,17 +34,16 @@ diff -uNra ppp-2.4.2/pppd/chap-new.c ppp-2.4.2-new/pppd/chap-new.c
  
  	/* Get the secret that the peer is supposed to know */
  	if (!get_secret(0, name, ourname, (char *)secret, &secret_len, 1)) {
-diff -uNra ppp-2.4.2/pppd/pppd.h ppp-2.4.2-new/pppd/pppd.h
---- ppp-2.4.2/pppd/pppd.h	Mon Apr  7 01:01:46 2003
-+++ ppp-2.4.2-new/pppd/pppd.h	Sat Dec 20 18:58:23 2003
-@@ -310,6 +310,10 @@
- extern bool	dryrun;		/* check everything, print options, exit */
- extern int	child_wait;	/* # seconds to wait for children at end */
+--- ppp-2.5.0/pppd/pppd-private.h.orig	2022-12-30 02:12:39.000000000 +0100
++++ ppp-2.5.0/pppd/pppd-private.h	2023-08-21 06:28:01.690374011 +0200
+@@ -207,6 +207,10 @@ extern int  privileged_option;  /* set i
+ extern char *option_source;     /* string saying where the option came from */
+ extern int  option_priority;    /* priority of current options */
  
-+#ifdef CHAPMS
++#ifdef PPP_WITH_CHAPMS
 +extern bool	ms_ignore_domain; /* Ignore any MS domain prefix */
 +#endif
 +
- #ifdef USE_EAPTLS
- extern char	*crl_dir;
- extern char	*crl_file;
+ #ifdef PPP_WITH_IPV6CP
+ extern char	path_ipv6up[]; /* pathname of ipv6-up script */
+ extern char	path_ipv6down[]; /* pathname of ipv6-down script */

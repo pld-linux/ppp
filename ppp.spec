@@ -6,6 +6,7 @@
 %bcond_without	mppc	# MPPC support
 %bcond_without	pppoatm	# PPPoATM plugin (requires kernel 2.4+ and atm-devel)
 %bcond_with	srp	# SRP support
+%bcond_without	systemd	# systemd notifications
 #
 Summary:	ppp daemon package for Linux
 Summary(de.UTF-8):	ppp-Dämonpaket für Linux
@@ -17,38 +18,37 @@ Summary(ru.UTF-8):	Демон ppp
 Summary(tr.UTF-8):	PPP sunucu süreci
 Summary(zh_CN.UTF-8):	PPP 配置和管理软件包
 Name:		ppp
-Version:	2.4.9
-Release:	4
+Version:	2.5.0
+Release:	1
 Epoch:		3
 License:	distributable
 Group:		Networking/Daemons
 Source0:	https://download.samba.org/pub/ppp/%{name}-%{version}.tar.gz
-# Source0-md5:	c88153ae3d16ae114152cd3c15c7301d
+# Source0-md5:	ce5fd7b9f6e1095ae6c0c11365c444eb
 Source1:	%{name}.pamd
 Source2:	%{name}.pon
 Source3:	%{name}.poff
 Source4:	http://www.mif.pg.gda.pl/homepages/ankry/man-PLD/%{name}-non-english-man-pages.tar.bz2
 # Source4-md5:	3801b59005bef8f52856300fe3167a64
 Source5:	%{name}.logrotate
-Patch0:		%{name}-make.patch
 Patch2:		%{name}-debian_scripts.patch
 Patch4:		%{name}-pidfile-owner.patch
-#Patch7:		http://public.planetmirror.com/pub/mppe/pppd-2.4.2-chapms-strip-domain.patch.gz
+# http://public.planetmirror.com/pub/mppe/pppd-2.4.2-chapms-strip-domain.patch.gz
 Patch7:		pppd-2.4.2-chapms-strip-domain.patch
-Patch8:		%{name}-openssl.patch
-Patch9:		%{name}-lib64.patch
-#Patch10:	http://mppe-mppc.alphacron.de/%{name}-2.4.3-mppe-mppc-1.1.patch.gz
+# http://mppe-mppc.alphacron.de/%{name}-2.4.3-mppe-mppc-1.1.patch.gz
 Patch10:	%{name}-2.4.3-mppe-mppc-1.1.patch
-Patch11:	%{name}-ifpppstatsreq.patch
-Patch12:	%{name}-libx32.patch
 URL:		https://ppp.samba.org/
+BuildRequires:	autoconf >= 2.69
+BuildRequires:	automake
 BuildRequires:	libpcap-devel >= 2:0.8.1
+BuildRequires:	libtool >= 2:2
 %{?with_pppoatm:BuildRequires:	linux-atm-devel}
 # <linux/if_pppol2tp.h>
 BuildRequires:	linux-libc-headers >= 7:2.6.23
 BuildRequires:	openssl-devel
 BuildRequires:	pam-devel
 %{?with_srp:BuildRequires:	srp-devel}
+%{?with_systemd:BuildRequires:	systemd-devel >= 1:209}
 Requires:	pam >= 0.77.3
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
@@ -115,36 +115,36 @@ Wtyczka PPPoATM dla pppd.
 
 %prep
 %setup -q
-%patch0 -p1
 %patch2 -p1
 %patch4 -p1
 %patch7 -p1
-%patch8 -p1
-%if "%{_lib}" == "lib64"
-%patch9 -p1
-%endif
 %if %{with mppc}
 %patch10 -p1
-%endif
-%patch11 -p1
-%if "%{_lib}" == "libx32"
-%patch12 -p1
 %endif
 
 # use headers from llh instead of older supplied by ppp, incompatible with current llh
 %{__rm} include/linux/*.h
 
-%build
-# note: not autoconf configure
-%configure \
-	--cc="%{__cc}" \
-	--cflags="%{rpmcflags} %{rpmcppflags}"
+%{__sed} -i -e 's,/usr/lib64/openssl/engines/,/%{_lib}/engines-3/,' \
+	-e 's,/usr/lib64/,%{_libdir}/,' etc.ppp/openssl.cnf
 
-%{__make} \
-	%{?with_pppoatm:HAVE_LIBATM=y} \
-	USE_PAM=y \
-	%{?with_srp:USE_SRP=y} \
-	LDFLAGS="%{rpmldflags}"
+%build
+%{__libtoolize}
+%{__aclocal} -I m4
+%{__autoconf}
+%{__autoheader}
+%{__automake}
+%configure \
+	--enable-cbcp \
+	--enable-mslanman \
+	--enable-multilink \
+	--disable-silent-rules \
+	%{?with_systemd:--enable-systemd} \
+	%{!?with_pppoatm:--without-atm} \
+	--with-plugin-dir=%{_libdir}/pppd/plugins \
+	%{!?with_srp:--without-srp}
+
+%{__make}
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -152,9 +152,9 @@ install -d $RPM_BUILD_ROOT{%{_bindir},%{_sysconfdir}/ppp/peers,/var/log} \
 	$RPM_BUILD_ROOT/etc/{pam.d,logrotate.d}
 
 %{__make} install \
-	%{?with_pppoatm:HAVE_LIBATM=y} \
-	%{?with_srp:USE_SRP=y} \
-	DESTDIR=$RPM_BUILD_ROOT%{_prefix}
+	DESTDIR=$RPM_BUILD_ROOT
+
+%{__rm} $RPM_BUILD_ROOT%{_libdir}/pppd/plugins/*.la
 
 install -p %{SOURCE2} $RPM_BUILD_ROOT%{_bindir}/pon
 install -p %{SOURCE3} $RPM_BUILD_ROOT%{_bindir}/poff
@@ -171,15 +171,11 @@ bzip2 -dc %{SOURCE4} | tar xf - -C $RPM_BUILD_ROOT%{_mandir}
 cp -p %{SOURCE5} $RPM_BUILD_ROOT/etc/logrotate.d/ppp
 > $RPM_BUILD_ROOT/var/log/ppp.log
 
-%{__rm} scripts/README
-
 cp -p %{SOURCE1} $RPM_BUILD_ROOT/etc/pam.d/ppp
 
-cd $RPM_BUILD_ROOT%{_libdir}/pppd
-v=$(echo %{version}*)
-%{__mv} $v plugins
-# not sure which path used, keep the old path for compat
-ln -s plugins $v
+[ ! -d example-scripts ] || %{__rm} -r example-scripts  # make install reentrant
+cp -pr scripts example-scripts
+%{__rm} example-scripts/Makefile*
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -195,9 +191,7 @@ fi
 
 %files
 %defattr(644,root,root,755)
-%doc README.linux debian/README.debian scripts
-%doc debian/win95.ppp README.MSCHAP8* FAQ debian/ppp-2.3.0.STATIC.README
-%doc README.MPPE README.pppoe README.cbcp README.pwfd
+%doc Changes-2.3 FAQ NEWS README README.{MPPE,MSCHAP80,MSCHAP81,cbcp,eap-tls,linux,pppoe,pppol2tp,pwfd} %{?with_srp:README.eap-srp} SETUP debian/{README.debian,win95.ppp} example-scripts
 %attr(755,root,root) %{_bindir}/plog
 %attr(755,root,root) %{_bindir}/poff
 %attr(755,root,root) %{_bindir}/pon
@@ -218,17 +212,14 @@ fi
 %attr(755,root,root) %{_libdir}/pppd/plugins/radattr.so
 %attr(755,root,root) %{_libdir}/pppd/plugins/radius.so
 %attr(755,root,root) %{_libdir}/pppd/plugins/radrealms.so
-%attr(755,root,root) %{_libdir}/pppd/plugins/rp-pppoe.so
 %attr(755,root,root) %{_libdir}/pppd/plugins/winbind.so
-
-# TODO: legacy, try to drop
-%{_libdir}/pppd/%{version}
 
 %{_mandir}/man8/chat.8*
 %{_mandir}/man8/pppd.8*
 %{_mandir}/man8/pppd-radattr.8*
 %{_mandir}/man8/pppd-radius.8*
 %{_mandir}/man8/pppdump.8*
+%{_mandir}/man8/pppoe-discovery.8*
 %{_mandir}/man8/pppstats.8*
 %lang(fr) %{_mandir}/fr/man8/*
 %lang(ja) %{_mandir}/ja/man8/*
@@ -237,6 +228,9 @@ fi
 
 %attr(600,root,root) %config(missingok,noreplace) %verify(not md5 mtime size) %{_sysconfdir}/ppp/chap-secrets
 %attr(600,root,root) %config(missingok,noreplace) %verify(not md5 mtime size) %{_sysconfdir}/ppp/pap-secrets
+%attr(600,root,root) %config(missingok,noreplace) %verify(not md5 mtime size) %{_sysconfdir}/ppp/eaptls-client
+%attr(600,root,root) %config(missingok,noreplace) %verify(not md5 mtime size) %{_sysconfdir}/ppp/eaptls-server
+%attr(600,root,root) %config(missingok,noreplace) %verify(not md5 mtime size) %{_sysconfdir}/ppp/openssl.cnf
 %config(missingok,noreplace) %verify(not md5 mtime size) %{_sysconfdir}/ppp/options
 %config(missingok,noreplace) %verify(not md5 mtime size) %{_sysconfdir}/ppp/options.ttyXX
 %dir %{_sysconfdir}/ppp/peers
@@ -246,7 +240,9 @@ fi
 
 %files plugin-devel
 %defattr(644,root,root,755)
+%doc PLUGINS
 %{_includedir}/pppd
+%{_pkgconfigdir}/pppd.pc
 
 %if %{with pppoatm}
 %files plugin-pppoatm

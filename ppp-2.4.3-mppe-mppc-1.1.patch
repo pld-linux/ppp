@@ -99,25 +99,31 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
  /*
   * Definitions for other, as yet unsupported, compression methods.
   */
---- ppp-2.4.9/pppd/ccp.c.orig	2021-01-05 00:06:37.000000000 +0100
-+++ ppp-2.4.9/pppd/ccp.c	2021-01-09 19:01:16.225743180 +0100
-@@ -61,12 +61,10 @@ static int setdeflate (char **);
- static char bsd_value[8];
- static char deflate_value[8];
+--- ppp-2.5.0/pppd/ccp.c.orig	2022-12-30 02:12:39.000000000 +0100
++++ ppp-2.5.0/pppd/ccp.c	2023-09-03 14:16:15.333281107 +0200
+@@ -36,11 +36,7 @@
  
--/*
-- * Option variables.
-- */
- #ifdef MPPE
--bool refuse_mppe_stateful = 1;		/* Allow stateful mode? */
+ #include <stdlib.h>
+ #include <string.h>
+-#if defined(SOL2)
+ #include <net/ppp-comp.h>
+-#else
+-#include <linux/ppp-comp.h>
 -#endif
+ 
+ #include "pppd-private.h"
+ #include "options.h"
+@@ -73,7 +73,8 @@ static char deflate_value[8];
+  * Option variables.
+  */
+ #ifdef PPP_WITH_MPPE
+-bool refuse_mppe_stateful = 1;		/* Allow stateful mode? */
 +static int setmppe(char **);
 +static int setnomppe(void);
-+#endif /* MPPE */
+ #endif
  
- static option_t ccp_option_list[] = {
-     { "noccp", o_bool, &ccp_protent.enabled_flag,
-@@ -107,54 +105,36 @@ static option_t ccp_option_list[] = {
+ static struct option ccp_option_list[] = {
+@@ -115,54 +116,36 @@ static struct option ccp_option_list[] =
        "don't allow Predictor-1", OPT_ALIAS | OPT_PRIOSUB | OPT_A2CLR,
        &ccp_allowoptions[0].predictor_1 },
  
@@ -132,7 +138,7 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 +      "don't allow Stac LZS", OPT_ALIAS | OPT_PRIOSUB | OPT_A2CLR,
 +      &ccp_allowoptions[0].lzs },
 +
- #ifdef MPPE
+ #ifdef PPP_WITH_MPPE
 -    /* MPPE options are symmetrical ... we only set wantoptions here */
 -    { "require-mppe", o_bool, &ccp_wantoptions[0].mppe,
 -      "require MPPE encryption",
@@ -201,7 +207,7 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
  #endif /* MPPE */
  
      { NULL }
-@@ -240,7 +220,7 @@ static fsm_callbacks ccp_callbacks = {
+@@ -248,7 +231,7 @@ static fsm_callbacks ccp_callbacks = {
   */
  #define ANY_COMPRESS(opt)	((opt).deflate || (opt).bsd_compress \
  				 || (opt).predictor_1 || (opt).predictor_2 \
@@ -210,11 +216,11 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
  
  /*
   * Local state (mainly for handling reset-reqs and reset-acks).
-@@ -341,6 +321,100 @@ setdeflate(char **argv)
+@@ -349,6 +332,100 @@ setdeflate(char **argv)
      return 1;
  }
  
-+#ifdef MPPE
++#ifdef PPP_WITH_MPPE
 +/*
 + * Functions called from config options
 + */
@@ -262,7 +268,7 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 +	    ccp_wantoptions[0].mppe = 1;
 +	    goto next_param;
 +	} else {
-+	    option_error("invalid parameter '%s' for mppe option", cmdbuf);
++	    ppp_option_error("invalid parameter '%s' for mppe option", cmdbuf);
 +	    return 0;
 +	}
 +
@@ -275,7 +281,7 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 +	    if (!(ccp_allowoptions[0].mppe_40 || ccp_allowoptions[0].mppe_56 ||
 +		  ccp_allowoptions[0].mppe_128)) {
 +		if (ccp_wantoptions[0].mppe == 1) {
-+		    option_error("You require MPPE but you have switched off "
++		    ppp_option_error("You require MPPE but you have switched off "
 +				 "all encryption key lengths.");
 +		    return 0;
 +		}
@@ -306,12 +312,12 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 +    ccp_wantoptions[0].mppe_stateless = ccp_allowoptions[0].mppe_stateless = 0;
 +    return 1;
 +}
-+#endif /* MPPE */
++#endif /* PPP_WITH_MPPE */
 +
  /*
   * ccp_init - initialize CCP.
   */
-@@ -374,6 +448,30 @@ ccp_init(int unit)
+@@ -382,6 +459,30 @@ ccp_init(int unit)
      ccp_allowoptions[0].bsd_bits = BSD_MAX_BITS;
  
      ccp_allowoptions[0].predictor_1 = 1;
@@ -323,7 +329,7 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 +    ccp_allowoptions[0].lzs_mode = LZS_MODE_SEQ;
 +    ccp_allowoptions[0].lzs_hists = 1;
 +
-+#ifdef MPPE
++#ifdef PPP_WITH_MPPE
 +    /* by default allow and request MPPC... */
 +    ccp_wantoptions[0].mppc = ccp_allowoptions[0].mppc = 1;
 +
@@ -338,25 +344,20 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 +    ccp_wantoptions[0].mppe_56 = 0;
 +    ccp_wantoptions[0].mppe_128 = 0;
 +    ccp_wantoptions[0].mppe_stateless = 0;
-+#endif /* MPPE */
++#endif /* PPP_WITH_MPPE */
  }
  
  /*
-@@ -443,11 +541,11 @@ ccp_input(int unit, u_char *p, int len)
+@@ -451,7 +552,7 @@ ccp_input(int unit, u_char *p, int len)
      if (oldstate == OPENED && p[0] == TERMREQ && f->state != OPENED) {
  	notice("Compression disabled by peer.");
- #ifdef MPPE
+ #ifdef PPP_WITH_MPPE
 -	if (ccp_gotoptions[unit].mppe) {
 +	if (ccp_wantoptions[unit].mppe) {
  	    error("MPPE disabled, closing LCP");
  	    lcp_close(unit, "MPPE disabled by peer");
  	}
--#endif
-+#endif /* MPPE */
-     }
- 
-     /*
-@@ -471,6 +569,15 @@ ccp_extcode(fsm *f, int code, int id, u_
+@@ -479,6 +580,15 @@ ccp_extcode(fsm *f, int code, int id, u_
  	    break;
  	/* send a reset-ack, which the transmitter will see and
  	   reset its compression state. */
@@ -372,31 +373,25 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
  	fsm_sdata(f, CCP_RESETACK, id, NULL, 0);
  	break;
  
-@@ -498,12 +605,11 @@ ccp_protrej(int unit)
+@@ -506,7 +616,7 @@ ccp_protrej(int unit)
      fsm_lowerdown(&ccp_fsm[unit]);
  
- #ifdef MPPE
+ #ifdef PPP_WITH_MPPE
 -    if (ccp_gotoptions[unit].mppe) {
 +    if (ccp_wantoptions[unit].mppe) {
  	error("MPPE required but peer negotiation failed");
  	lcp_close(unit, "MPPE required but peer negotiation failed");
      }
--#endif
--
-+#endif /* MPPE */
- }
- 
- /*
-@@ -519,7 +625,7 @@ ccp_resetci(fsm *f)
+@@ -527,7 +637,7 @@ ccp_resetci(fsm *f)
      all_rejected[f->unit] = 0;
  
- #ifdef MPPE
+ #ifdef PPP_WITH_MPPE
 -    if (go->mppe) {
 +    if (go->mppe || go->mppc) {
  	ccp_options *ao = &ccp_allowoptions[f->unit];
  	int auth_mschap_bits = auth_done[f->unit];
- #ifdef USE_EAPTLS
-@@ -536,6 +642,7 @@ ccp_resetci(fsm *f)
+ #ifdef PPP_WITH_EAPTLS
+@@ -544,6 +654,7 @@ ccp_resetci(fsm *f)
  	 * NB: If MPPE is required, all other compression opts are invalid.
  	 *     So, we return right away if we can't do it.
  	 */
@@ -404,7 +399,7 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
  
  	/* Leave only the mschap auth bits set */
  	auth_mschap_bits &= (CHAP_MS_WITHPEER  | CHAP_MS_PEER |
-@@ -580,51 +687,80 @@ ccp_resetci(fsm *f)
+@@ -588,49 +699,80 @@ ccp_resetci(fsm *f)
  	    lcp_close(f->unit, "MPPE required but not available");
  	    return;
  	}
@@ -435,16 +430,13 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 -	ao->predictor_2  = go->predictor_2  = 0;
 -	ao->deflate      = go->deflate      = 0;
 -    }
--#endif /* MPPE */
 +      }
  
      /*
       * Check whether the kernel knows about the various
--     * compression methods we might request.
-+     * compression methods we might request. Key material
-+     * unimportant here.
+      * compression methods we might request.
++     * Key material unimportant here.
       */
--#ifdef MPPE
 -    if (go->mppe) {
 -	opt_buf[0] = CI_MPPE;
 -	opt_buf[1] = CILEN_MPPE;
@@ -462,7 +454,7 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 +        opt_buf[4] = 0;
 +        opt_buf[5] = MPPE_MPPC;
 +        if (ccp_test(f->unit, opt_buf, CILEN_MPPE, 0) <= 0)
-+    	go->mppc = 0;
++            go->mppc = 0;
 +      }
 +      if (go->mppe_40) {
 +        opt_buf[0] = CI_MPPE;
@@ -472,7 +464,7 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 +        opt_buf[4] = 0;
 +        opt_buf[5] = MPPE_40BIT;
 +        if (ccp_test(f->unit, opt_buf, CILEN_MPPE + MPPE_MAX_KEY_LEN, 0) <= 0)
-+    	go->mppe_40 = 0;
++            go->mppe_40 = 0;
 +      }
 +      if (go->mppe_56) {
 +        opt_buf[0] = CI_MPPE;
@@ -482,7 +474,7 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 +        opt_buf[4] = 0;
 +        opt_buf[5] = MPPE_56BIT;
 +        if (ccp_test(f->unit, opt_buf, CILEN_MPPE + MPPE_MAX_KEY_LEN, 0) <= 0)
-+    	go->mppe_56 = 0;
++            go->mppe_56 = 0;
 +      }
 +      if (go->mppe_128) {
 +        opt_buf[0] = CI_MPPE;
@@ -492,26 +484,26 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 +        opt_buf[4] = 0;
 +        opt_buf[5] = MPPE_128BIT;
 +        if (ccp_test(f->unit, opt_buf, CILEN_MPPE + MPPE_MAX_KEY_LEN, 0) <= 0)
-+    	go->mppe_128 = 0;
++            go->mppe_128 = 0;
 +      }
 +      if (!go->mppe_40 && !go->mppe_56 && !go->mppe_128) {
 +        if (ccp_wantoptions[f->unit].mppe) {
-+    	error("MPPE required, but kernel has no support.");
-+    	lcp_close(f->unit, "MPPE required but not available");
++            error("MPPE required, but kernel has no support.");
++            lcp_close(f->unit, "MPPE required but not available");
 +        }
 +        go->mppe = go->mppe_stateless = 0;
 +      } else {
 +        /* MPPE is not compatible with other compression types */
 +        if (ccp_wantoptions[f->unit].mppe) {
-+    	ao->bsd_compress = go->bsd_compress = 0;
-+    	ao->predictor_1  = go->predictor_1  = 0;
-+    	ao->predictor_2  = go->predictor_2  = 0;
-+    	ao->deflate	 = go->deflate	    = 0;
-+    	ao->lzs		 = go->lzs	    = 0;
++            ao->bsd_compress = go->bsd_compress = 0;
++            ao->predictor_1  = go->predictor_1  = 0;
++            ao->predictor_2  = go->predictor_2  = 0;
++            ao->deflate	 = go->deflate	    = 0;
++            ao->lzs		 = go->lzs	    = 0;
 +        }
 +      }
      }
- #endif
+ #endif /* PPP_WITH_MPPE */
 +    if (go->lzs) {
 +	opt_buf[0] = CI_LZS;
 +	opt_buf[1] = CILEN_LZS;
@@ -524,7 +516,7 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
      if (go->bsd_compress) {
  	opt_buf[0] = CI_BSD_COMPRESS;
  	opt_buf[1] = CILEN_BSD_COMPRESS;
-@@ -679,7 +815,8 @@ static int
+@@ -685,7 +827,8 @@ static int
  	+ (go->deflate && go->deflate_draft? CILEN_DEFLATE: 0)
  	+ (go->predictor_1? CILEN_PREDICTOR_1: 0)
  	+ (go->predictor_2? CILEN_PREDICTOR_2: 0)
@@ -534,7 +526,7 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
  }
  
  /*
-@@ -690,6 +827,8 @@ static void
+@@ -696,6 +839,8 @@ static void
  {
      int res;
      ccp_options *go = &ccp_gotoptions[f->unit];
@@ -543,10 +535,10 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
      u_char *p0 = p;
  
      /*
-@@ -698,22 +837,43 @@ static void
+@@ -704,22 +849,42 @@ static void
       * in case it gets Acked.
       */
- #ifdef MPPE
+ #ifdef PPP_WITH_MPPE
 -    if (go->mppe) {
 +    if (go->mppe || go->mppc || (!wo->mppe && ao->mppe)) {
  	u_char opt_buf[CILEN_MPPE + MPPE_MAX_KEY_LEN];
@@ -562,15 +554,13 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 +	p[4] = 0;
 +	p[5] = (go->mppe_40 ? MPPE_40BIT : 0) | (go->mppe_56 ? MPPE_56BIT : 0) |
 +	    (go->mppe_128 ? MPPE_128BIT : 0) | (go->mppc ? MPPE_MPPC : 0);
-+
-+	BCOPY(p, opt_buf, CILEN_MPPE);
- 	BCOPY(mppe_recv_key, &opt_buf[CILEN_MPPE], MPPE_MAX_KEY_LEN);
++	memcpy(opt_buf, p, CILEN_MPPE);
+ 	mppe_get_recv_key(&opt_buf[CILEN_MPPE], MPPE_MAX_KEY_LEN);
  	res = ccp_test(f->unit, opt_buf, CILEN_MPPE + MPPE_MAX_KEY_LEN, 0);
--	if (res > 0)
-+	if (res > 0) {
+ 	if (res > 0)
  	    p += CILEN_MPPE;
 -	else
-+	} else {
++	else {
  	    /* This shouldn't happen, we've already tested it! */
 -	    lcp_close(f->unit, "MPPE required but not available in kernel");
 +	    go->mppe = go->mppe_40 = go->mppe_56 = go->mppe_128 =
@@ -578,8 +568,8 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 +	    if (ccp_wantoptions[f->unit].mppe)
 +		lcp_close(f->unit, "MPPE required but not available in kernel");
 +	}
-+    }
-+#endif /* MPPE */
+     }
+ #endif
 +    if (go->lzs) {
 +	p[0] = CI_LZS;
 +	p[1] = CILEN_LZS;
@@ -591,19 +581,11 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 +	    p += CILEN_LZS;
 +	} else
 +	    go->lzs = 0;
-     }
--#endif
++    }
      if (go->deflate) {
  	p[0] = go->deflate_correct? CI_DEFLATE: CI_DEFLATE_DRAFT;
  	p[1] = CILEN_DEFLATE;
-@@ -799,30 +959,50 @@ static void
- 
- /*
-  * ccp_ackci - process a received configure-ack, and return
-- * 1 iff the packet was OK.
-+ * 1 if the packet was OK.
-  */
- static int
+@@ -811,24 +976,44 @@ static int
    ccp_ackci(fsm *f, u_char *p, int len)
  {
      ccp_options *go = &ccp_gotoptions[f->unit];
@@ -611,7 +593,7 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 +    ccp_options *wo = &ccp_wantoptions[f->unit];
      u_char *p0 = p;
  
- #ifdef MPPE
+ #ifdef PPP_WITH_MPPE
 -    if (go->mppe) {
 -	u_char opt_buf[CILEN_MPPE];
 -
@@ -636,11 +618,13 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 +	    go->mppe = 1;
  	p += CILEN_MPPE;
  	len -= CILEN_MPPE;
+-	/* XXX Cope with first/fast ack */
+-	if (len == 0)
 +	/* Cope with first/fast ack */
 +	if (p == p0 && len == 0)
-+	    return 1;
-+    }
-+#endif /* MPPE */
+ 	    return 1;
+     }
+ #endif
 +    if (go->lzs) {
 +	if (len < CILEN_LZS || p[0] != CI_LZS || p[1] != CILEN_LZS
 +	    || p[2] != go->lzs_hists>>8 || p[3] != (go->lzs_hists&0xff)
@@ -648,16 +632,14 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 +	    return 0;
 +	p += CILEN_LZS;
 +	len -= CILEN_LZS;
- 	/* XXX Cope with first/fast ack */
--	if (len == 0)
++	/* XXX Cope with first/fast ack */
 +	if (p == p0 && len == 0)
- 	    return 1;
-     }
--#endif
++	    return 1;
++    }
      if (go->deflate) {
  	if (len < CILEN_DEFLATE
  	    || p[0] != (go->deflate_correct? CI_DEFLATE: CI_DEFLATE_DRAFT)
-@@ -885,12 +1065,14 @@ static int
+@@ -891,12 +1076,14 @@ static int
  
  /*
   * ccp_nakci - process received configure-nak.
@@ -673,10 +655,10 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
      ccp_options no;		/* options we've seen already */
      ccp_options try;		/* options to ask for next time */
  
-@@ -898,28 +1080,100 @@ static int
+@@ -904,28 +1091,98 @@ static int
      try = *go;
  
- #ifdef MPPE
+ #ifdef PPP_WITH_MPPE
 -    if (go->mppe && len >= CILEN_MPPE
 -	&& p[0] == CI_MPPE && p[1] == CILEN_MPPE) {
 -	no.mppe = 1;
@@ -691,13 +673,8 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 -	} else if (((go->mppe | MPPE_OPT_STATEFUL) & try.mppe) != try.mppe) {
 -	    /* Peer must have set options we didn't request (suggest) */
 -	    try.mppe = 0;
--	}
 +    if ((go->mppe || go->mppc || (!wo->mppe && ao->mppe)) &&
 +	len >= CILEN_MPPE && p[0] == CI_MPPE && p[1] == CILEN_MPPE) {
- 
--	if (!try.mppe) {
--	    error("MPPE required but peer negotiation failed");
--	    lcp_close(f->unit, "MPPE required but peer negotiation failed");
 +	if (go->mppc) {
 +	    no.mppc = 1;
 +	    if (!(p[5] & MPPE_MPPC))
@@ -770,12 +747,15 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 +		else
 +		    if (try.mppe_40 && try.mppe_56)
 +			try.mppe_40 = 0;
-+
+ 
+-	if (!try.mppe) {
+-	    error("MPPE required but peer negotiation failed");
+-	    lcp_close(f->unit, "MPPE required but peer negotiation failed");
+-	}
 +	p += CILEN_MPPE;
 +	len -= CILEN_MPPE;
      }
- #endif /* MPPE */
-+
+ #endif /* PPP_WITH_MPPE */
 +    if (go->lzs && len >= CILEN_LZS && p[0] == CI_LZS && p[1] == CILEN_LZS) {
 +	no.lzs = 1;
 +	if (((p[2]<<8)|p[3]) > 1 || (p[4] != LZS_MODE_SEQ &&
@@ -792,10 +772,10 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
      if (go->deflate && len >= CILEN_DEFLATE
  	&& p[0] == (go->deflate_correct? CI_DEFLATE: CI_DEFLATE_DRAFT)
  	&& p[1] == CILEN_DEFLATE) {
-@@ -989,14 +1243,50 @@ ccp_rejci(fsm *f, u_char *p, int len)
+@@ -995,14 +1252,50 @@ ccp_rejci(fsm *f, u_char *p, int len)
  	return -1;
  
- #ifdef MPPE
+ #ifdef PPP_WITH_MPPE
 -    if (go->mppe && len >= CILEN_MPPE
 +    if ((go->mppe || go->mppc) && len >= CILEN_MPPE
  	&& p[0] == CI_MPPE && p[1] == CILEN_MPPE) {
@@ -834,8 +814,7 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
  	p += CILEN_MPPE;
  	len -= CILEN_MPPE;
      }
--#endif
-+#endif /* MPPE */
+ #endif
 +    if (go->lzs && len >= CILEN_LZS && p[0] == CI_LZS && p[1] == CILEN_LZS) {
 +	if (p[2] != go->lzs_hists>>8 || p[3] != (go->lzs_hists&0xff) 
 +	    || p[4] != go->lzs_mode)
@@ -847,7 +826,7 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
      if (go->deflate_correct && len >= CILEN_DEFLATE
  	&& p[0] == CI_DEFLATE && p[1] == CILEN_DEFLATE) {
  	if (p[2] != DEFLATE_MAKE_OPT(go->deflate_size)
-@@ -1056,14 +1346,15 @@ static int
+@@ -1062,13 +1355,13 @@ static int
  ccp_reqci(fsm *f, u_char *p, int *lenp, int dont_nak)
  {
      int ret, newret, res;
@@ -857,19 +836,16 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
      ccp_options *ho = &ccp_hisoptions[f->unit];
      ccp_options *ao = &ccp_allowoptions[f->unit];
 +    ccp_options *wo = &ccp_wantoptions[f->unit];
- #ifdef MPPE
+ #ifdef PPP_WITH_MPPE
 -    bool rej_for_ci_mppe = 1;	/* Are we rejecting based on a bad/missing */
 -				/* CI_MPPE, or due to other options?       */
--#endif
 +    u_char opt_buf[CILEN_MPPE + MPPE_MAX_KEY_LEN];
-+/*     int mtu; */
-+#endif /* MPPE */
+ #endif
  
      ret = CONFACK;
-     retp = p0 = p;
-@@ -1086,106 +1377,307 @@ ccp_reqci(fsm *f, u_char *p, int *lenp,
+@@ -1092,105 +1385,305 @@ ccp_reqci(fsm *f, u_char *p, int *lenp,
  	    switch (type) {
- #ifdef MPPE
+ #ifdef PPP_WITH_MPPE
  	    case CI_MPPE:
 -		if (!ao->mppe || clen != CILEN_MPPE) {
 +		if ((!ao->mppc && !ao->mppe) || clen != CILEN_MPPE) {
@@ -877,9 +853,13 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
  		    break;
  		}
 -		MPPE_CI_TO_OPTS(&p[2], ho->mppe);
- 
+-
 -		/* Nak if anything unsupported or unknown are set. */
 -		if (ho->mppe & MPPE_OPT_UNSUPPORTED) {
+-		    newret = CONFNAK;
+-		    ho->mppe &= ~MPPE_OPT_UNSUPPORTED;
+-		}
+-		if (ho->mppe & MPPE_OPT_UNKNOWN) {
 +		p2 = p[2];
 +		p5 = p[5];
 +		/* not sure what they want, tell 'em what we got */
@@ -888,10 +868,6 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 +			       MPPE_MPPC)) != 0 || p[5] == 0) ||
 +		    (p[2] == 0 && p[3] == 0 && p[4] == 0 &&  p[5] == 0)) {
  		    newret = CONFNAK;
--		    ho->mppe &= ~MPPE_OPT_UNSUPPORTED;
--		}
--		if (ho->mppe & MPPE_OPT_UNKNOWN) {
--		    newret = CONFNAK;
 -		    ho->mppe &= ~MPPE_OPT_UNKNOWN;
 +		    p[2] = (wo->mppe_stateless ? MPPE_STATELESS : 0);
 +		    p[3] = 0;
@@ -916,7 +892,7 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 +		if ((p[5] & MPPE_MPPC)) {
 +		    if (ao->mppc) {
 +			ho->mppc = 1;
-+			BCOPY(p, opt_buf, CILEN_MPPE);
++			memcpy(opt_buf, p, CILEN_MPPE);
 +			opt_buf[2] = opt_buf[3] = opt_buf[4] = 0;
 +			opt_buf[5] = MPPE_MPPC;
 +			if (ccp_test(f->unit, opt_buf, CILEN_MPPE, 1) <= 0) {
@@ -931,13 +907,9 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 +			    p[5] &= ~MPPE_MPPC;
 +			    newret = CONFNAK;
 +			}
- 		    }
- 		}
- 
--		/* Find out which of {S,L} are set. */
--		if ((ho->mppe & MPPE_OPT_128)
--		     && (ho->mppe & MPPE_OPT_40)) {
--		    /* Both are set, negotiate the strongest. */
++		    }
++		}
++
 +		if (ao->mppe)
 +		    ho->mppe = 1;
 +
@@ -960,9 +932,13 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 +			wo->mppe_stateless = 0;
 +			newret = CONFNAK;
 +			p[2] |= MPPE_STATELESS;
-+		    }
-+		}
-+
+ 		    }
+ 		}
+ 
+-		/* Find out which of {S,L} are set. */
+-		if ((ho->mppe & MPPE_OPT_128)
+-		     && (ho->mppe & MPPE_OPT_40)) {
+-		    /* Both are set, negotiate the strongest. */
 +		if ((p[5] & ~MPPE_MPPC) == (MPPE_40BIT|MPPE_56BIT|MPPE_128BIT)) {
  		    newret = CONFNAK;
 -		    if (ao->mppe & MPPE_OPT_128)
@@ -975,8 +951,8 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 +		    if (ao->mppe_128) {
 +			ho->mppe_128 = 1;
 +			p[5] &= ~(MPPE_40BIT|MPPE_56BIT);
-+			BCOPY(p, opt_buf, CILEN_MPPE);
-+			BCOPY(mppe_send_key, &opt_buf[CILEN_MPPE],
++			memcpy(opt_buf, p, CILEN_MPPE);
++			mppe_get_send_key(&opt_buf[CILEN_MPPE],
 +			      MPPE_MAX_KEY_LEN);
 +			if (ccp_test(f->unit, opt_buf, CILEN_MPPE +
 +				     MPPE_MAX_KEY_LEN, 1) <= 0) {
@@ -999,8 +975,8 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 +		    if (ao->mppe_128) {
 +			ho->mppe_128 = 1;
 +			p[5] &= ~MPPE_56BIT;
-+			BCOPY(p, opt_buf, CILEN_MPPE);
-+			BCOPY(mppe_send_key, &opt_buf[CILEN_MPPE],
++			memcpy(opt_buf, p, CILEN_MPPE);
++			mppe_get_send_key(&opt_buf[CILEN_MPPE],
 +			      MPPE_MAX_KEY_LEN);
 +			if (ccp_test(f->unit, opt_buf, CILEN_MPPE +
 +				     MPPE_MAX_KEY_LEN, 1) <= 0) {
@@ -1023,8 +999,8 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 +		    if (ao->mppe_128) {
 +			ho->mppe_128 = 1;
 +			p[5] &= ~MPPE_40BIT;
-+			BCOPY(p, opt_buf, CILEN_MPPE);
-+			BCOPY(mppe_send_key, &opt_buf[CILEN_MPPE],
++			memcpy(opt_buf, p, CILEN_MPPE);
++			mppe_get_send_key(&opt_buf[CILEN_MPPE],
 +			      MPPE_MAX_KEY_LEN);
 +			if (ccp_test(f->unit, opt_buf, CILEN_MPPE +
 +				     MPPE_MAX_KEY_LEN, 1) <= 0) {
@@ -1041,8 +1017,8 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 +		if ((p[5] & ~MPPE_MPPC) == MPPE_128BIT) {
 +		    if (ao->mppe_128) {
 +			ho->mppe_128 = 1;
-+			BCOPY(p, opt_buf, CILEN_MPPE);
-+			BCOPY(mppe_send_key, &opt_buf[CILEN_MPPE],
++			memcpy(opt_buf, p, CILEN_MPPE);
++			mppe_get_send_key(&opt_buf[CILEN_MPPE],
 +			      MPPE_MAX_KEY_LEN);
 +			if (ccp_test(f->unit, opt_buf, CILEN_MPPE +
 +				     MPPE_MAX_KEY_LEN, 1) <= 0) {
@@ -1062,8 +1038,8 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 +		    if (ao->mppe_56) {
 +			ho->mppe_56 = 1;
 +			p[5] &= ~MPPE_40BIT;
-+			BCOPY(p, opt_buf, CILEN_MPPE);
-+			BCOPY(mppe_send_key, &opt_buf[CILEN_MPPE],
++			memcpy(opt_buf, p, CILEN_MPPE);
++			mppe_get_send_key(&opt_buf[CILEN_MPPE],
 +			      MPPE_MAX_KEY_LEN);
 +			if (ccp_test(f->unit, opt_buf, CILEN_MPPE +
 +				     MPPE_MAX_KEY_LEN, 1) <= 0) {
@@ -1082,8 +1058,8 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 +		if ((p[5] & ~MPPE_MPPC) == MPPE_56BIT) {
 +		    if (ao->mppe_56) {
 +			ho->mppe_56 = 1;
-+			BCOPY(p, opt_buf, CILEN_MPPE);
-+			BCOPY(mppe_send_key, &opt_buf[CILEN_MPPE],
++			memcpy(opt_buf, p, CILEN_MPPE);
++			mppe_get_send_key(&opt_buf[CILEN_MPPE],
 +			      MPPE_MAX_KEY_LEN);
 +			if (ccp_test(f->unit, opt_buf, CILEN_MPPE +
 +				     MPPE_MAX_KEY_LEN, 1) <= 0) {
@@ -1101,8 +1077,8 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 +		if ((p[5] & ~MPPE_MPPC) == MPPE_40BIT) {
 +		    if (ao->mppe_40) {
 +			ho->mppe_40 = 1;
-+			BCOPY(p, opt_buf, CILEN_MPPE);
-+			BCOPY(mppe_send_key, &opt_buf[CILEN_MPPE],
++			memcpy(opt_buf, p, CILEN_MPPE);
++			mppe_get_send_key(&opt_buf[CILEN_MPPE],
 +			      MPPE_MAX_KEY_LEN);
 +			if (ccp_test(f->unit, opt_buf, CILEN_MPPE +
 +				     MPPE_MAX_KEY_LEN, 1) <= 0) {
@@ -1155,8 +1131,7 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 -		    int mtu;
 -
 -		    BCOPY(p, opt_buf, CILEN_MPPE);
--		    BCOPY(mppe_send_key, &opt_buf[CILEN_MPPE],
--			  MPPE_MAX_KEY_LEN);
+-		    mppe_get_send_key(&opt_buf[CILEN_MPPE], MPPE_MAX_KEY_LEN);
 -		    if (ccp_test(f->unit, opt_buf,
 -				 CILEN_MPPE + MPPE_MAX_KEY_LEN, 1) <= 0) {
 -			/* This shouldn't happen, we've already tested it! */
@@ -1170,9 +1145,9 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 -		     * because MPPE frames **grow**.  The kernel [must]
 -		     * allocate MPPE_PAD extra bytes in xmit buffers.
 -		     */
--		    mtu = netif_get_mtu(f->unit);
+-		    mtu = ppp_get_mtu(f->unit);
 -		    if (mtu)
--			netif_set_mtu(f->unit, mtu - MPPE_PAD);
+-			ppp_set_mtu(f->unit, mtu - MPPE_PAD);
 -		    else
 -			newret = CONFREJ;
 -		}
@@ -1218,8 +1193,7 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 +		}
 +*/
  		break;
- #endif /* MPPE */
-+
+ #endif /* PPP_WITH_MPPE */
 +	    case CI_LZS:
 +		if (!ao->lzs || clen != CILEN_LZS) {
 +		    newret = CONFREJ;
@@ -1248,11 +1222,11 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
  	    case CI_DEFLATE:
  	    case CI_DEFLATE_DRAFT:
  		if (!ao->deflate || clen != CILEN_DEFLATE
-@@ -1327,12 +1819,6 @@ ccp_reqci(fsm *f, u_char *p, int *lenp,
+@@ -1332,12 +1825,6 @@ ccp_reqci(fsm *f, u_char *p, int *lenp,
  	else
  	    *lenp = retp - p0;
      }
--#ifdef MPPE
+-#ifdef PPP_WITH_MPPE
 -    if (ret == CONFREJ && ao->mppe && rej_for_ci_mppe) {
 -	error("MPPE required but peer negotiation failed");
 -	lcp_close(f->unit, "MPPE required but peer negotiation failed");
@@ -1261,7 +1235,7 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
      return ret;
  }
  
-@@ -1353,24 +1839,35 @@ method_name(ccp_options *opt, ccp_option
+@@ -1358,24 +1845,35 @@ method_name(ccp_options *opt, ccp_option
  	char *p = result;
  	char *q = result + sizeof(result); /* 1 past result */
  
@@ -1313,22 +1287,16 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
      case CI_DEFLATE:
      case CI_DEFLATE_DRAFT:
  	if (opt2 != NULL && opt2->deflate_size != opt->deflate_size)
-@@ -1425,12 +1922,12 @@ ccp_up(fsm *f)
+@@ -1430,7 +1928,7 @@ ccp_up(fsm *f)
      } else if (ANY_COMPRESS(*ho))
  	notice("%s transmit compression enabled", method_name(ho, NULL));
- #ifdef MPPE
+ #ifdef PPP_WITH_MPPE
 -    if (go->mppe) {
 +    if (go->mppe || go->mppc) {
- 	BZERO(mppe_recv_key, MPPE_MAX_KEY_LEN);
- 	BZERO(mppe_send_key, MPPE_MAX_KEY_LEN);
+ 	mppe_clear_keys();
  	continue_networks(f->unit);		/* Bring up IP et al */
      }
--#endif
-+#endif /* MPPE */
- }
- 
- /*
-@@ -1452,7 +1949,7 @@ ccp_down(fsm *f)
+@@ -1456,7 +1954,7 @@ ccp_down(fsm *f)
  	    lcp_close(f->unit, "MPPE disabled");
  	}
      }
@@ -1337,8 +1305,8 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
  }
  
  /*
-@@ -1509,24 +2006,28 @@ ccp_printpkt(u_char *p, int plen,
- #ifdef MPPE
+@@ -1513,24 +2011,28 @@ ccp_printpkt(u_char *p, int plen,
+ #ifdef PPP_WITH_MPPE
  	    case CI_MPPE:
  		if (optlen >= CILEN_MPPE) {
 -		    u_char mppe_opts;
@@ -1367,8 +1335,7 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
  		    p += CILEN_MPPE;
  		}
  		break;
--#endif
-+#endif /* MPPE */
+ #endif
 +	    case CI_LZS:
 +		if (optlen >= CILEN_LZS) {
 +		    printer(arg, "lzs %.2x %.2x %.2x", p[2], p[3], p[4]);
@@ -1378,15 +1345,15 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
  	    case CI_DEFLATE:
  	    case CI_DEFLATE_DRAFT:
  		if (optlen >= CILEN_DEFLATE) {
-@@ -1609,6 +2110,7 @@ ccp_datainput(int unit, u_char *pkt, int
+@@ -1613,6 +2115,7 @@ ccp_datainput(int unit, u_char *pkt, int
  	    error("Lost compression sync: disabling compression");
  	    ccp_close(unit, "Lost compression sync");
- #ifdef MPPE
-+	    /* My module dosn't need this. J.D., 2003-07-06 */
+ #ifdef PPP_WITH_MPPE
++	    /* My module doesn't need this. J.D., 2003-07-06 */
  	    /*
  	     * If we were doing MPPE, we must also take the link down.
  	     */
-@@ -1616,9 +2118,18 @@ ccp_datainput(int unit, u_char *pkt, int
+@@ -1620,9 +2123,18 @@ ccp_datainput(int unit, u_char *pkt, int
  		error("Too many MPPE errors, closing LCP");
  		lcp_close(unit, "Too many MPPE errors");
  	    }
@@ -1406,18 +1373,18 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
  	     * Send a reset-request to reset the peer's compressor.
  	     * We don't do that if we are still waiting for an
  	     * acknowledgement to a previous reset-request.
-@@ -1648,4 +2159,3 @@ ccp_rack_timeout(void *arg)
+@@ -1652,4 +2164,3 @@ ccp_rack_timeout(void *arg)
      } else
  	ccp_localstate[f->unit] &= ~RACK_PENDING;
  }
 -
---- ppp-2.4.8/pppd/ccp.h.orig	2020-04-16 06:33:49.345695328 +0200
-+++ ppp-2.4.8/pppd/ccp.h	2020-04-16 07:25:41.255503333 +0200
-@@ -37,9 +37,17 @@
+--- ppp-2.5.0/pppd/ccp.h.orig	2023-09-02 09:59:26.758158825 +0200
++++ ppp-2.5.0/pppd/ccp.h	2023-09-03 14:17:52.576087631 +0200
+@@ -45,9 +45,17 @@ typedef struct ccp_options {
      bool predictor_2;		/* do Predictor-2? */
      bool deflate_correct;	/* use correct code for deflate? */
      bool deflate_draft;		/* use draft RFC code for deflate? */
--    u_char mppe;		/* MPPE bitfield */
+-    unsigned char mppe;		/* MPPE bitfield */
 +    bool lzs;			/* do Stac LZS? */
 +    bool mppc;			/* do MPPC? */
 +    bool mppe;			/* do MPPE? */
@@ -1425,17 +1392,16 @@ diff -ruN ppp-2.4.3.orig/include/net/ppp-comp.h ppp-2.4.3/include/net/ppp-comp.h
 +    bool mppe_56;		/* allow 56 bit encryption? */
 +    bool mppe_128;		/* allow 128 bit encryption? */
 +    bool mppe_stateless;	/* allow stateless encryption */
-     u_short bsd_bits;		/* # bits/code for BSD Compress */
-     u_short deflate_size;	/* lg(window size) for Deflate */
-+    u_short lzs_mode;		/* LZS check mode */
-+    u_short lzs_hists;		/* number of LZS histories */
+     unsigned short bsd_bits;		/* # bits/code for BSD Compress */
+     unsigned short deflate_size;	/* lg(window size) for Deflate */
++    unsigned short lzs_mode;		/* LZS check mode */
++    unsigned short lzs_hists;		/* number of LZS histories */
      short method;		/* code for chosen compression method */
  } ccp_options;
  
-diff -ruN ppp-2.4.3.orig/pppd/chap_ms.c ppp-2.4.3/pppd/chap_ms.c
---- ppp-2.4.3.orig/pppd/chap_ms.c	2004-11-12 10:57:43.000000000 +0100
-+++ ppp-2.4.3/pppd/chap_ms.c	2004-11-21 13:54:09.000000000 +0100
-@@ -895,13 +895,17 @@
+--- ppp-2.5.0/pppd/mppe.c.orig	2022-12-30 02:12:39.000000000 +0100
++++ ppp-2.5.0/pppd/mppe.c	2023-09-03 14:20:18.168632222 +0200
+@@ -309,13 +309,17 @@ mppe_set_enc_types(int policy, int types
      /*
       * Disable undesirable encryption types.  Note that we don't ENABLE
       * any encryption types, to avoid overriding manual configuration.
@@ -1533,3 +1499,13 @@ diff -ruN ppp-2.4.3.orig/pppd/pppd.8 ppp-2.4.3/pppd/pppd.8
  .TP
  .B require\-mschap
  Require the peer to authenticate itself using MS\-CHAP [Microsoft Challenge
+--- ppp-2.5.0/pppd/Makefile.am.orig	2023-03-25 05:38:30.000000000 +0100
++++ ppp-2.5.0/pppd/Makefile.am	2023-09-03 21:04:02.204066024 +0200
+@@ -93,6 +93,7 @@ endif
+ 
+ if LINUX
+ pppd_SOURCES += sys-linux.c
++pppd_CPPFLAGS += -I${top_srcdir}/include
+ noinst_HEADERS += termios_linux.h
+ pppd_LIBS += $(CRYPT_LIBS) $(UTIL_LIBS)
+ endif
