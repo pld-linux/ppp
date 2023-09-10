@@ -4,7 +4,7 @@
 
 # Conditional build:
 %bcond_with	mppc	# MPPC/MPPE-56/LZS support (upstream-incompatible configuration, support not in mainline/PLD kernel)
-%bcond_without	pppoatm	# PPPoATM plugin (requires kernel 2.4+ and atm-devel)
+%bcond_without	system_libatm	# link PPPoATM plugin against system libatm
 %bcond_with	srp	# SRP support
 %bcond_without	systemd	# systemd notifications
 #
@@ -42,7 +42,7 @@ BuildRequires:	autoconf >= 2.69
 BuildRequires:	automake
 BuildRequires:	libpcap-devel >= 2:0.8.1
 BuildRequires:	libtool >= 2:2
-%{?with_pppoatm:BuildRequires:	linux-atm-devel}
+%{?with_system_libatm:BuildRequires:	linux-atm-devel}
 # <linux/if_pppol2tp.h>
 BuildRequires:	linux-libc-headers >= 7:2.6.23
 BuildRequires:	openssl-devel
@@ -140,7 +140,6 @@ Wtyczka PPPoATM dla pppd.
 	--enable-multilink \
 	--disable-silent-rules \
 	%{?with_systemd:--enable-systemd} \
-	%{!?with_pppoatm:--without-atm} \
 	--with-plugin-dir=%{_libdir}/pppd/plugins \
 	%{!?with_srp:--without-srp}
 
@@ -244,8 +243,6 @@ fi
 %{_includedir}/pppd
 %{_pkgconfigdir}/pppd.pc
 
-%if %{with pppoatm}
 %files plugin-pppoatm
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_libdir}/pppd/plugins/pppoatm.so
-%endif
