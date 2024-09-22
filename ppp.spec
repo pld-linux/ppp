@@ -5,7 +5,7 @@
 # Conditional build:
 %bcond_with	mppc	# MPPC/MPPE-56/LZS support (upstream-incompatible configuration, support not in mainline/PLD kernel)
 %bcond_without	system_libatm	# link PPPoATM plugin against system libatm
-%bcond_with	srp	# SRP support
+%bcond_with	srp	# SRP support (pppd/srp-entry.8 missing in dist)
 %bcond_without	systemd	# systemd notifications
 #
 Summary:	ppp daemon package for Linux
@@ -18,13 +18,13 @@ Summary(ru.UTF-8):	Демон ppp
 Summary(tr.UTF-8):	PPP sunucu süreci
 Summary(zh_CN.UTF-8):	PPP 配置和管理软件包
 Name:		ppp
-Version:	2.5.0
+Version:	2.5.1
 Release:	1
 Epoch:		3
 License:	distributable
 Group:		Networking/Daemons
 Source0:	https://download.samba.org/pub/ppp/%{name}-%{version}.tar.gz
-# Source0-md5:	ce5fd7b9f6e1095ae6c0c11365c444eb
+# Source0-md5:	c2d96ac7eb2020d3ed0e6e05fe996afe
 Source1:	%{name}.pamd
 Source2:	%{name}.pon
 Source3:	%{name}.poff
@@ -126,7 +126,7 @@ Wtyczka PPPoATM dla pppd.
 %{__rm} include/linux/*.h
 
 %{__sed} -i -e 's,/usr/lib64/openssl/engines/,/%{_lib}/engines-3/,' \
-	-e 's,/usr/lib64/,%{_libdir}/,' etc.ppp/openssl.cnf
+	-e 's,/usr/lib64/,%{_libdir}/,' etc.ppp/openssl.cnf.example
 
 %build
 %{__libtoolize}
@@ -159,7 +159,9 @@ install -p %{SOURCE2} $RPM_BUILD_ROOT%{_bindir}/pon
 install -p %{SOURCE3} $RPM_BUILD_ROOT%{_bindir}/poff
 install -p debian/plog $RPM_BUILD_ROOT%{_bindir}
 
-cp -p etc.ppp/chap-secrets $RPM_BUILD_ROOT%{_sysconfdir}/ppp
+for f in $RPM_BUILD_ROOT%{_sysconfdir}/ppp/*.example ; do
+	%{__mv} "$f" "${f%.example}"
+done
 cp -p debian/pap-secrets $RPM_BUILD_ROOT%{_sysconfdir}/ppp
 cp -p debian/options $RPM_BUILD_ROOT%{_sysconfdir}/ppp
 cp -p debian/options.ttyXX $RPM_BUILD_ROOT%{_sysconfdir}/ppp
