@@ -5,7 +5,7 @@
 # Conditional build:
 %bcond_with	mppc		# MPPC/MPPE-56/LZS support (upstream-incompatible configuration, support not in mainline/PLD kernel)
 %bcond_without	system_libatm	# link PPPoATM plugin against system libatm
-%bcond_with	srp		# SRP support (pppd/srp-entry.8 missing in dist)
+%bcond_with	srp		# SRP support
 %bcond_without	systemd		# systemd notifications
 #
 Summary:	ppp daemon package for Linux
