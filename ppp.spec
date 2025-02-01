@@ -3,10 +3,10 @@
 # - check if %{_libdir}/pppd/%{version} path is needed, if not drop the symlink
 
 # Conditional build:
-%bcond_with	mppc	# MPPC/MPPE-56/LZS support (upstream-incompatible configuration, support not in mainline/PLD kernel)
+%bcond_with	mppc		# MPPC/MPPE-56/LZS support (upstream-incompatible configuration, support not in mainline/PLD kernel)
 %bcond_without	system_libatm	# link PPPoATM plugin against system libatm
-%bcond_with	srp	# SRP support (pppd/srp-entry.8 missing in dist)
-%bcond_without	systemd	# systemd notifications
+%bcond_with	srp		# SRP support (pppd/srp-entry.8 missing in dist)
+%bcond_without	systemd		# systemd notifications
 #
 Summary:	ppp daemon package for Linux
 Summary(de.UTF-8):	ppp-Dämonpaket für Linux
@@ -18,13 +18,13 @@ Summary(ru.UTF-8):	Демон ppp
 Summary(tr.UTF-8):	PPP sunucu süreci
 Summary(zh_CN.UTF-8):	PPP 配置和管理软件包
 Name:		ppp
-Version:	2.5.1
+Version:	2.5.2
 Release:	1
 Epoch:		3
 License:	distributable
 Group:		Networking/Daemons
 Source0:	https://download.samba.org/pub/ppp/%{name}-%{version}.tar.gz
-# Source0-md5:	c2d96ac7eb2020d3ed0e6e05fe996afe
+# Source0-md5:	28744065f8062622e2ab59901a310b2a
 Source1:	%{name}.pamd
 Source2:	%{name}.pon
 Source3:	%{name}.poff
@@ -47,6 +47,7 @@ BuildRequires:	libtool >= 2:2
 BuildRequires:	linux-libc-headers >= 7:2.6.23
 BuildRequires:	openssl-devel
 BuildRequires:	pam-devel
+BuildRequires:	pkgconfig
 %{?with_srp:BuildRequires:	srp-devel}
 %{?with_systemd:BuildRequires:	systemd-devel >= 1:209}
 Requires:	pam >= 0.77.3
@@ -115,15 +116,15 @@ Wtyczka PPPoATM dla pppd.
 
 %prep
 %setup -q
-%patch2 -p1
-%patch4 -p1
-%patch7 -p1
+%patch -P2 -p1
+%patch -P4 -p1
+%patch -P7 -p1
 %if %{with mppc}
-%patch10 -p1
+%patch -P10 -p1
 %endif
 
 # use headers from llh instead of older supplied by ppp, incompatible with current llh
-%{__rm} include/linux/*.h
+%{__rm} include/linux/ppp_defs.h
 
 %{__sed} -i -e 's,/usr/lib64/openssl/engines/,/%{_lib}/engines-3/,' \
 	-e 's,/usr/lib64/,%{_libdir}/,' etc.ppp/openssl.cnf.example
@@ -206,7 +207,6 @@ fi
 %dir %{_libdir}/pppd/plugins
 %attr(755,root,root) %{_libdir}/pppd/plugins/minconn.so
 %attr(755,root,root) %{_libdir}/pppd/plugins/openl2tp.so
-%attr(755,root,root) %{_libdir}/pppd/plugins/passprompt.so
 %attr(755,root,root) %{_libdir}/pppd/plugins/passwordfd.so
 %attr(755,root,root) %{_libdir}/pppd/plugins/pppoe.so
 %attr(755,root,root) %{_libdir}/pppd/plugins/pppol2tp.so
