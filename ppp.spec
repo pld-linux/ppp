@@ -18,13 +18,13 @@ Summary(ru.UTF-8):	Демон ppp
 Summary(tr.UTF-8):	PPP sunucu süreci
 Summary(zh_CN.UTF-8):	PPP 配置和管理软件包
 Name:		ppp
-Version:	2.5.2
+Version:	2.5.3
 Release:	1
 Epoch:		3
 License:	distributable
 Group:		Networking/Daemons
 Source0:	https://download.samba.org/pub/ppp/%{name}-%{version}.tar.gz
-# Source0-md5:	28744065f8062622e2ab59901a310b2a
+# Source0-md5:	48e6bf5a9a2530eadc6e650a3402fd2b
 Source1:	%{name}.pamd
 Source2:	%{name}.pon
 Source3:	%{name}.poff
@@ -193,7 +193,7 @@ fi
 
 %files
 %defattr(644,root,root,755)
-%doc Changes-2.3 FAQ NEWS README README.{MPPE,MSCHAP80,MSCHAP81,cbcp,eap-tls,linux,pppoe,pppol2tp,pwfd} %{?with_srp:README.eap-srp} SETUP debian/{README.debian,win95.ppp} example-scripts
+%doc Changes-2.3 FAQ NEWS README README.{MPPE,MSCHAP80,MSCHAP81,cbcp,eap-tls,linux,pppoe,pppol2tp,pwfd} %{?with_srp:README.eap-srp} SECURITY.md SETUP debian/{README.debian,win95.ppp} example-scripts
 %attr(755,root,root) %{_bindir}/plog
 %attr(755,root,root) %{_bindir}/poff
 %attr(755,root,root) %{_bindir}/pon
@@ -202,18 +202,21 @@ fi
 %attr(755,root,root) %{_sbindir}/pppdump
 %attr(755,root,root) %{_sbindir}/pppoe-discovery
 %attr(755,root,root) %{_sbindir}/pppstats
-%{?with_srp:%attr(755,root,root) %{_sbindir}/srp-entry}
+%if %{with srp}
+%attr(755,root,root) %{_sbindir}/srp-entry
+%endif
 %dir %{_libdir}/pppd
 %dir %{_libdir}/pppd/plugins
-%attr(755,root,root) %{_libdir}/pppd/plugins/minconn.so
-%attr(755,root,root) %{_libdir}/pppd/plugins/openl2tp.so
-%attr(755,root,root) %{_libdir}/pppd/plugins/passwordfd.so
-%attr(755,root,root) %{_libdir}/pppd/plugins/pppoe.so
-%attr(755,root,root) %{_libdir}/pppd/plugins/pppol2tp.so
-%attr(755,root,root) %{_libdir}/pppd/plugins/radattr.so
-%attr(755,root,root) %{_libdir}/pppd/plugins/radius.so
-%attr(755,root,root) %{_libdir}/pppd/plugins/radrealms.so
-%attr(755,root,root) %{_libdir}/pppd/plugins/winbind.so
+%{_libdir}/pppd/plugins/dhcpv6relay.so
+%{_libdir}/pppd/plugins/minconn.so
+%{_libdir}/pppd/plugins/openl2tp.so
+%{_libdir}/pppd/plugins/passwordfd.so
+%{_libdir}/pppd/plugins/pppoe.so
+%{_libdir}/pppd/plugins/pppol2tp.so
+%{_libdir}/pppd/plugins/radattr.so
+%{_libdir}/pppd/plugins/radius.so
+%{_libdir}/pppd/plugins/radrealms.so
+%{_libdir}/pppd/plugins/winbind.so
 
 %{_mandir}/man8/chat.8*
 %{_mandir}/man8/pppd.8*
@@ -247,4 +250,4 @@ fi
 
 %files plugin-pppoatm
 %defattr(644,root,root,755)
-%attr(755,root,root) %{_libdir}/pppd/plugins/pppoatm.so
+%{_libdir}/pppd/plugins/pppoatm.so
